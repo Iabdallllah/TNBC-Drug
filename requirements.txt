@@ -6,9 +6,12 @@ scikit-learn==1.6.1
 scipy==1.17.1
 xgboost==2.0.3
 catboost==1.2.10
-shap==0.51.0
 pyarrow==14.0.2
 matplotlib==3.11.2
+# NOTE: shap is intentionally NOT pinned here. Its metadata requires numpy>=2,
+# which conflicts with this frozen numpy==1.26.4 set (uv resolver fails hard).
+# Nothing committed imports shap at runtime (dashboard/API/tests don't use it);
+# the training notebooks install it themselves in their setup cells.
 fastapi==0.115.0
 uvicorn==0.30.6
 starlette==0.38.6
