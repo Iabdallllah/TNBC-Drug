@@ -1,7 +1,7 @@
-# Save as .streamlit/config.toml in the folder you run `streamlit run` from.
-# No "base" is set, so the app follows each viewer's light/dark preference.
+# Dark theme is forced for all viewers (defense-demo consistency).
 
 [theme]
+base = "dark"
 primaryColor = "#3B5BDB"
 font = "sans serif"
 
