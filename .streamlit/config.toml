@@ -1,0 +1,9 @@
+# Save as .streamlit/config.toml in the folder you run `streamlit run` from.
+# No "base" is set, so the app follows each viewer's light/dark preference.
+
+[theme]
+primaryColor = "#3B5BDB"
+font = "sans serif"
+
+[client]
+toolbarMode = "viewer"   # hides the Deploy button for lab users

@@ -1,7 +1,7 @@
 """TNBC Drug Response Predictor — Streamlit dashboard.
 
 Run:  streamlit run dashboard/app.py
-Needs Streamlit >= 1.50 (uses width="stretch"; use_container_width is deprecated).
+Compatible with the pinned Streamlit 1.39 (uses use_container_width / use_column_width).
 Reads all artifacts from ../outputs_local (no retraining, no API needed).
 """
 import json
@@ -76,7 +76,7 @@ COLS = {
 
 
 def table(df):
-    st.dataframe(df, hide_index=True, width='stretch',
+    st.dataframe(df, hide_index=True, use_container_width=True,
                  column_config={c: COLS[c] for c in df.columns if c in COLS})
 
 
@@ -241,7 +241,7 @@ with tab_rank:
     st.download_button('Download Top-20 CSV', to_csv(top20),
                        'mda_mb_231_top20_killers.csv', 'text/csv')
     st.subheader(f'Predicted AUC of the top {k} (lower is stronger)')
-    st.altair_chart(top_chart(rank_full.head(k)), width='stretch')
+    st.altair_chart(top_chart(rank_full.head(k)), use_container_width=True)
 
 with tab_sel:
     st.subheader('Selectivity: MDA-MB-231 vs MCF7 predicted AUC')
@@ -249,7 +249,7 @@ with tab_sel:
              f'the control. The dotted line marks the sensitivity cut-off (AUC {SENSITIVE_AUC}). '
              'Hover for values; scroll to zoom.')
     n_top = st.slider('Label the top N drugs', 0, 10, 5)
-    st.altair_chart(selectivity_chart(rank_full, n_top), width='stretch')
+    st.altair_chart(selectivity_chart(rank_full, n_top), use_container_width=True)
     table(top20[['rank', 'drug_name', 'pred_AUC_MDA231', 'pred_AUC_MCF7', 'selectivity_delta']])
 
 with tab_lab:
@@ -293,7 +293,7 @@ with tab_model:
             st.write(title)
             path = os.path.join(DATA, fname)
             if os.path.exists(path):
-                st.image(path, caption=alt_text, width='stretch')
+                st.image(path, caption=alt_text, use_column_width=True)
             else:
                 st.caption(f'`{fname}` not found in the outputs folder.')
 
