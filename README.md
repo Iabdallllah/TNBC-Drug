@@ -1,0 +1,190 @@
+# TNBC Drug Response Predictor
+
+An end-to-end computational platform that predicts and ranks drug sensitivity
+for **Triple-Negative Breast Cancer (TNBC)**, validated experimentally for
+selectivity against a non-TNBC control.
+
+**One-liner:** given a breast cancer cell line's molecular profile, the system
+predicts its sensitivity (AUC) to every screened drug, ranks the strongest
+killers of the TNBC model **MDA-MB-231**, and checks selectivity against the
+luminal control **MCF7** — first computationally, then in the wet lab.
+
+> Outputs are *predicted sensitivities in cell models*, never clinical
+> treatment recommendations.
+
+---
+
+## 1. Biological premise (for the bio team)
+
+TNBC lacks the three receptors (ER, PR, HER2) targeted in other breast cancers,
+so drug response varies widely between models. The project tests one hypothesis:
+
+> **Top computationally ranked drugs kill MDA-MB-231 (TNBC) preferentially
+> over MCF7 (ER+, luminal), quantified by the Selectivity Index
+> SI = IC50(MCF7) / IC50(MDA-MB-231).**
+
+The ML stream owns everything computational. The bio stream owns receptor
+annotation, drug mechanism review, and target/pathway confirmation. The wet-lab
+stream owns cell culture, MTT viability assays, and dose-response fitting.
+
+---
+
+## 2. Repository structure
+
+```text
+TNBC-Drug/
+├── TNBC_01_Data_Audit_Colab.ipynb      # data audit + gold dataset (run first)
+├── TNBC_02_Modeling_Ranking_Colab.ipynb # training + ranking + SHAP (run second)
+├── src/
+│   ├── ingestion/download.py            # fetch GDSC2 + DepMap raw files
+│   ├── models/combo_rank.py             # Bliss 2-drug combo ranking (CLI)
+│   └── api/main.py                      # FastAPI: /predict /rank /rank-pairs
+├── dashboard/app.py                     # Streamlit UI (run: streamlit run dashboard/app.py)
+├── tests/test_pipeline.py               # leakage + schema + artifact + gate tests
+├── outputs_local/                       # all v1 results (rankings, models, SHAP, leaderboard)
+├── Data/                                # local raw datasets (git-ignored, see below)
+├── requirements.txt                     # frozen working environment
+├── PRD.md                               # product requirements (frozen v1.0 scope)
+└── project_blueprint.html               # 20-week team execution blueprint
+```
+
+---
+
+## 3. Quickstart
+
+### Option A — Google Colab (recommended for the team)
+
+1. Upload the small files (`Model.csv`, `REPURPOSING*.csv`) via the Files panel.
+2. Paste a **fresh** DepMap signed URL into the Section 2 download cell to fetch
+   `OmicsExpressionTPMLogp1HumanAllGenes.csv` (~938 MB, 26Q3). Signed URLs
+   expire — generate one right before downloading.
+3. Run notebook `01` top to bottom, download its 5 outputs
+   (`tnbc_ml_dataset.parquet`, `holdout_lines.npy`,
+   `breast_lines_annotated.csv`, `expression_pca128_breast.parquet`,
+   `audit_summary.json`).
+4. Open notebook `02` in a new session, upload those 5 files plus
+   `REPURPOSINGLog2ViabilityCollapsedConditions.csv`, run top to bottom.
+
+### Option B — Local
+
+```bash
+pip install -r requirements.txt
+python src/ingestion/download.py --small-only   # GDSC2 + Model.csv (~22 MB)
+python src/ingestion/download.py --all          # + 1.1 GB expression matrix
+streamlit run dashboard/app.py                  # UI on http://127.0.0.1:8501
+uvicorn src.api.main:app --host 127.0.0.1 --port 8000   # API
+python -m pytest tests/ -q                      # 7 integrity tests
+```
+
+---
+
+## 4. Data sources (all public, academic-free)
+
+| Source | File | Content | Version used |
+|---|---|---|---|
+| DepMap (Broad) | `OmicsExpressionTPMLogp1HumanAllGenes.csv` | log-TPM expression, ~60k genes | Public 26Q3 |
+| DepMap (Broad) | `Model.csv` | cell-line metadata (lineage, IDs) | Public 26Q3 |
+| GDSC (Sanger) | `GDSC2_fitted_dose_response_27Oct23.xlsx` | fitted AUC + LN_IC50, 969 lines x 286 drugs | release 8.5 |
+| PRISM (Broad) | `REPURPOSING*Matrix.csv` | repurposing viability screens incl. non-oncology drugs | 19Q4/20Q2 |
+
+Raw files live in `Data/` and are **git-ignored** (too large for GitHub).
+`src/ingestion/download.py` reproduces them from the sources above.
+
+---
+
+## 5. How it works (pipeline)
+
+```text
+raw CSVs → ID-unified cleaning → variance filter + PCA-128 (fit on train folds only)
+        → gold parquet (cell_line x drug → AUC)
+        → Dummy / XGBoost / CatBoost with GroupKFold by cell line
+        → TreeSHAP → ranked killers + Bliss combos → API + dashboard
+```
+
+**Non-negotiable guardrails** (enforced in code and in `tests/`):
+
+- Splits are **always by cell line** (`GroupKFold` on `cell_line_id`) — never random rows.
+- **MDA-MB-231 and MCF7 are blind holdouts**: excluded from all tuning and from
+  every PCA/scaler fit.
+- Feature Store discipline: PCA/scaler/median statistics are fit on
+  non-holdout rows only, then applied to the rest.
+- Every prediction carries a `model_version`; every run is reproducible from a
+  pinned `requirements.txt` with fixed seeds.
+
+---
+
+## 6. v1 results snapshot
+
+| Metric (unseen cell lines) | CatBoost-800 | Gate |
+|---|---|---|
+| R2 | 0.567 | > 0.25 |
+| Per-line Spearman | 0.630 | > 0.4 |
+| NDCG@10 | 0.941 | ranking primary |
+
+- Training set: **30,994** unique (cell line, drug) pairs — 30 lines x 1,482 drugs.
+- Top predicted killers of MDA-MB-231: **Triptolide, Dolastatin-10, Romidepsin,
+  Echinomycin, Exatecan** (see `outputs_local/mda_mb_231_top20_killers.csv`).
+  Selectivity deltas vs MCF7 are modest (~0.02), reported as-is.
+- Top Bliss pair: **Triptolide + Maytansinol-isobutyrate** (gap 0.025).
+  Additivity assumption — synergy verdict requires checkerboard validation.
+- Full artifacts: `outputs_local/` (leaderboard, rankings, models, SHAP plots,
+  `model_info.json`, `audit_summary.json`).
+
+---
+
+## 7. API
+
+```bash
+uvicorn src.api.main:app --host 127.0.0.1 --port 8000
+```
+
+| Endpoint | Input | Output |
+|---|---|---|
+| `GET /health`, `GET /model-info` | — | version, feature/drug counts |
+| `POST /predict` | `cell_line_id`, `drug_id` | `predicted_auc` |
+| `POST /rank` | `cell_line_id`, `top_k` | ranked drugs with sensitivity calls |
+| `POST /rank-pairs` | `top_singles`, `top_pairs` | Bliss pairs with selectivity gaps |
+
+Single-drug predictions from notebook 02 and from the API are bit-identical
+(verified: Triptolide 0.2764, Dolastatin-10 0.3488, Romidepsin 0.3594).
+
+---
+
+## 8. Wet-lab handoff (what the lab receives / returns)
+
+**Lab receives** (`outputs_local/`):
+
+- `wetlab_shortlist.csv` — Top-5 AI candidates + Doxorubicin/Paclitaxel
+  positive controls + 1 predicted-resistant compound.
+- `combo_rankings.csv` — Top-5 Bliss pairs (max **2 pairs** to test).
+
+**Protocol:** MTT/CellTiter-Glo, 72h, 6-8 concentrations, triplicates, both lines
+side by side. Combos as **4x4 checkerboard only** (16 wells x 3 replicates = 48;
+one 96-well plate fits 2 pairs + controls).
+
+**Lab returns:** `raw_absorbance.csv` (drug, cell line, concentration, viability,
+replicate) → fitted to 4PL curves for experimental IC50/AUC, then correlated
+against predictions (Spearman) with per-drug Selectivity Indexes.
+
+---
+
+## 9. Status by stream
+
+| Stream | Status |
+|---|---|
+| ML / Data / API / UI | **Done**: pipeline, models, rankings, combos, API, tests (7/7), dashboard |
+| Bioinformatics | Pending: confirm distinct targets/pathways for shortlisted pairs |
+| Wet-lab | Pending: MTT results (`raw_absorbance.csv`) for Top candidates + 2 pairs |
+
+Success criteria: computational (beat DummyMean on unseen lines — **met**),
+experimental (predicted-vs-actual Spearman > 0 and SI > 1.5 for at least one
+candidate — **awaiting lab data**).
+
+---
+
+## 10. Reproducibility
+
+- Dataset versions: DepMap Public 26Q3, GDSC2 fitted 27Oct23 (release 8.5).
+- Seeds fixed (42) across splits, PCA, and model training.
+- `tests/test_pipeline.py` re-verifies leakage guards, schema, artifacts, and
+  PRD gates on every run.
