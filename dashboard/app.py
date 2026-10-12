@@ -55,8 +55,9 @@ st.sidebar.download_button('Download combo rankings CSV',
                            combos.to_csv(index=False), 'combo_rankings.csv')
 
 # ---------- tabs ----------
-tab_rank, tab_sel, tab_lab, tab_combo, tab_model = st.tabs(
-    ['Killer ranking', 'Selectivity', 'Wet-lab shortlist', 'Combinations', 'Model'])
+tab_rank, tab_sel, tab_lab, tab_combo, tab_model, tab_live = st.tabs(
+    ['Killer ranking', 'Selectivity', 'Wet-lab shortlist', 'Combinations',
+     'Model', 'Live predictor'])
 
 with tab_rank:
     st.subheader('Drugs ranked by predicted killing of MDA-MB-231')
@@ -109,6 +110,61 @@ with tab_model:
     with col_b:
         st.write('Local explanation: MDA-MB-231 x top killer')
         st.image(os.path.join(DATA, 'shap_local_mda231_top1.png'), use_container_width=True)
+
+with tab_live:
+    st.subheader('Live predictor: any profiled line x any screened drug')
+    st.write('Loads the trained CatBoost model and predicts on demand. '
+             'Useful for questions beyond the two precomputed lines '
+             '(e.g. BT-549). Values for MDA-MB-231 / MCF7 match the ranking tab.')
+    import numpy as np
+
+    @st.cache_resource(show_spinner='Loading CatBoost model...')
+    def load_live():
+        import pyarrow.parquet as pq
+        from catboost import CatBoostRegressor
+        cols = pq.read_schema(os.path.join(DATA, 'tnbc_ml_dataset.parquet')).names
+        feat = [c for c in cols if c.startswith('pca_')
+                or (c.startswith('drug_') and c not in ('drug_id', 'drug_name'))]
+        pos = {c: i for i, c in enumerate(feat)}
+        pca = pd.read_parquet(os.path.join(DATA, 'expression_pca128_breast.parquet'))
+        pca = pca.drop_duplicates(subset=['ModelID'], keep='first').reset_index(drop=True)
+        model = CatBoostRegressor()
+        model.load_model(os.path.join(DATA, 'catboost_tnbc_v1.cbm'))
+        return feat, pos, pca, model
+
+    try:
+        feat, pos, pca_live, live_model = load_live()
+        live_ok = True
+    except Exception as e:
+        live_ok = False
+        st.warning('Live model file not found in this deployment '
+                   '(expected catboost_tnbc_v1.cbm next to the CSVs). '
+                   'Precomputed tabs above remain fully usable.')
+
+    if live_ok:
+        pca_cols = [c for c in feat if c.startswith('pca_')]
+        line_ids = sorted(pca_live['ModelID'].unique().tolist())
+        drug_ids = sorted(rank_full['drug_id'].astype(str).unique().tolist())
+        name_of = dict(zip(rank_full['drug_id'].astype(str), rank_full['drug_name']))
+        c1, c2 = st.columns(2)
+        with c1:
+            sel_line = st.selectbox('Cell line (ModelID)', line_ids,
+                                    index=line_ids.index('ACH-000768'))
+        with c2:
+            sel_drug = st.selectbox(
+                'Drug', drug_ids,
+                format_func=lambda d: f"{name_of.get(d, d)} ({d})")
+        if st.button('Predict sensitivity'):
+            row = pca_live.loc[pca_live['ModelID'] == sel_line]
+            x = np.zeros((1, len(feat)), dtype=np.float32)
+            for c in pca_cols:
+                x[0, pos[c]] = float(row[c].iloc[0])
+            x[0, pos[f'drug_{sel_drug}']] = 1.0
+            auc = float(np.clip(live_model.predict(x)[0], 0, 1))
+            m1, m2 = st.columns(2)
+            m1.metric('Predicted AUC', f'{auc:.4f}')
+            m2.metric('Call', 'SENSITIVE (AUC<0.3)' if auc < 0.3
+                      else 'resistant/intermediate')
 
 st.divider()
 st.caption('Reproducibility: DepMap 26Q3 + GDSC2/PRISM-REPURPOSING 27Oct23. '
