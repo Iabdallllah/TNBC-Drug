@@ -1,0 +1,61 @@
+{
+ "model_version": "catboost-v1.0",
+ "dataset": "/home/abdallah/Abdallah/Projects/TNBC/outputs_local/tnbc_ml_dataset.parquet",
+ "dataset_version": "DepMap public-26q3-526b.11 + REPURPOSING (see 01 notebook)",
+ "features": "1544 (pca_128 + drug_one_hot)",
+ "holdout": [
+  "ACH-000019",
+  "ACH-000097",
+  "ACH-000212",
+  "ACH-000248",
+  "ACH-000643",
+  "ACH-000768",
+  "ACH-000934"
+ ],
+ "seed": 42,
+ "leaderboard": [
+  {
+   "label": "DummyMean",
+   "mae": 0.10874253511428833,
+   "rmse": 0.15311730667172682,
+   "r2": -0.009926557540893555,
+   "spearman": NaN,
+   "per_line_spearman": NaN,
+   "ndcg10": 0.23353388057256183,
+   "recall10": 0.0125
+  },
+  {
+   "label": "XGBoost-600",
+   "mae": 0.08100514858961105,
+   "rmse": 0.1005530951872301,
+   "r2": 0.5644559264183044,
+   "spearman": 0.3782684959293575,
+   "per_line_spearman": 0.6309566062596216,
+   "ndcg10": 0.9303286548640843,
+   "recall10": 0.6733333333333332
+  },
+  {
+   "label": "CatBoost-800 \u2705",
+   "mae": 0.08112297600401139,
+   "rmse": 0.10027021850558432,
+   "r2": 0.5669030020380805,
+   "spearman": 0.4168502783922829,
+   "per_line_spearman": 0.630404561351272,
+   "ndcg10": 0.9411393070796752,
+   "recall10": 0.6933333333333334
+  }
+ ],
+ "outputs": [
+  "mda_mb_231_top20_killers.csv",
+  "mda_mb_231_full_ranking.csv",
+  "wetlab_shortlist.csv",
+  "candidate_rankings.csv",
+  "audit_summary.json (from 01)",
+  "catboost_tnbc_v1.cbm",
+  "xgb_tnbc_v1.json",
+  "rf_tnbc_v1.pkl",
+  "shap_global_top20.png"
+ ],
+ "disclaimer": "predicted sensitivity in cell model \u2014 NOT a clinical recommendation (PRD \u00a75.2)",
+ "date": "2026-10-12"
+}

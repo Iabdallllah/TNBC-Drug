@@ -1,0 +1,19 @@
+{
+ "expression_file": "{\"gene_start\": 6, \"id_col\": \"ModelID\", \"n_file_rows\": 2314, \"file\": \"OmicsExpressionTPMLogp1HumanAllGenes.csv\"}",
+ "breast_lines_total": 96,
+ "subtype_counts": {
+  "other": 75,
+  "TNBC": 10,
+  "Luminal": 7,
+  "HER2+": 4
+ },
+ "wanted_with_expression": 77,
+ "ml_rows": 30994,
+ "ml_cell_lines": 30,
+ "ml_drugs": 1482,
+ "mda_mb_231_present": true,
+ "mcf7_present": true,
+ "auc_min": 0.0271079890265864,
+ "auc_max": 1.0,
+ "note": "ml_rows deduped to unique (cell_line, drug) pairs actually used for training"
+}

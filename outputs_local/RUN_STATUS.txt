@@ -1,0 +1,18 @@
+finished_at: 2026-10-12T22:49:40
+status: SUCCESS (all RF training skipped by decision: RF300 + RF100-demo; Dummy/XGB/CatBoost done)
+
+== leaderboard ==
+         label      mae     rmse        r2  spearman  per_line_spearman   ndcg10  recall10
+CatBoost-800 ✅ 0.081123 0.100270  0.566903  0.416850           0.630405 0.941139  0.693333
+   XGBoost-600 0.081005 0.100553  0.564456  0.378268           0.630957 0.930329  0.673333
+     DummyMean 0.108743 0.153117 -0.009927       NaN                NaN 0.233534  0.012500
+
+== top-5 killers ==
+ rank         drug_name  pred_AUC_MDA231  pred_AUC_MCF7  selectivity_delta
+    1        TRIPTOLIDE         0.276434       0.310324           0.033890
+    2     DOLASTATIN-10         0.348794       0.367441           0.018647
+    3        ROMIDEPSIN         0.359435       0.380846           0.021411
+    4       ECHINOMYCIN         0.374248       0.359919          -0.014329
+    5 EXATECAN-MESYLATE         0.378459       0.393581           0.015122
+
+files: RUN_STATUS.txt, audit_summary.json, breast_lines_annotated.csv, candidate_rankings.csv, catboost_tnbc_v1.cbm, expression_pca128_breast.parquet, holdout_lines.npy, leaderboard.csv, mda_mb_231_full_ranking.csv, mda_mb_231_top20_killers.csv, model_info.json, shap_global_top20.png, shap_local_mda231_top1.png, tnbc_ml_dataset.parquet, wetlab_shortlist.csv, xgb_tnbc_v1.json

@@ -1,0 +1,16 @@
+# TNBC drug-response platform — frozen working set (local env + Colab compatible)
+# Install:  pip install -r requirements.txt
+pandas==2.2.3
+numpy==1.26.4
+scikit-learn==1.6.1
+scipy==1.17.1
+xgboost==2.0.3
+catboost==1.2.10
+shap==0.51.0
+pyarrow==14.0.2
+matplotlib==3.11.2
+fastapi==0.115.0
+uvicorn==0.30.6
+starlette==0.38.6
+streamlit==1.39.0
+pytest==8.2.2

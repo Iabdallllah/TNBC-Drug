@@ -1,0 +1,13 @@
+# Raw datasets live here locally but are NOT committed (too big for GitHub).
+# Re-download anytime with:  python src/ingestion/download.py --small-only
+# Full expression matrix:    python src/ingestion/download.py --all
+# Sources pinned in PRD.md (DepMap 26Q3 + GDSC2 27Oct23).
+Data/*.csv
+Data/*.xlsx
+
+# Regenerable local artifacts
+catboost_info/
+__pycache__/
+.ipynb_checkpoints/
+*.crdownload
+.DS_Store
