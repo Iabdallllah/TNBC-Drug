@@ -106,10 +106,10 @@ with tab_model:
     col_a, col_b = st.columns(2)
     with col_a:
         st.write('Global feature impact (Top-20)')
-        st.image(os.path.join(DATA, 'shap_global_top20.png'), use_container_width=True)
+        st.image(os.path.join(DATA, 'shap_global_top20.png'), use_column_width=True)
     with col_b:
         st.write('Local explanation: MDA-MB-231 x top killer')
-        st.image(os.path.join(DATA, 'shap_local_mda231_top1.png'), use_container_width=True)
+        st.image(os.path.join(DATA, 'shap_local_mda231_top1.png'), use_column_width=True)
 
 with tab_live:
     st.subheader('Live predictor: any profiled line x any screened drug')
