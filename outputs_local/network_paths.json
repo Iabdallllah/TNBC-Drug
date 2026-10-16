@@ -1,0 +1,131 @@
+{
+ "shortest_to_GPX4": {
+  "sulfasalazine": [
+   "sulfasalazine",
+   "SLC7A11",
+   "cystine_import",
+   "cysteine",
+   "GSH",
+   "GPX4"
+  ],
+  "erastin": [
+   "erastin",
+   "SLC7A11",
+   "cystine_import",
+   "cysteine",
+   "GSH",
+   "GPX4"
+  ],
+  "simvastatin": [
+   "simvastatin",
+   "HMGCR",
+   "mevalonate_pathway",
+   "IPP",
+   "seleno_tRNA",
+   "GPX4_synthesis",
+   "GPX4"
+  ],
+  "lovastatin": [
+   "lovastatin",
+   "HMGCR",
+   "mevalonate_pathway",
+   "IPP",
+   "seleno_tRNA",
+   "GPX4_synthesis",
+   "GPX4"
+  ],
+  "RSL3": [
+   "RSL3",
+   "GPX4"
+  ]
+ },
+ "shortest_to_ferroptosis": {
+  "sulfasalazine": [
+   "sulfasalazine",
+   "SLC7A11",
+   "cystine_import",
+   "cysteine",
+   "GSH",
+   "GPX4",
+   "lipid_hydroperoxides",
+   "lipid_ROS_ferroptosis"
+  ],
+  "erastin": [
+   "erastin",
+   "SLC7A11",
+   "cystine_import",
+   "cysteine",
+   "GSH",
+   "GPX4",
+   "lipid_hydroperoxides",
+   "lipid_ROS_ferroptosis"
+  ],
+  "simvastatin": [
+   "simvastatin",
+   "HMGCR",
+   "mevalonate_pathway",
+   "IPP",
+   "seleno_tRNA",
+   "GPX4_synthesis",
+   "GPX4",
+   "lipid_hydroperoxides",
+   "lipid_ROS_ferroptosis"
+  ],
+  "lovastatin": [
+   "lovastatin",
+   "HMGCR",
+   "mevalonate_pathway",
+   "IPP",
+   "seleno_tRNA",
+   "GPX4_synthesis",
+   "GPX4",
+   "lipid_hydroperoxides",
+   "lipid_ROS_ferroptosis"
+  ],
+  "RSL3": [
+   "RSL3",
+   "GPX4",
+   "lipid_hydroperoxides",
+   "lipid_ROS_ferroptosis"
+  ]
+ },
+ "hubs": [
+  {
+   "node": "SLC7A11",
+   "degree": 5
+  },
+  {
+   "node": "lipid_hydroperoxides",
+   "degree": 5
+  },
+  {
+   "node": "GPX4",
+   "degree": 4
+  },
+  {
+   "node": "GSH",
+   "degree": 4
+  },
+  {
+   "node": "labile_Fe2",
+   "degree": 4
+  },
+  {
+   "node": "HMGCR",
+   "degree": 3
+  },
+  {
+   "node": "cysteine",
+   "degree": 3
+  },
+  {
+   "node": "cystine_import",
+   "degree": 2
+  }
+ ],
+ "proximity_sulfasalazine_simvastatin": 11,
+ "convergent_nodes": [
+  "GPX4",
+  "lipid_hydroperoxides"
+ ]
+}

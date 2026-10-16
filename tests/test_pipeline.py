@@ -75,6 +75,38 @@ def test_prd_gate():
     assert best['per_line_spearman'] > 0.4, 'ranking gate failed'
 
 
+# ---------- FerroSelect track (proposal §6-8) ----------
+
+def test_ferroselect_artifacts_exist():
+    for f in ['ferroselect_results.json', 'ferroselect_panel_predictions.csv',
+              'ferroptosis_sample_audit.csv', 'network_table.csv',
+              'network_paths.json', 'ferroselect_network.png',
+              'sealed_prediction.md']:
+        assert os.path.exists(os.path.join(OUT, f)), f'missing {f}'
+
+
+def test_ferroselect_ceiling_check():
+    res = json.load(open(os.path.join(OUT, 'ferroselect_results.json')))
+    assert 'BUG-SUSPECT' not in res['ceiling_flag'], res['ceiling_flag']
+    assert res['frozen_model'] in ('Lasso', 'Ridge', 'RandomForest')
+
+
+def test_sealed_doc_consistent():
+    txt = open(os.path.join(OUT, 'sealed_prediction.md')).read()
+    res = json.load(open(os.path.join(OUT, 'ferroselect_results.json')))
+    assert res['frozen_model'] in txt
+    assert 'SHA256' in txt and 'Sign-off' in txt
+    for line in ['MDA-MB-231', 'MDA-MB-468', 'MCF7']:
+        assert line in txt, f'{line} missing from sealed doc'
+
+
+def test_network_converges_on_gpx4():
+    paths = json.load(open(os.path.join(OUT, 'network_paths.json')))
+    assert 'GPX4' in paths['convergent_nodes']
+    assert paths['shortest_to_ferroptosis']['sulfasalazine'] is not None
+    assert paths['shortest_to_ferroptosis']['simvastatin'] is not None
+
+
 if __name__ == '__main__':
     fns = [(k, v) for k, v in sorted(globals().items())
            if k.startswith('test_') and callable(v)]

@@ -220,9 +220,51 @@ with st.sidebar:
                'See model_info.json and audit_summary.json for versions.')
 
 # ---------- tabs ----------
-tab_rank, tab_sel, tab_lab, tab_combo, tab_model, tab_live = st.tabs(
-    ['Killer ranking', 'Selectivity', 'Wet-lab shortlist', 'Combinations',
-     'Model', 'Live predictor'])
+tab_ferro, tab_rank, tab_sel, tab_lab, tab_combo, tab_model, tab_live = st.tabs(
+    ['FerroSelect', 'Killer ranking', 'Selectivity', 'Wet-lab shortlist',
+     'Combinations', 'Model', 'Live predictor'])
+
+with tab_ferro:
+    st.subheader('FerroSelect: ferroptosis inducer panel (proposal track)')
+    st.write('Proposal-faithful predictions (Lasso/Ridge/RF, nested cell-line CV) '
+             'for the inducer panel on the three proposal lines. Confidence flags '
+             'reflect training support: low-support rows are hypotheses for the '
+             'lab, not evidence.')
+    fpred = load('ferroselect_panel_predictions.csv')
+    st.dataframe(fpred, use_container_width=True, hide_index=True)
+    fres = json.load(open(os.path.join(DATA, 'ferroselect_results.json')))
+    fbest = fres['per_model_oof'][fres['frozen_model']]
+    c1, c2, c3 = st.columns(3)
+    c1.metric('Frozen model', fres['frozen_model'])
+    c2.metric('Pooled OOF Spearman', f"{fbest['spearman']:.3f}")
+    c3.metric('Ceiling check', 'PASS' if 'OK' in fres['ceiling_flag'] else 'REVIEW')
+    st.caption(fres['ceiling_flag'])
+    st.subheader('Aim 0: measuring the circularity inflation')
+    st.write('Same models and splits, two labellings: measured AUC (honest) vs '
+             'ssGSEA score computed from the input expression itself (circular on '
+             'purpose). The gap is the reported finding.')
+    import json as _json2
+    try:
+        ph2 = _json2.load(open(os.path.join(DATA, 'ferroselect_phase2.json')))
+        rows = []
+        for m in ['Lasso', 'Ridge', 'RandomForest']:
+            r = ph2['real_labels'][m]['spearman']
+            c = ph2['aim0_labels'][m]['spearman']
+            rows.append({'model': m, 'measured-AUC Spearman': round(r, 3),
+                         'circular-label Spearman': round(c, 3),
+                         'inflation gap': round(ph2['inflation_gap'][m], 3)})
+        st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+    except Exception:
+        st.caption('Aim-0 results not yet generated (src/models/ferroselect_phase2.py).')
+    st.subheader('Mechanism graph (computed from proposal §2.2/Fig.2)')
+    st.write('Both drug routes converge on GPX4 and lipid hydroperoxides. '
+             'This is the computed companion to the proposal figure.')
+    st.image(os.path.join(DATA, 'ferroselect_network.png'), use_column_width=True)
+    seal = os.path.join(DATA, 'sealed_prediction.md')
+    if os.path.exists(seal):
+        st.success('Sealed prediction document generated — print, sign and lodge it before the first plate.')
+    else:
+        st.warning('Sealed prediction not yet generated (src/models/seal_prediction.py).')
 
 with tab_rank:
     st.subheader('Drugs ranked by predicted killing of MDA-MB-231')

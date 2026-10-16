@@ -132,6 +132,36 @@ raw CSVs → ID-unified cleaning → variance filter + PCA-128 (fit on train fol
 
 ---
 
+## 6B. FerroSelect track (proposal-aligned)
+
+The general platform above stays intact. This track implements the funded
+proposal's computational half verbatim: same data, proposal-mandated methods.
+
+- **Inducer panel audit** (`ferroptosis_sample_audit.csv`): per-agent training
+  rows stated honestly — sulfasalazine 9, simvastatin 22, lovastatin 19,
+  erastin 14. RSL3/ML162/ML210 are absent from our matrices (CTRP download
+  pending; RSL3 is droppable per the proposal).
+- **Proposal-faithful models** (`src/models/ferroselect.py`): Lasso, Ridge and
+  RandomForest with nested cell-line GroupKFold, screen covariate slot, and an
+  automatic ceiling check against published GPX4-inhibitor agreement
+  (max 0.83 — anything above is flagged as a bug, not a triumph).
+- **Uncertainty-first outputs** (`ferroselect_panel_predictions.csv`): every
+  prediction for the 3 proposal lines carries its training-row count; anything
+  under 25 rows is flagged LOW (lab data decides).
+- **Network pharmacology** (`src/network/build_network.py`): curated
+  drug-target-pathway graph (31 nodes). Both drug routes provably converge on
+  GPX4 and lipid hydroperoxides (`network_paths.json`); figure + supplement
+  table in `outputs_local/`.
+- **Sealed prediction** (`outputs_local/sealed_prediction.md`): frozen-model
+  ranking for the 3 lines + nominated statin pairing + SHA256 + sign-off block.
+  Print, sign and lodge it BEFORE the first plate — any later training change
+  voids the seal.
+
+Pending (blocked on downloads, not on code): raw expression matrix for the
+small FerrDb-gene model + Aim-0 ssGSEA baseline, CTRP bulk for RSL3 coverage.
+
+---
+
 ## 7. API
 
 ```bash

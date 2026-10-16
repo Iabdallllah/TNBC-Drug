@@ -1,0 +1,13 @@
+agent,drug_id,status,n_rows,n_lines,mean_auc
+SULFASALAZINE,DPC-006173,PRISM-present,9,9,0.983
+SIMVASTATIN,DPC-005959,PRISM-present,22,22,0.949
+LOVASTATIN,DPC-003889,PRISM-present,19,19,0.96
+ERASTIN,DPC-002562,PRISM-present,14,14,0.897
+RSL3,,ABSENT-everywhere-we-have,0,0,-
+ML162,,ABSENT-everywhere-we-have,0,0,-
+ML210,,ABSENT-everywhere-we-have,0,0,-
+FERROSTATIN,,ABSENT-everywhere-we-have,0,0,-
+DEFEROXAMINE,,ABSENT-everywhere-we-have,0,0,-
+ACETYLCYSTEINE,DPC-000296,PRISM-present,17,17,0.994
+SORAFENIB,,ABSENT-everywhere-we-have,0,0,-
+ALTRETAMINE,DPC-000470,PRISM-present,13,13,0.989

@@ -1,0 +1,53 @@
+{
+ "frozen_model": "RandomForest",
+ "outer_folds": 3,
+ "n_panel_rows": 64,
+ "n_lines": 22,
+ "features": 1545,
+ "screen_note": "PRISM-only; covariate constant",
+ "per_model_oof": {
+  "Lasso": {
+   "n": 64,
+   "mae": 0.050985981710255146,
+   "rmse": 0.059516279025758345,
+   "spearman": -0.20172165865893696,
+   "bootstrap_spearman": {
+    "mean": -0.20049812367066808,
+    "lo95": -0.4160418379591916,
+    "hi95": 0.04100127470202909,
+    "n_boot": 1000
+   }
+  },
+  "Ridge": {
+   "n": 64,
+   "mae": 0.053936718963086605,
+   "rmse": 0.061389919082323566,
+   "spearman": -0.129355473076499,
+   "bootstrap_spearman": {
+    "mean": -0.12743242866600943,
+    "lo95": -0.35073634603735787,
+    "hi95": 0.10843886947888129,
+    "n_boot": 1000
+   }
+  },
+  "RandomForest": {
+   "n": 64,
+   "mae": 0.04799215864553674,
+   "rmse": 0.057080312294962375,
+   "spearman": 0.1947217589746305,
+   "bootstrap_spearman": {
+    "mean": 0.18591081331803153,
+    "lo95": -0.06346302800421914,
+    "hi95": 0.42655007583249427,
+    "n_boot": 1000
+   }
+  }
+ },
+ "ceiling": {
+  "RSL3": 0.83,
+  "ML210": 0.7,
+  "ML162": 0.79
+ },
+ "ceiling_flag": "ceiling check OK (below 0.83 max published agreement)",
+ "seed": 42
+}

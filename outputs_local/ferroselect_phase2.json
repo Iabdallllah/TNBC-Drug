@@ -1,0 +1,52 @@
+{
+ "core_genes_used": [
+  "GPX4",
+  "SLC7A11",
+  "GCLC",
+  "GSS",
+  "ACSL4",
+  "LPCAT3",
+  "NFE2L2",
+  "FTH1",
+  "TFRC",
+  "SLC3A2"
+ ],
+ "core_missing": [],
+ "n_background": 2000,
+ "n_rows": 64,
+ "n_lines": 22,
+ "real_labels": {
+  "Lasso": {
+   "rmse": 0.05926337345429955,
+   "spearman": 0.054784974558242834
+  },
+  "Ridge": {
+   "rmse": 0.05976677112116252,
+   "spearman": -0.16153367982831796
+  },
+  "RandomForest": {
+   "rmse": 0.06385591959451807,
+   "spearman": -0.039109603641297785
+  }
+ },
+ "aim0_labels": {
+  "Lasso": {
+   "rmse": 0.13367752710768935,
+   "spearman": 0.8339718287587767
+  },
+  "Ridge": {
+   "rmse": 0.13592845508968524,
+   "spearman": 0.8261427945526417
+  },
+  "RandomForest": {
+   "rmse": 0.21142881708113723,
+   "spearman": 0.6062588392920831
+  }
+ },
+ "inflation_gap": {
+  "Lasso": 0.7791868542005339,
+  "Ridge": 0.9876764743809596,
+  "RandomForest": 0.6453684429333809
+ },
+ "note": "Aim-0 high scores demonstrate inflation, not a bug. Core set = proposal axis (10 genes); full-FerrDb rerun pending tables."
+}

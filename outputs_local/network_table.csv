@@ -1,0 +1,10 @@
+drug,target,pathway,effect,evidence
+sulfasalazine,SLC7A11 (System xc-),cystine/GSH axis,"Type I inducer: starves cystine, GSH falls, GPX4 stalls",proposal [9]; PRISM data present
+erastin,SLC7A11 (System xc-),cystine/GSH axis,Type I reference inducer,"proposal [10,11]; PRISM data present"
+simvastatin,HMGCR,mevalonate -> IPP -> seleno-tRNA -> GPX4 synthesis,Sensitiser (fixed sub-lethal dose): weakens GPX4 supply,proposal [18]; PRISM data present
+lovastatin,HMGCR,mevalonate -> IPP -> seleno-tRNA -> GPX4 synthesis,Sensitiser alternative,PRISM data present
+RSL3,GPX4 (direct),lipid hydroperoxide clearance,Type II reference; droppable if over budget,proposal [3]; ABSENT from our matrices
+ferrostatin-1,lipid radicals,rescue control,Must rescue if death is ferroptosis,required control
+deferoxamine,labile Fe2+,rescue control,Must rescue if death needs iron,required control
+N-acetylcysteine,cysteine,rescue control,"Rescues Type I, not RSL3 (mechanism discriminator)",cheap control
+Z-VAD-FMK,caspases,specificity control,Must NOT rescue (rules out apoptosis),closes the argument
