@@ -251,6 +251,58 @@ def selectivity_chart(df, n_top):
     return fig
 
 
+def rescue_bubble(df):
+    """Bubble chart: killers (x) vs rescue enrichment (y); size = re-expressed
+    proteins, colour = rescue control. The one-glance picture of rescue power."""
+    d = df.copy()
+    d['rescue'] = d['rescue'].replace({'N-ACETYLCYSTEINE': 'NAC', 'DEFEROXAMINE': 'DFO'})
+    d['p_text'] = d['reversal_p'].map(
+        lambda v: '< 1e-16' if not v or v == 0 else f'{v:.1g}')
+    fig = px.scatter(d, x='killer', y='reversal_enrich',
+                     size='reversal_hits', size_max=46,
+                     color='rescue', color_discrete_map={'NAC': '#2f7d32',
+                                                        'DFO': '#1c7ed6'},
+                     hover_name='killer',
+                     hover_data={'reversal_enrich': ':.2f', 'reversal_hits': True,
+                                 'p_text': True, 'rescue': True,
+                                 'signature_source': True, 'killer': False,
+                                 'reversal_p': False},
+                     category_orders={'killer': ['ERASTIN', 'SULFASALAZINE', 'RSL3',
+                                                 'SIMVASTATIN']},
+                     labels={'killer': 'Killer drug', 'rescue': 'Rescue control',
+                             'reversal_enrich': 'Rescue enrichment (x)',
+                             'reversal_hits': 'Re-expressed proteins',
+                             'p_text': 'p (hypergeom)',
+                             'signature_source': 'Killer signature source'})
+    y_hi = float(d['reversal_enrich'].max()) * 1.18 or 1
+    fig.add_hline(y=1, line=dict(dash='dash', color=MUTED, width=1),
+                  annotation_text='1x = no enrichment (no reversal signal)',
+                  annotation_position='bottom right',
+                  annotation_font=dict(color=MUTED, size=10))
+    fig.update_traces(marker=dict(opacity=0.85, line=dict(width=1, color='#ffffff')))
+    fig.update_layout(height=430, margin=dict(t=10, b=40), yaxis=dict(range=[0, y_hi]))
+    return fig
+
+
+def array_priority_bar(df):
+    """Bar chart: the rescue-competent array candidates, split by protein location."""
+    loc = {'membrane': 'Membrane', 'secreted': 'Secreted', 'intracellular': 'Intracellular'}
+    counts = df.drop_duplicates('Gene')['Array-friendly'].value_counts().reindex(
+        ['membrane', 'secreted', 'intracellular']).fillna(0).astype(int)
+    counts.index = counts.index.map(loc)
+    fig = px.bar(x=counts.index, y=counts.values, color=counts.index,
+                 color_discrete_map={'Membrane': '#2f7d32', 'Secreted': '#2f7d32',
+                                     'Intracellular': '#5f6368'},
+                 labels={'x': 'Where the protein sits', 'y': 'Unique proteins',
+                         'color': 'Array-ready'})
+    fig.update_traces(texttemplate='%{y}', textposition='outside',
+                      marker_line_width=0)
+    fig.update_layout(height=380, margin=dict(t=20, b=40), showlegend=False,
+                      yaxis_title='Unique rescue-competent proteins',
+                      xaxis_title='Protein location')
+    return fig
+
+
 # ---------- live model (loaded only on request) ----------
 @st.cache_resource(show_spinner='Loading CatBoost model…')
 def load_live():
@@ -547,6 +599,30 @@ with tab_rank:
             st.caption(f'Showing the {len(core)} rescue-competent candidates; the CSV '
                        f'contains all {len(sl2)} candidates with the array-friendly and '
                        f'statin-core flags.')
+
+            st.subheader('The rescue layer, in pictures')
+            line_sel = st.selectbox('Line', ['MDA-MB-231', 'MDA-MB-468', 'MCF7'],
+                                    key='sel_rev_line')
+            code_sel = {'MDA-MB-231': 'ACH-000768', 'MDA-MB-468': 'ACH-000849',
+                        'MCF7': 'ACH-000019'}[line_sel]
+
+            st.write('**Rescue power at a glance** — how strongly each rescue control '
+                     're-expresses the proteins each killer suppresses on the chosen '
+                     'line. Bubble size = re-expressed proteins; colour = rescue drug.')
+            rev = load('offtarget_rescue_reversal.csv')
+            rev = rev[(rev['killer'] != 'LOVASTATIN') & (rev['line'] == code_sel)]
+            st.plotly_chart(rescue_bubble(rev), use_container_width=True,
+                            config={'displaylogo': False})
+            st.caption('RSL3 comes from the GSE247883 single-paper signature, so it is '
+                       'plotted on MDA-MB-231 only. DFO does not reverse RSL3 '
+                       '(p = 0.41, not significant) — exactly the mechanism split the '
+                       'wet lab should see. Exact p values: table above.')
+
+            st.write('**Where the array candidates sit** — the rescue-competent proteins, '
+                     'split by location. Membrane and secreted proteins go straight on '
+                     'the array; intracellular ones need cell lysis.')
+            st.plotly_chart(array_priority_bar(core), use_container_width=True,
+                            config={'displaylogo': False})
 
     else:
         df = rank_full if view == 'Full ranking' else top20
