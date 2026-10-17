@@ -24,11 +24,15 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 OUT = os.path.join(ROOT, 'outputs_local')
 CACHE_DIR = os.environ.get('TNBC_CACHE', '/tmp/opencode')
 MDA231 = 'ACH-000768'
-STATIN = 'SIMVASTATIN'          # the panel statin (lovastatin run separately)
+STATIN = 'SIMVASTATIN'          # the sealed prediction's nominated statin pairing
 
+# the wet-lab panel EXACTLY as the lab defined it: 5 singles (statin exists only
+# inside combos) + 3 killer x statin combos
+SINGLES = ['ERASTIN', 'SULFASALAZINE', 'RSL3', 'N-ACETYLCYSTEINE', 'DEFEROXAMINE']
 COMBOS = [('ERASTIN+' + STATIN, 'ERASTIN', STATIN),
           ('SULFASALAZINE+' + STATIN, 'SULFASALAZINE', STATIN),
           ('RSL3+' + STATIN, 'RSL3', STATIN)]
+PANEL = SINGLES + [c[0] for c in COMBOS]
 
 
 def log(m):
@@ -109,8 +113,14 @@ def main():
     down_sets = {
         'ERASTIN': resolve(sigs, 'ERASTIN', ['ERASTIN'])['Down'] & e231,
         'SULFASALAZINE': resolve(sigs, 'SULFASALAZINE', ['SULFASALAZINE'])['Down'] & e231,
-        STATIN: resolve(sigs, STATIN, [STATIN])['Down'] & e231,
+        STATIN: resolve(sigs, STATIN, [STATIN])['Down'] & e231,   # combo partner only
         'RSL3': set(rsl3_df.loc[rsl3_df.rsl3_set == 'Down', 'gene']) & e231,
+        'N-ACETYLCYSTEINE': resolve(sigs, 'N-ACETYLCYSTEINE',
+                                    ['N-ACETYLCYSTEINE', 'N-ACETYL-L-CYSTEINE',
+                                     'NAC'])['Down'] & e231,
+        'DEFEROXAMINE': resolve(sigs, 'DEFEROXAMINE',
+                                ['DEFEROXAMINE', 'DESFERIOXAMINE',
+                                 'DEFERIOXAMINE'])['Down'] & e231,
     }
 
     # rescue-reversal overlaps (genes NAC/DFO restore) from the reversal table
@@ -125,7 +135,8 @@ def main():
         down_sets[label] = down_sets[k1] | down_sets[k2]
 
     rows = []
-    for drug, down in down_sets.items():
+    for drug in PANEL:
+        down = down_sets[drug]
         loc = uniprot_localization(sorted(down), 'uniprot_shortlist.json')
         for g in sorted(down):
             rows.append({

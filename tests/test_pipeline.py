@@ -205,11 +205,13 @@ def test_offtarget_layer_covers_full_wetlab_panel():
         nac_p = sub[sub['rescue'] == 'N-ACETYLCYSTEINE']['reversal_p'].min()
         assert nac_p < 0.01, f'{killer}: NAC reversal not significant (p={nac_p})'
     short = pd.read_csv(os.path.join(OUT, 'protein_array_shortlist.csv'))
-    singles = {'ERASTIN', 'SULFASALAZINE', 'SIMVASTATIN', 'RSL3'}
+    singles = {'ERASTIN', 'SULFASALAZINE', 'RSL3',
+               'N-ACETYLCYSTEINE', 'DEFEROXAMINE'}
     combos = {'ERASTIN+SIMVASTATIN', 'SULFASALAZINE+SIMVASTATIN', 'RSL3+SIMVASTATIN'}
-    assert set(short['drug'].unique()) == singles | combos
+    assert set(short['drug'].unique()) == singles | combos, \
+        'shortlist must match the wet-lab panel exactly (8 members, statin only in combos)'
     assert short['gene'].notna().all()
-    assert short['drug'].nunique() == 7
+    assert short['drug'].nunique() == 8
 
 
 if __name__ == '__main__':
