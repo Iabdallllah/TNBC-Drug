@@ -33,7 +33,9 @@ st.markdown("""
 <style>
 .block-container{padding-top:1.6rem;padding-bottom:2rem;}
 [data-testid="stMetricValue"]{font-size:1.9rem;}
-[data-testid="stMetricLabel"]{font-size:.85rem;}
+[data-testid="stMetric"]{padding-top:.3rem;}
+[data-testid="stMetricLabel"]{font-size:.85rem;padding-top:.3rem;line-height:1.35;}
+[data-testid="stMetricLabel"] p{margin-bottom:0;}
 .stTabs [data-baseweb="tab"]{padding:.45rem .9rem;font-size:.95rem;}
 div[data-testid="stDownloadButton"] button{width:100%;}
 </style>
@@ -49,14 +51,28 @@ if missing:
 
 
 @st.cache_data
-def load(name):
+def _load(name, stamp):
+    del stamp                      # mtime bump invalidates the cache when files change
     return pd.read_csv(os.path.join(DATA, name))
 
 
+def load(name):
+    """Read a CSV from outputs_local; cache key includes the file mtime so a
+    regenerated file is picked up on the next rerun (stale-cache killer)."""
+    path = os.path.join(DATA, name)
+    return _load(name, os.path.getmtime(path))
+
+
 @st.cache_data
-def load_json(name):
+def _load_json(name, stamp):
+    del stamp
     with open(os.path.join(DATA, name)) as f:
         return json.load(f)
+
+
+def load_json(name):
+    path = os.path.join(DATA, name)
+    return _load_json(name, os.path.getmtime(path))
 
 
 @st.cache_data
@@ -268,11 +284,20 @@ def live_tab():
     line_ids = sorted(pca_live['ModelID'].unique().tolist())
     drug_ids = sorted(rank_full['drug_id'].astype(str).unique().tolist())
     name_of = dict(zip(rank_full['drug_id'].astype(str), rank_full['drug_name']))
+    ann_path = os.path.join(DATA, 'breast_lines_annotated.csv')
+    if os.path.exists(ann_path):
+        ann = load('breast_lines_annotated.csv')
+        cell_name = dict(zip(ann['ModelID'], ann['StrippedCellLineName']))
+    else:
+        cell_name = {}
+    pretty_lines = {'ACH-000768': 'MDA-MB-231', 'ACH-000049': 'MCF7',
+                    'ACH-000390': 'MDA-MB-468'}
 
     with st.form('live_form'):
         c1, c2 = st.columns(2)
         sel_line = c1.selectbox(
-            'Cell line (ModelID)', line_ids,
+            'Cell line', line_ids,
+            format_func=lambda mid: f"{pretty_lines.get(mid) or cell_name.get(mid, mid)} ({mid})",
             index=line_ids.index(DEFAULT_LINE) if DEFAULT_LINE in line_ids else 0)
         sel_drug = c2.selectbox('Drug', drug_ids,
                                 format_func=lambda d: f'{name_of.get(d, d)} ({d})')
@@ -394,23 +419,25 @@ with tab_rank:
         sl.insert(0, 'role', roles)
         st.caption('Roles: AI candidate = model-nominated; Positive control = known killer '
                    'that validates the assay; Predicted resistant = negative control that should survive.')
-        left, right = st.columns([4, 1])
-        with left:
-            rank_table(sl[['role', 'drug_name', 'pred_AUC_MDA231', 'pred_AUC_MCF7',
-                           'selectivity_delta', 'sensitive_call', 'selective_call']])
-        with right:
+        dl_c, _ = st.columns([1, 3])
+        with dl_c:
             st.download_button('Download CSV', to_csv(sl), 'wetlab_shortlist.csv',
                                'text/csv', key='dl_sl')
+        rank_table(sl[['role', 'drug_name', 'pred_AUC_MDA231', 'pred_AUC_MCF7',
+                       'selectivity_delta', 'sensitive_call', 'selective_call']])
         st.subheader('Starting dose brackets (proposal §6.4 — narrow them in pilot)')
         st.caption('Vehicle capped at 0.1% DMSO; every plate carries a vehicle-matched control.')
         st.dataframe(pd.DataFrame([
-            ['Sulfasalazine', 'Type I inducer (workhorse)', '50–1000 µM, 8 points', 'Cheap generic'],
-            ['Erastin', 'Type I reference', '0.1–20 µM (published IC50 ~2.2)', 'Research-grade import'],
-            ['RSL3', 'Type II, extra only', '0.01–5 µM, MDA-MB-231 only', 'Droppable if over budget'],
-            ['Simvastatin', 'Sensitiser (fixed dose)', 'Sub-lethal ~IC20, set in pilot', 'Cheap generic'],
+            ['Sulfasalazine', 'Single - Type I inducer (workhorse)', '50–1000 µM, 8 points', 'Cheap generic'],
+            ['Erastin', 'Single - Type I reference', '0.1–20 µM (published IC50 ~2.2)', 'Research-grade import'],
+            ['RSL3', 'Single - Type II killer (GPX4)', '0.01–5 µM, MDA-MB-231 only', 'Lab-only - no PRISM data; see panel table'],
+            ['Erastin + Simvastatin', 'Combo', 'Erastin dose-response × statin ~IC20', 'Bliss-predicted pair'],
+            ['Sulfasalazine + Simvastatin', 'Combo (sealed nomination)', 'Sulfasalazine dose-response × statin ~IC20', 'Top sealed prediction'],
+            ['RSL3 + Simvastatin', 'Combo', 'RSL3 low-dose × statin ~IC20', 'Lab-only - no PRISM data'],
+            ['Simvastatin', 'Sensitiser inside the combos only', 'Sub-lethal ~IC20, set in pilot', 'Cheap generic; never a single agent'],
             ['Ferrostatin-1', 'Rescue control', '1–2 µM alongside', 'Must rescue if ferroptosis'],
-            ['Deferoxamine', 'Rescue control', '50–100 µM alongside', 'Death needed iron?'],
-            ['NAC', 'Rescue control', '1–5 mM alongside', 'Rescues Type I, not RSL3'],
+            ['Deferoxamine (DFO)', 'Rescue control', '50–100 µM alongside', 'Death needed iron? Reverses 4/5 killers'],
+            ['N-acetylcysteine (NAC)', 'Rescue control', '1–5 mM alongside', 'Rescues Type I, not RSL3'],
             ['Z-VAD-FMK', 'Specificity control', '20–50 µM alongside', 'Must NOT rescue'],
         ], columns=['Agent', 'Role in the assay', 'Starting range', 'Note']),
             hide_index=True, use_container_width=True)
@@ -419,25 +446,94 @@ with tab_rank:
         st.caption('Proposal-faithful predictions (Lasso/Ridge/RF, nested cell-line CV) for '
                    'the inducer panel on the three proposal lines. LOW confidence = fewer '
                    'than 25 training rows; a hypothesis for the lab, not evidence.')
-        if not os.path.exists(os.path.join(DATA, 'ferroselect_panel_predictions.csv')):
-            st.info('FerroSelect predictions are not in this deployment yet.')
-        else:
-            fpred = pretty(load('ferroselect_panel_predictions.csv'))
-            left, right = st.columns([4, 1])
-            with left:
-                st.dataframe(fpred, hide_index=True, use_container_width=True)
-            with right:
+
+        st.subheader('The wet-lab panel (8 members)')
+        panel = pd.DataFrame([
+            ['ERASTIN', 'Single - killer (Type I, system xc-)',
+             'PRISM AUC + L1000 signature'],
+            ['SULFASALAZINE', 'Single - killer (Type I)',
+             'PRISM AUC + L1000 signature'],
+            ['RSL3', 'Single - killer (Type II, GPX4)',
+             'GSE247883 single-paper signature; NOT in PRISM/L1000 (lab-only)'],
+            ['N-ACETYLCYSTEINE (NAC)', 'Single - rescue control',
+             'L1000 signature (reversal control)'],
+            ['DEFEROXAMINE (DFO)', 'Single - rescue control',
+             'L1000 signature (reversal control)'],
+            ['ERASTIN + SIMVASTATIN', 'Combo',
+             'PRISM E_AB + L1000 signatures'],
+            ['SULFASALAZINE + SIMVASTATIN', 'Combo - sealed nomination',
+             'PRISM E_AB + L1000 signatures'],
+            ['RSL3 + SIMVASTATIN', 'Combo',
+             'Lab-only (the RSL3 side has no PRISM/L1000 data)'],
+        ], columns=['Panel member', 'Role', 'Data status'])
+        st.dataframe(panel, hide_index=True, use_container_width=True)
+        st.caption('The 8 members agreed with the lab. The predictions table below covers '
+                   'only the members PRISM has AUC data for; the RSL3 rows are tracked '
+                   'through the GSE247883 single-paper signature instead.')
+
+        if os.path.exists(os.path.join(DATA, 'ferroselect_panel_predictions.csv')):
+            fpred = load('ferroselect_panel_predictions.csv')
+            if 'pred_auc' in fpred.columns:
+                fpred['pred_auc'] = fpred['pred_auc'].astype(float).round(3)
+            if 'confidence' in fpred.columns:
+                fpred['confidence'] = fpred['confidence'].astype(str).map(
+                    lambda v: 'LOW (<25 rows)' if v.strip().upper().startswith('LOW') else v)
+            dl_c, _ = st.columns([1, 3])
+            with dl_c:
                 st.download_button('Download CSV', to_csv(fpred),
                                    'ferroselect_panel_predictions.csv', 'text/csv', key='dl_fs')
-            fres = load_json('ferroselect_results.json')
-            fbest = fres['per_model_oof'][fres['frozen_model']]
-            c1, c2, c3 = st.columns(3)
-            c1.metric('Frozen model', fres['frozen_model'], help='Proposal-mandated algorithm.')
-            c2.metric('Pooled OOF Spearman', f"{fbest['spearman']:.3f}",
-                      help='Honest performance on unseen lines. Wide data, small panel.')
-            c3.metric('Ceiling check', 'PASS' if 'OK' in fres['ceiling_flag'] else 'REVIEW',
-                      help='Above published lab-vs-CTRP agreement (~0.83) would mean leakage.')
-            st.caption(fres['ceiling_flag'])
+            st.dataframe(fpred, hide_index=True, use_container_width=True)
+            st.caption('RSL3 has no row in the predictions table by design - PRISM has no '
+                       'RSL3 data; the panel table above and the signature tables below '
+                       'track it instead. LOVASTATIN appears because PRISM has data for '
+                       'it - it is the statin alternative, not one of the 8 members; the '
+                       'sealed nomination is SIMVASTATIN.')
+        else:
+            st.info('FerroSelect predictions are not in this deployment yet.')
+
+        rescue_path = os.path.join(DATA, 'offtarget_rescue_reversal.csv')
+        shortlist_path = os.path.join(DATA, 'protein_array_shortlist.csv')
+        if os.path.exists(rescue_path):
+            st.subheader('In-silico rescue reversal (protein level)')
+            st.caption('Do the rescue controls re-express the proteins each killer '
+                       'suppresses? Hypergeometric test on the expressed-protein overlap.')
+            res = load('offtarget_rescue_reversal.csv')
+            res = res.rename(columns={'line': 'Line', 'killer': 'Killer',
+                                      'rescue': 'Rescue drug',
+                                      'killer_down_genes': 'Proteins suppressed',
+                                      'rescue_up_genes': 'Rescue up-regulates',
+                                      'reversal_hits': 'Re-expressed',
+                                      'reversal_p': 'p (hypergeom)',
+                                      'reversal_enrich': 'Enrichment x',
+                                      'genes': 'Shared genes',
+                                      'signature_source': 'Signature source'})
+            res['p (hypergeom)'] = res['p (hypergeom)'].map(lambda v: f'{v:.2g}')
+            res['Enrichment x'] = res['Enrichment x'].astype(float).round(2)
+            dl_c, _ = st.columns([1, 3])
+            with dl_c:
+                st.download_button('Download CSV', to_csv(res),
+                                   'offtarget_rescue_reversal.csv', 'text/csv', key='dl_res')
+            st.dataframe(res, hide_index=True, use_container_width=True)
+        else:
+            st.info('Rescue-reversal table not in this deployment '
+                    '(run src/models/offtarget_panel.py + rsl3_signature.py).')
+        if os.path.exists(shortlist_path):
+            st.subheader('Protein-array shortlist')
+            st.caption('Candidates to print on the wet-lab protein array: rescue-competent '
+                       'first (they re-express under rescue controls), then '
+                       'membrane/secreted proteins that are easy to assay.')
+            sl2 = load('protein_array_shortlist.csv').rename(columns={
+                'drug': 'Drug', 'gene': 'Gene', 'in_rescue_reversal': 'Rescue-competent',
+                'array_friendly': 'Array-friendly', 'in_statin_core': 'In statin core set'})
+            core = sl2[sl2['Rescue-competent'].astype(str).isin(['1', '1.0', 'True'])]
+            dl_c, _ = st.columns([1, 3])
+            with dl_c:
+                st.download_button('Download CSV', to_csv(sl2), 'protein_array_shortlist.csv',
+                                   'text/csv', key='dl_short')
+            st.dataframe(core, hide_index=True, use_container_width=True)
+            st.caption(f'Showing the {len(core)} rescue-competent candidates; the CSV '
+                       f'contains all {len(sl2)} candidates with the array-friendly and '
+                       f'statin-core flags.')
 
     else:
         df = rank_full if view == 'Full ranking' else top20
@@ -447,12 +543,12 @@ with tab_rank:
         hits = df[df['drug_name'].str.contains(query, case=False, na=False, regex=False)] if query else df.head(n_k)
         if query:
             st.caption(f'{len(hits)} match(es) for "{query}"')
-        left, right = st.columns([4, 1])
-        with left:
-            rank_table(hits[RANK_COLS])
-        with right:
-            st.download_button('Download CSV', to_csv(top20),
-                               'mda_mb_231_top20_killers.csv', 'text/csv', key='dl_top')
+        dl_c, _ = st.columns([1, 3])
+        with dl_c:
+            st.download_button('Download CSV', to_csv(df),
+                               'mda_mb_231_full_ranking.csv' if view == 'Full ranking'
+                               else 'mda_mb_231_top20_killers.csv', 'text/csv', key='dl_top')
+        rank_table(hits[RANK_COLS])
         st.subheader(f'Predicted AUC of the top {min(n_k, len(hits))} (lower is stronger)')
         st.plotly_chart(bar_chart(hits[RANK_COLS]), use_container_width=True,
                         config={'displaylogo': False})
@@ -517,6 +613,22 @@ with tab_model:
             st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
         else:
             st.info('Run `python src/models/ferroselect_phase2.py` to generate.')
+
+    if os.path.exists(os.path.join(DATA, 'ferroselect_results.json')):
+        fres = load_json('ferroselect_results.json')
+        fbest = fres['per_model_oof'][fres['frozen_model']]
+        st.subheader('FerroSelect frozen model (proposal-mandated, sealed pre-lab)')
+        f1, f2, f3 = st.columns(3)
+        f1.metric('Frozen model', fres['frozen_model'], help='Proposal-mandated algorithm.')
+        f2.metric('Pooled OOF Spearman', f"{fbest['spearman']:.3f}",
+                  help='Honest performance on unseen lines. Wide data, small panel.')
+        f3.metric('Ceiling check', 'PASS' if 'OK' in fres['ceiling_flag'] else 'REVIEW',
+                  help='Above published lab-vs-CTRP agreement (~0.83) would mean leakage.')
+        st.caption(f"What to do with this: the model was frozen and sealed before the first "
+                   f"plate; {fbest['spearman']:.2f} is honestly low because the panel agents "
+                   f"have 9-22 training rows each - so every prediction is a pre-registered "
+                   f"hypothesis, the ceiling check rules out leakage, and the lab decides. "
+                   f"{fres['ceiling_flag']}")
 
     st.subheader('Training-data support per agent')
     audit_path = os.path.join(DATA, 'ferroptosis_sample_audit.csv')
