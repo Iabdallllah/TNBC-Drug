@@ -1,0 +1,58 @@
+[
+  {
+    "panel_drug": "ERASTIN",
+    "l1000_term": "Erastin Down",
+    "l1000_sig_genes": 244,
+    "chembl_id": "CHEMBL401989",
+    "chembl_max_phase": null,
+    "chembl_mechanisms": ""
+  },
+  {
+    "panel_drug": "RSL3",
+    "l1000_term": "",
+    "l1000_sig_genes": null,
+    "chembl_id": "",
+    "chembl_max_phase": null,
+    "chembl_mechanisms": ""
+  },
+  {
+    "panel_drug": "SULFASALAZINE",
+    "l1000_term": "Sulfasalazine Down",
+    "l1000_sig_genes": 244,
+    "chembl_id": "CHEMBL421",
+    "chembl_max_phase": "4.0",
+    "chembl_mechanisms": "Arachidonate 5-lipoxygenase inhibitor; Cyclooxygenase inhibitor"
+  },
+  {
+    "panel_drug": "N-ACETYLCYSTEINE",
+    "l1000_term": "Solifenacin-Succinate Down",
+    "l1000_sig_genes": 245,
+    "chembl_id": "",
+    "chembl_max_phase": null,
+    "chembl_mechanisms": ""
+  },
+  {
+    "panel_drug": "DEFEROXAMINE",
+    "l1000_term": "Deferoxamine-Mesylate Down",
+    "l1000_sig_genes": 245,
+    "chembl_id": "CHEMBL1234",
+    "chembl_max_phase": "4.0",
+    "chembl_mechanisms": "Iron chelating agent"
+  },
+  {
+    "panel_drug": "SIMVASTATIN",
+    "l1000_term": "Simvastatin Down",
+    "l1000_sig_genes": 244,
+    "chembl_id": "CHEMBL1064",
+    "chembl_max_phase": "4.0",
+    "chembl_mechanisms": "HMG-CoA reductase inhibitor"
+  },
+  {
+    "panel_drug": "LOVASTATIN",
+    "l1000_term": "Lovastatin Down",
+    "l1000_sig_genes": 247,
+    "chembl_id": "CHEMBL1201373",
+    "chembl_max_phase": "-1.0",
+    "chembl_mechanisms": ""
+  }
+]

@@ -1,0 +1,202 @@
+[
+  {
+    "drug_id": "DPC-006658",
+    "drug_name": "TRIPTOLIDE",
+    "rank": 1,
+    "l1000_term": "Triptolide Down",
+    "l1000_sig_genes": 249,
+    "chembl_id": "CHEMBL463763",
+    "chembl_max_phase": "3.0",
+    "chembl_mechanisms": ""
+  },
+  {
+    "drug_id": "DPC-002321",
+    "drug_name": "DOLASTATIN-10",
+    "rank": 2,
+    "l1000_term": "Dolastatin-10 Down",
+    "l1000_sig_genes": 246,
+    "chembl_id": "CHEMBL39541",
+    "chembl_max_phase": "2.0",
+    "chembl_mechanisms": "Tubulin inhibitor"
+  },
+  {
+    "drug_id": "DPC-005646",
+    "drug_name": "ROMIDEPSIN",
+    "rank": 3,
+    "l1000_term": "Romidepsin Down",
+    "l1000_sig_genes": 248,
+    "chembl_id": "CHEMBL343448",
+    "chembl_max_phase": "4.0",
+    "chembl_mechanisms": "Histone deacetylase inhibitor"
+  },
+  {
+    "drug_id": "DPC-002407",
+    "drug_name": "ECHINOMYCIN",
+    "rank": 4,
+    "l1000_term": "",
+    "l1000_sig_genes": null,
+    "chembl_id": "CHEMBL510650",
+    "chembl_max_phase": null,
+    "chembl_mechanisms": ""
+  },
+  {
+    "drug_id": "DPC-002682",
+    "drug_name": "EXATECAN-MESYLATE",
+    "rank": 5,
+    "l1000_term": "",
+    "l1000_sig_genes": null,
+    "chembl_id": "CHEMBL3989759",
+    "chembl_max_phase": "3.0",
+    "chembl_mechanisms": ""
+  },
+  {
+    "drug_id": "DPC-004020",
+    "drug_name": "MAYTANSINOL-ISOBUTYRATE",
+    "rank": 6,
+    "l1000_term": "",
+    "l1000_sig_genes": null,
+    "chembl_id": "",
+    "chembl_max_phase": null,
+    "chembl_mechanisms": ""
+  },
+  {
+    "drug_id": "DPC-005826",
+    "drug_name": "SB-743921",
+    "rank": 7,
+    "l1000_term": "SB-743921 Down",
+    "l1000_sig_genes": 248,
+    "chembl_id": "CHEMBL2325429",
+    "chembl_max_phase": "1.0",
+    "chembl_mechanisms": ""
+  },
+  {
+    "drug_id": "DPC-006002",
+    "drug_name": "SN38",
+    "rank": 8,
+    "l1000_term": "SN-38 Down",
+    "l1000_sig_genes": 248,
+    "chembl_id": "",
+    "chembl_max_phase": null,
+    "chembl_mechanisms": ""
+  },
+  {
+    "drug_id": "DPC-002977",
+    "drug_name": "GEMCITABINE",
+    "rank": 9,
+    "l1000_term": "Gemcitabine Down",
+    "l1000_sig_genes": 239,
+    "chembl_id": "CHEMBL3039516",
+    "chembl_max_phase": "2.0",
+    "chembl_mechanisms": ""
+  },
+  {
+    "drug_id": "DPC-002542",
+    "drug_name": "EPOTHILONE-B",
+    "rank": 10,
+    "l1000_term": "Epothilone-B Down",
+    "l1000_sig_genes": 247,
+    "chembl_id": "",
+    "chembl_max_phase": null,
+    "chembl_mechanisms": ""
+  },
+  {
+    "drug_id": "DPC-002543",
+    "drug_name": "EPOTHILONE-D",
+    "rank": 11,
+    "l1000_term": "Epothilone Down",
+    "l1000_sig_genes": 246,
+    "chembl_id": "CHEMBL96172",
+    "chembl_max_phase": "2.0",
+    "chembl_mechanisms": "Tubulin stabiliser"
+  },
+  {
+    "drug_id": "DPC-000025",
+    "drug_name": "10-HYDROXYCAMPTOTHECIN",
+    "rank": 12,
+    "l1000_term": "Camptothecin Down",
+    "l1000_sig_genes": 247,
+    "chembl_id": "",
+    "chembl_max_phase": null,
+    "chembl_mechanisms": ""
+  },
+  {
+    "drug_id": "DPC-005918",
+    "drug_name": "SEPANTRONIUM BROMIDE",
+    "rank": 13,
+    "l1000_term": "",
+    "l1000_sig_genes": null,
+    "chembl_id": "CHEMBL2105734",
+    "chembl_max_phase": "2.0",
+    "chembl_mechanisms": ""
+  },
+  {
+    "drug_id": "DPC-000001",
+    "drug_name": "(+)-CAMPTOTHECIN",
+    "rank": 14,
+    "l1000_term": "Camptothecin Down",
+    "l1000_sig_genes": 247,
+    "chembl_id": "CHEMBL65",
+    "chembl_max_phase": "-1.0",
+    "chembl_mechanisms": ""
+  },
+  {
+    "drug_id": "DPC-002990",
+    "drug_name": "GENZ-644282",
+    "rank": 15,
+    "l1000_term": "Genz-644282 Down",
+    "l1000_sig_genes": 245,
+    "chembl_id": "CHEMBL191958",
+    "chembl_max_phase": "1.0",
+    "chembl_mechanisms": ""
+  },
+  {
+    "drug_id": "DPC-001425",
+    "drug_name": "CABAZITAXEL",
+    "rank": 16,
+    "l1000_term": "Cabazitaxel Down",
+    "l1000_sig_genes": 247,
+    "chembl_id": "CHEMBL1201748",
+    "chembl_max_phase": "4.0",
+    "chembl_mechanisms": "Tubulin inhibitor"
+  },
+  {
+    "drug_id": "DPC-001489",
+    "drug_name": "CARFILZOMIB",
+    "rank": 17,
+    "l1000_term": "Carfilzomib Down",
+    "l1000_sig_genes": 244,
+    "chembl_id": "CHEMBL451887",
+    "chembl_max_phase": "4.0",
+    "chembl_mechanisms": "26S proteasome inhibitor"
+  },
+  {
+    "drug_id": "DPC-004752",
+    "drug_name": "OLIGOMYCIN-A",
+    "rank": 18,
+    "l1000_term": "Oligomycin-A Down",
+    "l1000_sig_genes": 244,
+    "chembl_id": "CHEMBL1256136",
+    "chembl_max_phase": null,
+    "chembl_mechanisms": ""
+  },
+  {
+    "drug_id": "DPC-004517",
+    "drug_name": "NEMORUBICIN",
+    "rank": 19,
+    "l1000_term": "",
+    "l1000_sig_genes": null,
+    "chembl_id": "CHEMBL1232279",
+    "chembl_max_phase": "2.0",
+    "chembl_mechanisms": ""
+  },
+  {
+    "drug_id": "DPC-001050",
+    "drug_name": "BEZ235",
+    "rank": 20,
+    "l1000_term": "NVP-BEZ235 Down",
+    "l1000_sig_genes": 241,
+    "chembl_id": "",
+    "chembl_max_phase": null,
+    "chembl_mechanisms": ""
+  }
+]

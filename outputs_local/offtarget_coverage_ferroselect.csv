@@ -1,0 +1,8 @@
+panel_drug,l1000_term,l1000_sig_genes,chembl_id,chembl_max_phase,chembl_mechanisms
+ERASTIN,Erastin Down,244.0,CHEMBL401989,,
+RSL3,,,,,
+SULFASALAZINE,Sulfasalazine Down,244.0,CHEMBL421,4.0,Arachidonate 5-lipoxygenase inhibitor; Cyclooxygenase inhibitor
+N-ACETYLCYSTEINE,Solifenacin-Succinate Down,245.0,,,
+DEFEROXAMINE,Deferoxamine-Mesylate Down,245.0,CHEMBL1234,4.0,Iron chelating agent
+SIMVASTATIN,Simvastatin Down,244.0,CHEMBL1064,4.0,HMG-CoA reductase inhibitor
+LOVASTATIN,Lovastatin Down,247.0,CHEMBL1201373,-1.0,

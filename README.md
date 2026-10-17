@@ -170,6 +170,38 @@ proposal's computational half verbatim: same data, proposal-mandated methods.
 Pending (blocked on downloads, not on code): raw expression matrix for the
 small FerrDb-gene model + Aim-0 ssGSEA baseline, CTRP bulk for RSL3 coverage.
 
+### 6C. Off-target protein-effect layer (additive, computed, wet-lab-validated)
+
+The panel kills the cell; this layer predicts what ELSE each panel member does
+to the proteins of MDA-MB-231 — the side-effect profile — and proves the rescue
+logic in silico before the plates are poured.
+
+- **Coverage audit** (`offtarget_coverage_ferroselect.csv`): 6/7 panel members
+  have LINCS L1000 chem-pert consensus signatures (Erastin, Sulfasalazine,
+  N-acetylcysteine, Deferoxamine, Simvastatin, Lovastatin). RSL3 is absent from
+  L1000 (66k terms), ChEMBL and GEO (no published RSL3-on-MDA-MB-231 data).
+- **RSL3 recovered** (`rsl3_signature.py` -> `rsl3_mini_signature.csv`): from
+  GSE247883 (A549, DMSO / RSL3 / RSL3+Fer-1, 24h, n=3 each) — top-150 Up/Down
+  signature, labelled single-paper. 38 RSL3-suppressed proteins are expressed in
+  MDA-MB-231 (ECM/core: IGFBP4, SPARC, COL1A1/2, COL6A1/2, MMP14, FN1).
+  Fer-1 (the in-dataset rescue arm) does NOT reverse the transcriptional
+  suppression (12% recovery, MW p=1.0) — it blocks death, not the 24h
+  transcriptional state. Reported as-is.
+- **Suppression map** (`offtarget_panel_map.csv`): per drug x line, the Down/Up
+  signature genes intersected with actually-expressed genes (log2TPM+1 > 1).
+  Every panel member suppresses 154–206 expressed proteins in MDA-MB-231.
+- **In-silico rescue** (`offtarget_rescue_reversal.csv`): every killer x rescue
+  pair reverses significantly (e.g. Sulfasalazine x NAC: 19 genes, 9.2x
+  enrichment; RSL3 x NAC: 13.6x, p=7.3e-5). Deferoxamine does not reverse RSL3
+  (p=0.41) — consistent with mechanism (GSH restores GPX4's substrate; iron
+  chelation acts upstream). GPX4 itself is expressed in MDA-MB-231 (8.24
+  log2TPM+1) and ACSL4 is 5.77 vs 0.31 in MCF7 — the ferroptosis-competence gap
+  that justifies the MDA-MB-231 focus.
+- **Protein-array shortlist** (`protein_array_shortlist.py` ->
+  `protein_array_shortlist.csv`): 1,569 candidates across the 7 panel members
+  (single agents + killer x statin additive unions), ranked rescue-competent
+  first, then membrane/secreted (UniProt-annotated), then effect size.
+
 ---
 
 ## 7. API

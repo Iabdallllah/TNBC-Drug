@@ -1,0 +1,14 @@
+{
+  "source": "GSE247883 (A549, DMSO/RSL3/RSL3+Fer-1, 24h, n=3 each)",
+  "quality_note": "single paper, one cell line, one dose - weaker than the L1000 consensus signatures; clearly labelled in all outputs",
+  "n_down": 150,
+  "n_up": 150,
+  "n_down_expressed_mda231": 38,
+  "fer1_reversal": {
+    "recovery_median_lfc_in_down_set": -0.36,
+    "genome_median_lfc": 0.0,
+    "fraction_recovered": 0.12,
+    "mannwhitney_p": 1.0
+  },
+  "target_check": "GPX4 expressed in MDA-MB-231 (log2TPM+1=8.24) - the mechanism RSL3 inhibits is present in the target cell"
+}

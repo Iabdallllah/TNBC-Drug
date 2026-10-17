@@ -191,6 +191,27 @@ def test_selectivity_rule_is_relative_not_the_dead_fixed_cutoff():
     assert (sel['pred_AUC_MDA231'] < rule['selective_auc_max']).all()
 
 
+def test_offtarget_layer_covers_full_wetlab_panel():
+    """Every panel killer needs a computable rescue-reversal page, incl. RSL3."""
+    rv = pd.read_csv(os.path.join(OUT, 'offtarget_rescue_reversal.csv'))
+    killers = {'ERASTIN', 'SULFASALAZINE', 'SIMVASTATIN', 'LOVASTATIN', 'RSL3'}
+    for killer in killers:
+        sub = rv[rv['killer'] == killer]
+        assert len(sub) > 0, f'{killer} missing from the rescue-reversal table'
+        if killer == 'RSL3':
+            src = json.load(open(os.path.join(OUT, 'rsl3_mini_signature_meta.json')))
+            assert 'single paper' in src['quality_note'], \
+                'RSL3 signature must stay labelled as single-paper'
+        nac_p = sub[sub['rescue'] == 'N-ACETYLCYSTEINE']['reversal_p'].min()
+        assert nac_p < 0.01, f'{killer}: NAC reversal not significant (p={nac_p})'
+    short = pd.read_csv(os.path.join(OUT, 'protein_array_shortlist.csv'))
+    singles = {'ERASTIN', 'SULFASALAZINE', 'SIMVASTATIN', 'RSL3'}
+    combos = {'ERASTIN+SIMVASTATIN', 'SULFASALAZINE+SIMVASTATIN', 'RSL3+SIMVASTATIN'}
+    assert set(short['drug'].unique()) == singles | combos
+    assert short['gene'].notna().all()
+    assert short['drug'].nunique() == 7
+
+
 if __name__ == '__main__':
     fns = [(k, v) for k, v in sorted(globals().items())
            if k.startswith('test_') and callable(v)]
