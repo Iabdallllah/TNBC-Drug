@@ -153,6 +153,36 @@ def test_verdict_labels_are_short_and_unique():
     assert calls <= {'SENSITIVE (AUC<0.3)', 'resistant/intermediate'}, calls
 
 
+def test_pca_loadings_are_verified_before_being_published():
+    """Gene annotations may only ship if the refit reproduces the shipped PCA scores."""
+    loadings = os.path.join(OUT, 'pca_loadings_top.csv')
+    if not os.path.exists(loadings):
+        print('  (no PCA loadings published - provenance gap, '
+              'see outputs_local/pca_loadings_status.json)')
+        return
+    meta = json.load(open(os.path.join(OUT, 'pca_loadings_meta.json')))
+    assert meta['verified_correlation_vs_shipped'] > 0.999, \
+        'published loadings do not reproduce the shipped PCA scores'
+    assert meta['verified_max_abs_diff_vs_shipped'] < 1e-3, \
+        'published loadings do not match the shipped PCA scores'
+    df = pd.read_csv(loadings)
+    assert len(df) == meta['n_components']
+    assert df['label'].str.match(r'^pca_\d+ \(.+, .+, .+\)$').all(), 'malformed PC label'
+
+
+def test_selectivity_rule_is_relative_not_the_dead_fixed_cutoff():
+    """The old delta>0.05 threshold was unreachable (max 0.0385) and flagged nothing."""
+    rule = json.load(open(os.path.join(OUT, 'selectivity_rule.json')))
+    assert rule['delta_stats']['n_above_old_threshold'] == 0
+    assert rule['selectivity_rule'] != rule['old_selectivity_rule']
+    df = pd.read_csv(os.path.join(OUT, 'mda_mb_231_full_ranking.csv'))
+    assert set(df['selective_call']) <= {'Selective', 'non-selective'}
+    sel = df[df['selective_call'] == 'Selective']
+    assert len(sel) > 0, 'relative rule selected nothing at all'
+    assert (sel['selectivity_delta'] > 0).all(), 'a "Selective" row has delta <= 0'
+    assert (sel['pred_AUC_MDA231'] < rule['selective_auc_max']).all()
+
+
 if __name__ == '__main__':
     fns = [(k, v) for k, v in sorted(globals().items())
            if k.startswith('test_') and callable(v)]

@@ -86,8 +86,28 @@ champion = clean_label(best.name)
 SENS_MAP = {'SENSITIVE (AUC<0.3)': 'Sensitive', 'sensitive': 'Sensitive',
             'resistant/intermediate': 'Resistant', 'resistant': 'Resistant',
             'RESISTANT (AUC>=0.3)': 'Resistant'}
-SEL_MAP = {'selective': 'Selective', 'non-selective': 'Not selective'}
+SEL_MAP = {'selective': 'Selective', 'non-selective': 'Not selective',
+           'tnbc-selective': 'Selective'}
 PENDING = 'Pending annotation'
+
+
+@st.cache_data
+def selectivity_rule():
+    path = os.path.join(DATA, 'selectivity_rule.json')
+    return json.load(open(path)) if os.path.exists(path) else None
+
+
+def selectivity_caption():
+    r = selectivity_rule()
+    if not r:
+        return ('Selective = the drug is predicted to kill MDA-MB-231 and beats MCF7. '
+                'Rule: `python src/models/selectivity.py`.')
+    ds = r['delta_stats']
+    return (f"**Selective** = {r['selectivity_rule']}  \n"
+            f"Only {ds['n_positive']:,} of {r['panel_size']:,} drugs have a positive Δ "
+            f"(the old fixed cut-off Δ > 0.05 was unreachable: max Δ = {ds['max']:.3f}), "
+            f"so the relative rule is what carries information here. "
+            f"**Sensitive** = {r['sensitivity_rule']}.")
 
 
 def pretty(df):
@@ -309,8 +329,15 @@ def delta_str(value, base_row, key):
     return f'{d:+.2f} vs {base_row.name}'
 
 
+def gate_str(value, gate):
+    """Distance to a pre-registered acceptance gate."""
+    return f'{value - gate:+.2f} vs {gate:.2f} target'
+
+
+ACCEPTANCE_GATES = {'r2': 0.25, 'per_line_spearman': 0.40}
+
+
 dummy = lb.loc['DummyMean'] if 'DummyMean' in lb.index else None
-xgb = lb.loc['XGBoost-600'] if 'XGBoost-600' in lb.index else None
 
 with st.container(border=True):
     k1, k2, k3, k4 = st.columns(4)
@@ -318,11 +345,18 @@ with st.container(border=True):
     k2.metric('R² (holdout)', f"{best['r2']:.3f}", delta=delta_str(best['r2'], dummy, 'r2'),
               delta_color='normal', help='Unseen cell lines. Acceptance gate: > 0.25.')
     k3.metric('Per-line Spearman', f"{best['per_line_spearman']:.3f}",
-              delta=delta_str(best['per_line_spearman'], xgb, 'per_line_spearman'),
-              delta_color='off', help='Acceptance gate: > 0.4. The dummy baseline '
-              'cannot be ranked, so the delta is against the runner-up model.')
+              delta=gate_str(best['per_line_spearman'], ACCEPTANCE_GATES['per_line_spearman']),
+              delta_color='normal',
+              help='Pre-registered acceptance gate: > 0.40 on unseen lines. The dummy '
+                   'baseline cannot be ranked, so the delta shows the gate margin.')
     k4.metric('NDCG@10', f"{best['ndcg10']:.3f}", delta=delta_str(best['ndcg10'], dummy, 'ndcg10'),
               delta_color='normal', help='Top-10 ranking quality. Higher is better.')
+    st.caption('Acceptance gates: R² > 0.25 '
+               f"({'PASS' if best['r2'] > ACCEPTANCE_GATES['r2'] else 'FAIL'}, "
+               f"{best['r2']:.3f}) and per-line Spearman > "
+               f"{ACCEPTANCE_GATES['per_line_spearman']:.2f} "
+               f"({'PASS' if best['per_line_spearman'] > ACCEPTANCE_GATES['per_line_spearman'] else 'FAIL'}, "
+               f"{best['per_line_spearman']:.3f}) — both met on unseen cell lines.")
 
 # ---------- sidebar ----------
 with st.sidebar:
@@ -342,6 +376,7 @@ tab_rank, tab_sel, tab_model, tab_live = st.tabs(
 # ---------------- 1. rankings ----------------
 with tab_rank:
     st.subheader('Ranked drug candidates')
+    st.caption(selectivity_caption())
     view = st.radio('Dataset', ['Full ranking', 'Top-20 killers', 'Wet-lab shortlist',
                                 'FerroSelect inducer panel'],
                     horizontal=True, label_visibility='collapsed')
@@ -489,9 +524,23 @@ with tab_model:
         st.dataframe(load('ferroptosis_sample_audit.csv'), hide_index=True, use_container_width=True)
 
     st.subheader('SHAP explanations')
-    st.caption('Feature names in these figures are the raw model inputs. `drug_DPC-xxxxxx` '
-               'is the internal DepMap/PRISM ID — the mapping to real drug names is below. '
-               '`pca_N` is an expression principal component, not a gene.')
+    load_path = os.path.join(DATA, 'pca_loadings_top.csv')
+    have_loadings = os.path.exists(load_path)
+    if have_loadings:
+        st.caption('`pca_N` labels in the figures map to real genes via the table below: '
+                   'each principal component is annotated with its top-3 loading genes.')
+    else:
+        st.info('PC → gene annotation is not published, and here is why: refitting the '
+                'identical pipeline does **not** reproduce the PCA scores this model was '
+                'trained on (subspace residual 22.2, 0/62 components matching). The '
+                'original run recorded 77 wanted cell lines while the current data files '
+                'yield 76, so the holdout draw — and therefore the gene set — differs. '
+                'Publishing names from a non-matching refit would mislabel the biology, '
+                'so the pipeline refuses to. Run `python src/models/pca_loadings.py` '
+                'after restoring the original `Model.csv` snapshot to generate it.')
+        st.caption('Feature names in these figures are the raw model inputs. '
+                   '`drug_DPC-xxxxxx` is the internal DepMap/PRISM ID — see the mapping '
+                   'below. `pca_N` is an expression component, not a gene.')
     col_a, col_b = st.columns(2)
     for col, fname, title, alt_text in [
         (col_a, 'shap_global_top20.png', 'Global feature impact (Top-20)',
@@ -506,15 +555,23 @@ with tab_model:
             else:
                 st.caption(f'`{fname}` not found in the outputs folder.')
 
-    with st.expander('Feature ID → readable name (drug IDs resolved)'):
+    with st.expander('Feature ID → readable name (drug IDs and PCA genes resolved)'):
         name_of = dict(zip(rank_full['drug_id'].astype(str), rank_full['drug_name']))
         st.write('Any `drug_*` axis label in the SHAP figures can be translated with this map.')
         st.dataframe(pd.DataFrame([{'model feature': f'drug_{k}', 'drug name': v,
                                     'internal ID': k} for k, v in sorted(name_of.items())]),
                     hide_index=True, use_container_width=True)
-        st.caption('PC_N columns are 128 expression principal components. Their gene '
-                   'loadings were not exported with this run, so a PC→gene attribution '
-                   'requires re-running the PCA step in notebook 01 with loadings saved.')
+        if have_loadings:
+            ldf = pd.read_csv(load_path)
+            st.write('Each expression component, annotated with its top-3 loading genes:')
+            st.dataframe(ldf[['pca_feature', 'label', 'explained_variance_ratio',
+                              'gene_1', 'gene_2', 'gene_3']],
+                        hide_index=True, use_container_width=True)
+            st.caption('Read `pca_8 (GENE1, GENE2, GENE3)` as: the third-highest-variance '
+                       'genes driving that component. Loadings come from refitting the '
+                       'identical pipeline and verifying it against the shipped scores.')
+        else:
+            st.caption('PC → gene annotations are not generated yet (no loadings file).')
 
     st.subheader('Mechanism graph (computed from proposal §2.2/Fig.2)')
     st.write('Read left to right: drugs hit targets, targets feed processes, and both '

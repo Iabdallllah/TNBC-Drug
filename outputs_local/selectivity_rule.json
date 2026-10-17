@@ -1,0 +1,60 @@
+{
+  "sensitivity_rule": "pred_AUC_MDA231 < 0.3 (unchanged, pre-registered)",
+  "selectivity_rule": "pred_AUC_MDA231 < 0.4 AND selectivity_delta > 0.0",
+  "old_selectivity_rule": "selectivity_delta > 0.05 (unreachable: max delta 0.0385)",
+  "sensitive_auc": 0.3,
+  "selective_auc_max": 0.4,
+  "selectivity_delta_min": 0.0,
+  "panel_size": 1482,
+  "delta_stats": {
+    "min": -0.0557260794176575,
+    "median": -0.0076167679987275,
+    "max": 0.0385328592892293,
+    "n_positive": 26,
+    "n_above_old_threshold": 0
+  },
+  "n_below_auc_0.40": 5,
+  "per_file": {
+    "mda_mb_231_full_ranking.csv": {
+      "rows": 1482,
+      "n_selective": 4,
+      "selective_drugs": [
+        "DOLASTATIN-10",
+        "EXATECAN-MESYLATE",
+        "ROMIDEPSIN",
+        "TRIPTOLIDE"
+      ]
+    },
+    "mda_mb_231_top20_killers.csv": {
+      "rows": 20,
+      "n_selective": 4,
+      "selective_drugs": [
+        "DOLASTATIN-10",
+        "EXATECAN-MESYLATE",
+        "ROMIDEPSIN",
+        "TRIPTOLIDE"
+      ]
+    },
+    "wetlab_shortlist.csv": {
+      "rows": 8,
+      "n_selective": 4,
+      "selective_drugs": [
+        "DOLASTATIN-10",
+        "EXATECAN-MESYLATE",
+        "ROMIDEPSIN",
+        "TRIPTOLIDE"
+      ]
+    },
+    "candidate_rankings.csv": {
+      "rows": 8,
+      "n_selective": 4,
+      "selective_drugs": [
+        "DOLASTATIN-10",
+        "EXATECAN-MESYLATE",
+        "ROMIDEPSIN",
+        "TRIPTOLIDE"
+      ]
+    }
+  },
+  "files_rewritten": 4
+}
