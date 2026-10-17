@@ -129,6 +129,16 @@ raw CSVs → ID-unified cleaning → variance filter + PCA-128 (fit on train fol
   Additivity assumption — synergy verdict requires checkerboard validation.
 - Full artifacts: `outputs_local/` (leaderboard, rankings, models, SHAP plots,
   `model_info.json`, `audit_summary.json`).
+- PCA gene loadings: `pca_loadings.parquet` + `pca_loadings_top.csv` map every
+  `pca_N` feature to its top-3 loading genes (`pca_0 (ETS1, SPDEF, MSN)` ...).
+  Loadings are reproduced by `src/models/pca_loadings.py` and **verified per
+  component against the shipped PCA scores** (61/62 components, reconstruction
+  error <= 1e-3). `pca_61` is the zero-variance residual direction of the sample
+  space — carries no signal, left unattributed and flagged in the dashboard.
+  Provenance: the original run wrote a stray header into `wanted_breast_ids.csv`,
+  which shifted the holdout draw (see `pca_loadings_meta.json`); the notebook bug
+  is fixed, and reproducing the shipped basis still requires the historical draw
+  (`--pool phantom`, the default).
 
 ---
 

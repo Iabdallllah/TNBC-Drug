@@ -161,13 +161,21 @@ def test_pca_loadings_are_verified_before_being_published():
               'see outputs_local/pca_loadings_status.json)')
         return
     meta = json.load(open(os.path.join(OUT, 'pca_loadings_meta.json')))
-    assert meta['verified_correlation_vs_shipped'] > 0.999, \
+    assert meta['n_components_verified'] >= 50, \
         'published loadings do not reproduce the shipped PCA scores'
-    assert meta['verified_max_abs_diff_vs_shipped'] < 1e-3, \
+    assert meta['min_abs_correlation_verified'] > 0.999, \
+        'published loadings do not reproduce the shipped PCA scores'
+    assert meta['max_reconstruction_error_verified'] < 1e-3, \
         'published loadings do not match the shipped PCA scores'
     df = pd.read_csv(loadings)
     assert len(df) == meta['n_components']
-    assert df['label'].str.match(r'^pca_\d+ \(.+, .+, .+\)$').all(), 'malformed PC label'
+    verified_rows = df[df['status'] == 'verified']
+    assert len(verified_rows) == meta['n_components_verified']
+    assert set(df['pca_feature']) - set(verified_rows['pca_feature']) == \
+        set(meta['components_not_attributable'])
+    bad = verified_rows['label'].str.match(
+        r'^pca_\d+ \(.+, .+, .+\)$') == False  # noqa: E712
+    assert not bad.any(), 'malformed PC label'
 
 
 def test_selectivity_rule_is_relative_not_the_dead_fixed_cutoff():

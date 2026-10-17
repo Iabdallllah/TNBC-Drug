@@ -1,0 +1,21 @@
+{
+  "source": "src/models/pca_loadings.py",
+  "pool_mode": "phantom",
+  "n_components": 62,
+  "n_genes": 2000,
+  "n_components_verified": 61,
+  "components_not_attributable": [
+    "pca_61"
+  ],
+  "max_reconstruction_error_verified": 0.0009681089500670481,
+  "max_reconstruction_error_all": 1.4527179434597155,
+  "min_abs_correlation_verified": 0.9999999968357548,
+  "explained_variance_sum": 1.0,
+  "fit_rows": 62,
+  "dataset_rows": 79,
+  "shipped_scores": [
+    79,
+    62
+  ],
+  "note": "Loadings are verified per component against the shipped expression_pca128_breast.parquet: reconstructed scores = scaled_expression @ components.T. Components with zero explained variance are the residual direction of the sample space and are deliberately left unattributed."
+}

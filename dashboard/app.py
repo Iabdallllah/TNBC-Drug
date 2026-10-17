@@ -528,16 +528,10 @@ with tab_model:
     have_loadings = os.path.exists(load_path)
     if have_loadings:
         st.caption('`pca_N` labels in the figures map to real genes via the table below: '
-                   'each principal component is annotated with its top-3 loading genes.')
-    else:
-        st.info('PC → gene annotation is not published, and here is why: refitting the '
-                'identical pipeline does **not** reproduce the PCA scores this model was '
-                'trained on (subspace residual 22.2, 0/62 components matching). The '
-                'original run recorded 77 wanted cell lines while the current data files '
-                'yield 76, so the holdout draw — and therefore the gene set — differs. '
-                'Publishing names from a non-matching refit would mislabel the biology, '
-                'so the pipeline refuses to. Run `python src/models/pca_loadings.py` '
-                'after restoring the original `Model.csv` snapshot to generate it.')
+                   'each principal component is annotated with its top-3 loading genes '
+                   '(loadings verified per component against the shipped PCA scores). '
+                   'Components with zero explained variance are the residual direction '
+                   'of the sample space — unattributable and flagged in the table.')
         st.caption('Feature names in these figures are the raw model inputs. '
                    '`drug_DPC-xxxxxx` is the internal DepMap/PRISM ID — see the mapping '
                    'below. `pca_N` is an expression component, not a gene.')
