@@ -20,6 +20,8 @@ SENSITIVE_AUC = 0.3
 HIGHLIGHT, MUTED = '#D9480F', '#868E96'
 POSITIVE_CONTROLS = {'doxorubicin', 'paclitaxel'}
 DEFAULT_LINE = 'ACH-000768'             # MDA-MB-231
+LINE_NAMES = {'ACH-000768': 'MDA-MB-231', 'ACH-000849': 'MDA-MB-468',
+              'ACH-000019': 'MCF7', 'ACH-000049': 'MCF7'}
 CSVS = ['mda_mb_231_full_ranking.csv', 'mda_mb_231_top20_killers.csv',
         'wetlab_shortlist.csv', 'combo_rankings.csv', 'leaderboard.csv']
 RANK_COLS = ['rank', 'drug_name', 'pred_AUC_MDA231', 'pred_AUC_MCF7',
@@ -290,8 +292,7 @@ def live_tab():
         cell_name = dict(zip(ann['ModelID'], ann['StrippedCellLineName']))
     else:
         cell_name = {}
-    pretty_lines = {'ACH-000768': 'MDA-MB-231', 'ACH-000049': 'MCF7',
-                    'ACH-000390': 'MDA-MB-468'}
+    pretty_lines = LINE_NAMES
 
     with st.form('live_form'):
         c1, c2 = st.columns(2)
@@ -473,6 +474,7 @@ with tab_rank:
 
         if os.path.exists(os.path.join(DATA, 'ferroselect_panel_predictions.csv')):
             fpred = load('ferroselect_panel_predictions.csv')
+            fpred = fpred[fpred['drug'] != 'LOVASTATIN']  # panel uses SIMVASTATIN only
             if 'pred_auc' in fpred.columns:
                 fpred['pred_auc'] = fpred['pred_auc'].astype(float).round(3)
             if 'confidence' in fpred.columns:
@@ -485,9 +487,9 @@ with tab_rank:
             st.dataframe(fpred, hide_index=True, use_container_width=True)
             st.caption('RSL3 has no row in the predictions table by design - PRISM has no '
                        'RSL3 data; the panel table above and the signature tables below '
-                       'track it instead. LOVASTATIN appears because PRISM has data for '
-                       'it - it is the statin alternative, not one of the 8 members; the '
-                       'sealed nomination is SIMVASTATIN.')
+                       'track it instead. LOVASTATIN rows are also hidden here on purpose: '
+                       'the sealed panel uses SIMVASTATIN only (LOVASTATIN stays in the '
+                       'downloaded CSV as the PRISM-screened statin alternative).')
         else:
             st.info('FerroSelect predictions are not in this deployment yet.')
 
@@ -498,6 +500,9 @@ with tab_rank:
             st.caption('Do the rescue controls re-express the proteins each killer '
                        'suppresses? Hypergeometric test on the expressed-protein overlap.')
             res = load('offtarget_rescue_reversal.csv')
+            res = res[res['killer'] != 'LOVASTATIN']      # panel uses SIMVASTATIN only
+            res['line'] = res['line'].map(lambda v: LINE_NAMES.get(v, v))
+            res['signature_source'] = res['signature_source'].fillna('LINCS L1000')
             res = res.rename(columns={'line': 'Line', 'killer': 'Killer',
                                       'rescue': 'Rescue drug',
                                       'killer_down_genes': 'Proteins suppressed',
@@ -507,7 +512,8 @@ with tab_rank:
                                       'reversal_enrich': 'Enrichment x',
                                       'genes': 'Shared genes',
                                       'signature_source': 'Signature source'})
-            res['p (hypergeom)'] = res['p (hypergeom)'].map(lambda v: f'{v:.2g}')
+            res['p (hypergeom)'] = res['p (hypergeom)'].map(
+                lambda v: '< 1e-16' if not v or v == 0 else f'{v:.2g}')
             res['Enrichment x'] = res['Enrichment x'].astype(float).round(2)
             dl_c, _ = st.columns([1, 3])
             with dl_c:
@@ -525,12 +531,19 @@ with tab_rank:
             sl2 = load('protein_array_shortlist.csv').rename(columns={
                 'drug': 'Drug', 'gene': 'Gene', 'in_rescue_reversal': 'Rescue-competent',
                 'array_friendly': 'Array-friendly', 'in_statin_core': 'In statin core set'})
+            sl2['Array-friendly'] = sl2['Array-friendly'].fillna('intracellular')
             core = sl2[sl2['Rescue-competent'].astype(str).isin(['1', '1.0', 'True'])]
             dl_c, _ = st.columns([1, 3])
             with dl_c:
                 st.download_button('Download CSV', to_csv(sl2), 'protein_array_shortlist.csv',
                                    'text/csv', key='dl_short')
-            st.dataframe(core, hide_index=True, use_container_width=True)
+            st.dataframe(core, hide_index=True, use_container_width=True, column_config={
+                'Rescue-competent': st.column_config.CheckboxColumn(
+                    'Rescue-competent', disabled=True,
+                    help='Also re-expressed under a rescue control in silico.'),
+                'In statin core set': st.column_config.CheckboxColumn(
+                    'In statin core set', disabled=True,
+                    help='Suppressed by the statin in its L1000 signature core set.')})
             st.caption(f'Showing the {len(core)} rescue-competent candidates; the CSV '
                        f'contains all {len(sl2)} candidates with the array-friendly and '
                        f'statin-core flags.')
