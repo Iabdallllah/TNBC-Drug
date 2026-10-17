@@ -9,6 +9,7 @@ import sys
 
 import numpy as np
 import pandas as pd
+import plotly.express as px
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, 'outputs_local')
@@ -105,6 +106,51 @@ def test_network_converges_on_gpx4():
     assert 'GPX4' in paths['convergent_nodes']
     assert paths['shortest_to_ferroptosis']['sulfasalazine'] is not None
     assert paths['shortest_to_ferroptosis']['simvastatin'] is not None
+
+
+def test_dashboard_runs_without_streamlit_exceptions():
+    """The deployed page must render end-to-end: a bad st.* kwarg kills the whole tab."""
+    from streamlit.testing.v1 import AppTest
+    at = AppTest.from_file(os.path.join(ROOT, 'dashboard', 'app.py'), default_timeout=180)
+    at.run()
+    assert not at.exception, [e.value for e in at.exception]
+    assert {t.label for t in at.tabs} == {'Rankings & candidates',
+                                          'Selectivity & combinations',
+                                          'Model & audit', 'Live predictor'}
+
+
+def test_dashboard_charts_serialise_without_nan():
+    """Vega rejected the old payload; the plotly JSON must be finite and parseable."""
+    json.loads(_chart_json('bar'))
+    json.loads(_chart_json('scatter'))
+
+
+def _chart_json(which):
+    import ast
+    src = open(os.path.join(ROOT, 'dashboard', 'app.py')).read()
+    ns = {'np': np, 'pd': pd, 'px': px, 'SENSITIVE_AUC': 0.3,
+          'HIGHLIGHT': '#D9480F', 'MUTED': '#868E96',
+          'SENS_MAP': {'SENSITIVE (AUC<0.3)': 'Sensitive', 'sensitive': 'Sensitive',
+                       'resistant/intermediate': 'Resistant', 'resistant': 'Resistant',
+                       'RESISTANT (AUC>=0.3)': 'Resistant'},
+          'SEL_MAP': {'selective': 'Selective', 'non-selective': 'Not selective'}}
+    for node in ast.parse(src).body:
+        if isinstance(node, ast.FunctionDef) and node.name in ('pretty', 'bar_chart',
+                                                               'selectivity_chart'):
+            exec(compile(ast.Module([node], []), '<ast>', 'exec'), ns)
+    rank = pd.read_csv(os.path.join(OUT, 'mda_mb_231_full_ranking.csv'))
+    fig = ns['bar_chart'](rank.head(20)) if which == 'bar' else ns['selectivity_chart'](rank, 5)
+    blob = fig.to_json()
+    for token in ('NaN', 'Infinity'):
+        assert token not in blob, f'{token} in plotly payload ({which})'
+    return blob
+
+
+def test_verdict_labels_are_short_and_unique():
+    """Long repeated strings ('resistant/intermediate') were a review complaint."""
+    df = pd.read_csv(os.path.join(OUT, 'mda_mb_231_full_ranking.csv'))
+    calls = set(df['sensitive_call'])
+    assert calls <= {'SENSITIVE (AUC<0.3)', 'resistant/intermediate'}, calls
 
 
 if __name__ == '__main__':
