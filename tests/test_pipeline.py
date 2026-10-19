@@ -214,6 +214,92 @@ def test_offtarget_layer_covers_full_wetlab_panel():
     assert short['drug'].nunique() == 8
 
 
+def test_live_predictor_matches_sealed_rankings():
+    """The live predictor must reproduce the rankings tab exactly, and must NOT
+    pretend a drug the model never split on is a prediction (it returns the
+    drug-free baseline, which is what made every drug read 0.907)."""
+    import pyarrow.parquet as pq
+    from catboost import CatBoostRegressor
+    cols = pq.read_schema(os.path.join(OUT, 'tnbc_ml_dataset.parquet')).names
+    feat = [c for c in cols if c.startswith('pca_')
+            or (c.startswith('drug_') and c not in ('drug_id', 'drug_name'))]
+    pos = {c: i for i, c in enumerate(feat)}
+    pca = pd.read_parquet(os.path.join(OUT, 'expression_pca128_breast.parquet'))
+    pca = pca.drop_duplicates(subset=['ModelID'], keep='first')
+    model = CatBoostRegressor()
+    model.load_model(os.path.join(OUT, 'catboost_tnbc_v1.cbm'))
+    imp = pd.Series(model.get_feature_importance(), index=feat)
+    scored = {c[len('drug_'):] for c, v in imp.items()
+              if c.startswith('drug_') and v > 0}
+    pca_cols = [c for c in feat if c.startswith('pca_')]
+    rank = pd.read_csv(os.path.join(OUT, 'mda_mb_231_full_ranking.csv'))
+
+    def vec(line, drug=None):
+        row = pca.loc[pca['ModelID'] == line, pca_cols]
+        x = np.zeros((1, len(feat)), dtype=np.float32)
+        x[0, [pos[c] for c in pca_cols]] = row.to_numpy(dtype=np.float32)[0]
+        if drug is not None:
+            x[0, pos[f'drug_{drug}']] = 1.0
+        return float(np.clip(model.predict(x)[0], 0, 1))
+
+    assert scored, 'no drug feature carries importance - the one-hot contract broke'
+    names = dict(zip(rank['drug_id'].astype(str), rank['drug_name']))
+
+    def table_auc(drug):
+        return float(rank.loc[rank['drug_id'].astype(str) == drug,
+                              'pred_AUC_MDA231'].iloc[0])
+
+    scored_ids = [d for d in rank['drug_id'].astype(str) if d in scored][:5]
+    assert len(scored_ids) >= 2, 'need at least two scored drugs to test drug dependence'
+    seen = {}
+    for d in scored_ids:
+        got = vec('ACH-000768', d)
+        assert abs(got - table_auc(d)) < 1e-6, \
+            f'{names[d]}: live {got:.6f} != sealed table {table_auc(d):.6f}'
+        seen[d] = got
+    assert len(set(round(v, 6) for v in seen.values())) > 1, \
+        'changing the drug did not change the prediction - drug features not encoded'
+
+    baseline = vec('ACH-000768')
+    unscored = [d for d in rank['drug_id'].astype(str) if d not in scored][:20]
+    for d in unscored:
+        got = vec('ACH-000768', d)
+        assert abs(got - baseline) < 1e-9, \
+            f'{names.get(d, d)} has no model signal but differs from the baseline'
+    return {'scored': len(scored), 'unscored_sample': len(unscored),
+            'baseline': round(baseline, 6)}
+
+
+def test_panel_ranking_covers_the_eight_members_in_order():
+    """The FerroSelect view must show all 8 wet-lab members ranked 1-8 with the
+    lab-only lanes explicitly marked, so nobody reads an RSL3 number that is not there."""
+    from streamlit.testing.v1 import AppTest
+    at = AppTest.from_file(os.path.join(ROOT, 'dashboard', 'app.py'), default_timeout=300)
+    at.run()
+    at.radio[0].set_value('FerroSelect inducer panel')
+    at.run()
+    assert not at.exception, [e.value for e in at.exception]
+    tables = [d.value for d in at.dataframe]
+    ranked = next((t for t in tables if 'Rank' in list(t.columns)), None)
+    assert ranked is not None, 'the 1-8 panel ranking table is missing from the view'
+    assert len(ranked) == 8, f'expected the 8 wet-lab members, got {len(ranked)}'
+    assert list(ranked['Rank']) == list(range(1, 9)), 'ranking must be ordered 1-8'
+    members = list(ranked['Panel member'])
+    for required in ['RSL3', 'RSL3 + SIMVASTATIN', 'N-ACETYLCYSTEINE (NAC)',
+                     'DEFEROXAMINE (DFO)']:
+        assert any(required in m for m in members), f'{required} missing from the ranking'
+    auc = dict(zip(ranked['Panel member'], ranked['Predicted AUC (MDA-MB-231)']))
+    lab_only = ['RSL3 + SIMVASTATIN', 'RSL3',
+                'N-ACETYLCYSTEINE (NAC)', 'DEFEROXAMINE (DFO)']
+    for m in lab_only:
+        assert pd.isna(auc[m]), f'{m} must not show a fabricated AUC'
+    for m, lo, hi in [('ERASTIN + SIMVASTATIN', 0.7, 0.8), ('SULFASALAZINE + SIMVASTATIN', 0.7, 0.85),
+                      ('ERASTIN', 0.8, 0.9), ('SULFASALAZINE', 0.85, 0.95)]:
+        assert lo < auc[m] < hi, f'{m} AUC {auc[m]} outside the sealed range'
+    assert any('244' in str(n) for n in ranked['Evidence / note']), \
+        'the combined RSL3+simvastatin suppression count must stay visible'
+
+
 if __name__ == '__main__':
     fns = [(k, v) for k, v in sorted(globals().items())
            if k.startswith('test_') and callable(v)]

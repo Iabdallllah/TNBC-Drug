@@ -303,15 +303,16 @@ def array_priority_bar(df):
     return fig
 
 
-PANEL_ORDER = ['ERASTIN', 'SULFASALAZINE', 'RSL3', 'N-ACETYLCYSTEINE (NAC)',
-               'DEFEROXAMINE (DFO)', 'ERASTIN + SIMVASTATIN',
-               'SULFASALAZINE + SIMVASTATIN', 'RSL3 + SIMVASTATIN']
-PANEL_ROLES = {'ERASTIN': 'Killer', 'SULFASALAZINE': 'Killer', 'RSL3': 'Killer',
-               'N-ACETYLCYSTEINE (NAC)': 'Rescue control',
-               'DEFEROXAMINE (DFO)': 'Rescue control',
-               'ERASTIN + SIMVASTATIN': 'Combo',
-               'SULFASALAZINE + SIMVASTATIN': 'Combo',
-               'RSL3 + SIMVASTATIN': 'Combo'}
+PANEL_RANK_ORDER = [
+    (1, 'ERASTIN + SIMVASTATIN', 'Combo', 'combo'),
+    (2, 'SULFASALAZINE + SIMVASTATIN', 'Combo (sealed nomination)', 'combo'),
+    (3, 'RSL3 + SIMVASTATIN', 'Combo', 'rsl3combo'),
+    (4, 'ERASTIN', 'Killer (Type I)', 'ERASTIN'),
+    (5, 'SULFASALAZINE', 'Killer (Type I)', 'SULFASALAZINE'),
+    (6, 'RSL3', 'Killer (Type II, GPX4)', 'rsl3'),
+    (7, 'N-ACETYLCYSTEINE (NAC)', 'Rescue control', 'NAC'),
+    (8, 'DEFEROXAMINE (DFO)', 'Rescue control', 'DFO'),
+]
 ROLE_COLORS = {'Killer': '#b3261e', 'Rescue control': '#1c7ed6', 'Combo': '#d9480f'}
 
 
@@ -322,34 +323,97 @@ def _bliss(e, a, b):
     return float(e[a] + e[b] - e[a] * e[b])
 
 
-def wetlab_panel_ranking(preds, line='MDA-MB-231'):
-    """The agreed 8-member panel: expected killing per member (horizontal bars)."""
-    p = preds[preds['line'] == line].set_index('drug')['pred_auc'].astype(float)
-    e = 1.0 - p
-    values = {
-        'ERASTIN': float(e.get('ERASTIN', np.nan)),
-        'SULFASALAZINE': float(e.get('SULFASALAZINE', np.nan)),
-        'ERASTIN + SIMVASTATIN': _bliss(e, 'ERASTIN', 'SIMVASTATIN'),
-        'SULFASALAZINE + SIMVASTATIN': _bliss(e, 'SULFASALAZINE', 'SIMVASTATIN'),
-    }
-    d = pd.DataFrame([{'member': m, 'role': PANEL_ROLES[m],
-                       'expected_killing': values.get(m, np.nan)}
-                      for m in PANEL_ORDER])
-    fig = px.bar(d.iloc[::-1], x='expected_killing', y='member', orientation='h',
+def panel_ranking_table(preds):
+    """The agreed 8-member panel ranked 1-8 on MDA-MB-231, sealed numbers only."""
+    p231 = preds[preds['line'] == 'MDA-MB-231'].set_index('drug')
+    auc = p231['pred_auc'].astype(float)
+    nrows = p231['n_train_rows'].to_dict()
+    e = 1.0 - auc
+
+    supp = {}
+    if os.path.exists(os.path.join(DATA, 'offtarget_panel_map.csv')):
+        m = load('offtarget_panel_map.csv')
+        m = m[m['line'] == DEFAULT_LINE]
+        def hits(drug, direction):
+            return int(m[(m['drug'] == drug) & (m['direction'] == direction)]['hit_genes'].sum())
+        supp['SIMVASTATIN_down'] = hits('SIMVASTATIN', 'Down')
+        supp['NAC_up'] = hits('N-ACETYLCYSTEINE', 'Up')
+        supp['DFO_up'] = hits('DEFEROXAMINE', 'Up')
+    rsl3_n = None
+    if os.path.exists(os.path.join(DATA, 'rsl3_mini_signature_meta.json')):
+        rsl3_n = load_json('rsl3_mini_signature_meta.json').get('n_down_expressed_mda231')
+
+    combined = None
+    if rsl3_n and supp.get('SIMVASTATIN_down'):
+        combined = rsl3_n + supp['SIMVASTATIN_down']
+
+    def value(key):
+        if key == 'ERASTIN':
+            return float(auc.get('ERASTIN', np.nan)), f'{nrows.get("ERASTIN")} PRISM training rows (LOW confidence)'
+        if key == 'SULFASALAZINE':
+            return float(auc.get('SULFASALAZINE', np.nan)), f'{nrows.get("SULFASALAZINE")} PRISM training rows (LOW confidence)'
+        if key == 'combo':
+            return np.nan, 'Lab-only: PRISM has no AUC for RSL3, so no Bliss number exists'
+        if key == 'rsl3combo':
+            note = ('Lab-only (no PRISM AUC for RSL3); together the two signatures suppress '
+                    f'{combined} expressed proteins in MDA-MB-231 '
+                    f'({rsl3_n} RSL3 + {supp["SIMVASTATIN_down"]} simvastatin)') if combined \
+                else 'Lab-only (no PRISM AUC for RSL3)'
+            return np.nan, note
+        if key == 'rsl3':
+            note = (f'Type II GPX4 killer, lab-only; {rsl3_n} expressed proteins suppressed in '
+                    f'MDA-MB-231; dose 0.01-5 uM') if rsl3_n else 'Type II GPX4 killer, lab-only'
+            return np.nan, note
+        if key == 'NAC':
+            note = (f'Rescue control; re-expresses {supp["NAC_up"]} proteins in MDA-MB-231 '
+                    f'(L1000 Up signature)') if supp.get('NAC_up') else 'Rescue control'
+            return np.nan, note
+        if key == 'DFO':
+            note = (f'Rescue control; re-expresses {supp["DFO_up"]} proteins in MDA-MB-231 '
+                    f'(L1000 Up signature)') if supp.get('DFO_up') else 'Rescue control'
+            return np.nan, note
+        return np.nan, ''
+
+    rows = []
+    for rank, member, role, key in PANEL_RANK_ORDER:
+        if role.startswith('Combo') and key == 'combo':
+            killer = member.split(' + ')[0]
+            auc_val = (1 - _bliss(e, killer, 'SIMVASTATIN')) if killer in e.index else np.nan
+            note = ('Sealed nomination' if 'nomination' in role
+                    else 'Bliss expectation from the sealed single-agent AUCs')
+            if not np.isnan(auc_val):
+                note += f'; E_AB = {1 - auc_val:.3f}; needs the checkerboard test'
+        else:
+            auc_val, note = value(key)
+        rows.append({'Rank': rank, 'Panel member': member, 'Role': role,
+                     'Predicted AUC (MDA-MB-231)': auc_val, 'Evidence / note': note})
+    d = pd.DataFrame(rows)
+    d['Predicted AUC (MDA-MB-231)'] = d['Predicted AUC (MDA-MB-231)'].astype(float).round(3)
+    return d
+
+
+def panel_ranking_chart(d):
+    """Ranked 1-8 bars: predicted AUC on MDA-MB-231, colour by the wet-lab role."""
+    def bucket(role):
+        if role.startswith('Rescue'):
+            return 'Rescue control'
+        return 'Combo' if role.startswith('Combo') else 'Killer'
+    dd = d.assign(role=[bucket(r) for r in d['Role']]).iloc[::-1]
+    fig = px.bar(dd, x='Predicted AUC (MDA-MB-231)', y='Panel member', orientation='h',
                  color='role', color_discrete_map=ROLE_COLORS,
-                 category_orders={'member': PANEL_ORDER[::-1]},
-                 labels={'expected_killing':
-                         'Expected killing (1 - AUC; Bliss E_AB for combos)',
+                 category_orders={'Panel member': d['Panel member'].tolist()[::-1]},
+                 labels={'Predicted AUC (MDA-MB-231)':
+                         'Predicted AUC on MDA-MB-231 (lower = stronger expected killing)',
                          'role': 'Role'})
     fig.update_traces(texttemplate='%{x:.3f}', textposition='outside',
                       marker_line_width=0)
-    for m in PANEL_ORDER:
-        if pd.isna(values.get(m, np.nan)):
-            fig.add_annotation(x=0.002, y=m, text='no model prediction',
+    for _, r in d.iterrows():
+        if pd.isna(r['Predicted AUC (MDA-MB-231)']):
+            fig.add_annotation(x=0.005, y=r['Panel member'], text='no AUC — lab-only lane',
                                showarrow=False, xanchor='left',
                                font=dict(color=MUTED, size=10))
-    top = float(d['expected_killing'].max()) * 1.3 or 0.3
-    fig.update_layout(height=430, margin=dict(t=10, b=40, l=210),
+    top = float(d['Predicted AUC (MDA-MB-231)'].max()) * 1.18 or 1.0
+    fig.update_layout(height=430, margin=dict(t=10, b=40, l=215),
                       xaxis=dict(range=[0, top]), yaxis_title=None)
     return fig
 
@@ -398,7 +462,11 @@ def load_live():
     pca = pca.drop_duplicates(subset=['ModelID'], keep='first').reset_index(drop=True)
     model = CatBoostRegressor()
     model.load_model(os.path.join(DATA, 'catboost_tnbc_v1.cbm'))
-    return feat, pos, pca, model
+    # Drugs the model actually learned: a drug column with zero importance was never
+    # split on, so scoring it returns the drug-free baseline - not a prediction.
+    imp = pd.Series(model.get_feature_importance(), index=feat)
+    scored = {c[len('drug_'):] for c, v in imp.items() if c.startswith('drug_') and v > 0}
+    return feat, pos, pca, model, scored
 
 
 def live_tab():
@@ -410,7 +478,7 @@ def live_tab():
                      help='Loads CatBoost and the expression table. Takes a few seconds the first time.'):
         return
     try:
-        feat, pos, pca_live, model = load_live()
+        feat, pos, pca_live, model, scored_drugs = load_live()
     except Exception as e:
         st.warning('Could not load the live model. The precomputed tabs still work.')
         st.caption(f'Details: {type(e).__name__}: {e}')
@@ -420,6 +488,16 @@ def live_tab():
     line_ids = sorted(pca_live['ModelID'].unique().tolist())
     drug_ids = sorted(rank_full['drug_id'].astype(str).unique().tolist())
     name_of = dict(zip(rank_full['drug_id'].astype(str), rank_full['drug_name']))
+    st.caption(f'Model coverage: the champion model split on {len(scored_drugs):,} of the '
+               f'{len(drug_ids):,} screened drugs. A drug outside that set carries no '
+               f'learned signal — its column was never used in training — so scoring it '
+               f'returns the drug-free baseline for that cell line, not a drug-specific '
+               f'prediction. Such drugs are marked in the dropdown.')
+
+    def _drug_option(d):
+        mark = '' if d in scored_drugs else '  · no model signal'
+        return f'{name_of.get(d, d)} ({d}){mark}'
+
     ann_path = os.path.join(DATA, 'breast_lines_annotated.csv')
     if os.path.exists(ann_path):
         ann = load('breast_lines_annotated.csv')
@@ -434,8 +512,7 @@ def live_tab():
             'Cell line', line_ids,
             format_func=lambda mid: f"{pretty_lines.get(mid) or cell_name.get(mid, mid)} ({mid})",
             index=line_ids.index(DEFAULT_LINE) if DEFAULT_LINE in line_ids else 0)
-        sel_drug = c2.selectbox('Drug', drug_ids,
-                                format_func=lambda d: f'{name_of.get(d, d)} ({d})')
+        sel_drug = c2.selectbox('Drug', drug_ids, format_func=_drug_option)
         go = st.form_submit_button('Predict sensitivity', type='primary')
 
     if go:
@@ -447,12 +524,28 @@ def live_tab():
         x[0, [pos[c] for c in pca_cols]] = row.to_numpy(dtype=np.float32)[0]
         x[0, pos[f'drug_{sel_drug}']] = 1.0
         auc = float(np.clip(model.predict(x)[0], 0, 1))
-        m1, m2 = st.columns(2)
+        m1, m2, m3 = st.columns(3)
         m1.metric('Predicted AUC', f'{auc:.3f}')
         if auc < SENSITIVE_AUC:
             m2.success(f'Sensitive (AUC < {SENSITIVE_AUC})')
         else:
             m2.info('Resistant or intermediate')
+        name = name_of.get(sel_drug, sel_drug)
+        if sel_drug not in scored_drugs:
+            x0 = np.zeros((1, len(feat)), dtype=np.float32)
+            x0[0, [pos[c] for c in pca_cols]] = row.to_numpy(dtype=np.float32)[0]
+            base = float(np.clip(model.predict(x0)[0], 0, 1))
+            m3.warning('no learned signal')
+            st.warning(f'{name} has no learned signal in the champion model, so this number is '
+                       f'the drug-free baseline for this cell line (AUC {base:.3f}), not a '
+                       f'prediction about {name}. For the panel agents use the FerroSelect '
+                       f'panel predictions (the Lasso/Ridge/RF track scores them separately).')
+        else:
+            ref = rank_full.loc[rank_full['drug_id'].astype(str) == sel_drug, 'pred_AUC_MDA231']
+            m3.success('scored by the model')
+            if len(ref):
+                st.success(f'Reproduces the sealed rankings tab for {name} on '
+                           f'MDA-MB-231: AUC {float(ref.iloc[0]):.3f} (Δ {auc - float(ref.iloc[0]):+.3f}).')
 
 
 # ---------- header ----------
@@ -609,13 +702,18 @@ with tab_rank:
         if os.path.exists(os.path.join(DATA, 'ferroselect_panel_predictions.csv')):
             preds = load('ferroselect_panel_predictions.csv')
             preds = preds[preds['drug'] != 'LOVASTATIN']  # panel uses SIMVASTATIN only
-            st.subheader('Wet-lab panel ranking - expected killing on MDA-MB-231')
-            st.plotly_chart(wetlab_panel_ranking(preds), use_container_width=True,
+            st.subheader('Panel ranking 1-8 on MDA-MB-231 (the eight wet-lab members)')
+            prank = panel_ranking_table(preds)
+            st.dataframe(prank, hide_index=True, use_container_width=True,
+                         column_config={'Predicted AUC (MDA-MB-231)':
+                                        st.column_config.NumberColumn(format='%.3f')})
+            st.plotly_chart(panel_ranking_chart(prank), use_container_width=True,
                             config={'displaylogo': False})
-            st.caption('Singles show 1 - sealed predicted AUC; combos show the Bliss expected '
-                       'effect E_AB = E_A + E_B - E_A*E_B from the same sealed numbers. RSL3, '
-                       'NAC and DFO carry no model prediction by design: RSL3 is lab-only (no '
-                       'PRISM data) and the rescue controls are validation chemistry, not killers.')
+            st.caption('Rank 1 = strongest expected killing. Where the model has a number the '
+                       'order follows the sealed predicted AUC (lower = stronger). RSL3 and '
+                       'its combo carry no PRISM AUC (lab-only lanes, shaded in the note) and '
+                       'the two rescue controls sit last because they are not killers — they '
+                       'must bring the death back, not add to it.')
             st.subheader('Combination Bliss ranking - the three Simvastatin pairs')
             st.plotly_chart(combo_bliss_chart(preds), use_container_width=True,
                             config={'displaylogo': False})
