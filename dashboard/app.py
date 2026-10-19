@@ -303,6 +303,88 @@ def array_priority_bar(df):
     return fig
 
 
+PANEL_ORDER = ['ERASTIN', 'SULFASALAZINE', 'RSL3', 'N-ACETYLCYSTEINE (NAC)',
+               'DEFEROXAMINE (DFO)', 'ERASTIN + SIMVASTATIN',
+               'SULFASALAZINE + SIMVASTATIN', 'RSL3 + SIMVASTATIN']
+PANEL_ROLES = {'ERASTIN': 'Killer', 'SULFASALAZINE': 'Killer', 'RSL3': 'Killer',
+               'N-ACETYLCYSTEINE (NAC)': 'Rescue control',
+               'DEFEROXAMINE (DFO)': 'Rescue control',
+               'ERASTIN + SIMVASTATIN': 'Combo',
+               'SULFASALAZINE + SIMVASTATIN': 'Combo',
+               'RSL3 + SIMVASTATIN': 'Combo'}
+ROLE_COLORS = {'Killer': '#b3261e', 'Rescue control': '#1c7ed6', 'Combo': '#d9480f'}
+
+
+def _bliss(e, a, b):
+    """Bliss expected effect from two single-agent effects; NaN if either is missing."""
+    if a not in e.index or b not in e.index:
+        return np.nan
+    return float(e[a] + e[b] - e[a] * e[b])
+
+
+def wetlab_panel_ranking(preds, line='MDA-MB-231'):
+    """The agreed 8-member panel: expected killing per member (horizontal bars)."""
+    p = preds[preds['line'] == line].set_index('drug')['pred_auc'].astype(float)
+    e = 1.0 - p
+    values = {
+        'ERASTIN': float(e.get('ERASTIN', np.nan)),
+        'SULFASALAZINE': float(e.get('SULFASALAZINE', np.nan)),
+        'ERASTIN + SIMVASTATIN': _bliss(e, 'ERASTIN', 'SIMVASTATIN'),
+        'SULFASALAZINE + SIMVASTATIN': _bliss(e, 'SULFASALAZINE', 'SIMVASTATIN'),
+    }
+    d = pd.DataFrame([{'member': m, 'role': PANEL_ROLES[m],
+                       'expected_killing': values.get(m, np.nan)}
+                      for m in PANEL_ORDER])
+    fig = px.bar(d.iloc[::-1], x='expected_killing', y='member', orientation='h',
+                 color='role', color_discrete_map=ROLE_COLORS,
+                 category_orders={'member': PANEL_ORDER[::-1]},
+                 labels={'expected_killing':
+                         'Expected killing (1 - AUC; Bliss E_AB for combos)',
+                         'role': 'Role'})
+    fig.update_traces(texttemplate='%{x:.3f}', textposition='outside',
+                      marker_line_width=0)
+    for m in PANEL_ORDER:
+        if pd.isna(values.get(m, np.nan)):
+            fig.add_annotation(x=0.002, y=m, text='no model prediction',
+                               showarrow=False, xanchor='left',
+                               font=dict(color=MUTED, size=10))
+    top = float(d['expected_killing'].max()) * 1.3 or 0.3
+    fig.update_layout(height=430, margin=dict(t=10, b=40, l=210),
+                      xaxis=dict(range=[0, top]), yaxis_title=None)
+    return fig
+
+
+def combo_bliss_chart(preds):
+    """The three Simvastatin pairs: Bliss expected effect, grouped by cell line."""
+    rows = []
+    for line in ['MDA-MB-231', 'MDA-MB-468', 'MCF7']:
+        p = preds[preds['line'] == line].set_index('drug')['pred_auc'].astype(float)
+        e = 1.0 - p
+        for killer in ['ERASTIN', 'SULFASALAZINE', 'RSL3']:
+            combo = f'{killer} + SIMVASTATIN'
+            rows.append({'combo': combo, 'line': line,
+                         'E_AB': _bliss(e, killer, 'SIMVASTATIN')
+                         if killer in e.index else np.nan})
+    d = pd.DataFrame(rows)
+    order = ['RSL3 + SIMVASTATIN', 'SULFASALAZINE + SIMVASTATIN',
+             'ERASTIN + SIMVASTATIN']
+    fig = px.bar(d, x='E_AB', y='combo', orientation='h', barmode='group',
+                 color='line',
+                 color_discrete_map={'MDA-MB-231': '#b3261e',
+                                     'MDA-MB-468': '#f59f00', 'MCF7': '#495057'},
+                 category_orders={'combo': order},
+                 labels={'E_AB': 'Bliss expected effect E_AB', 'line': 'Line'})
+    fig.update_traces(texttemplate='%{x:.3f}', textposition='outside',
+                      marker_line_width=0)
+    fig.add_annotation(x=0.002, y='RSL3 + SIMVASTATIN',
+                       text='not computable - no PRISM AUC for RSL3',
+                       showarrow=False, xanchor='left',
+                       font=dict(color=MUTED, size=10))
+    fig.update_layout(height=340, margin=dict(t=10, b=40, l=210),
+                      xaxis=dict(range=[0, 0.35]))
+    return fig
+
+
 # ---------- live model (loaded only on request) ----------
 @st.cache_resource(show_spinner='Loading CatBoost model…')
 def load_live():
@@ -525,8 +607,23 @@ with tab_rank:
                    'through the GSE247883 single-paper signature instead.')
 
         if os.path.exists(os.path.join(DATA, 'ferroselect_panel_predictions.csv')):
-            fpred = load('ferroselect_panel_predictions.csv')
-            fpred = fpred[fpred['drug'] != 'LOVASTATIN']  # panel uses SIMVASTATIN only
+            preds = load('ferroselect_panel_predictions.csv')
+            preds = preds[preds['drug'] != 'LOVASTATIN']  # panel uses SIMVASTATIN only
+            st.subheader('Wet-lab panel ranking - expected killing on MDA-MB-231')
+            st.plotly_chart(wetlab_panel_ranking(preds), use_container_width=True,
+                            config={'displaylogo': False})
+            st.caption('Singles show 1 - sealed predicted AUC; combos show the Bliss expected '
+                       'effect E_AB = E_A + E_B - E_A*E_B from the same sealed numbers. RSL3, '
+                       'NAC and DFO carry no model prediction by design: RSL3 is lab-only (no '
+                       'PRISM data) and the rescue controls are validation chemistry, not killers.')
+            st.subheader('Combination Bliss ranking - the three Simvastatin pairs')
+            st.plotly_chart(combo_bliss_chart(preds), use_container_width=True,
+                            config={'displaylogo': False})
+            st.caption('Expected combined effect per line from the sealed FerroSelect AUCs. '
+                       'RSL3 + SIMVASTATIN cannot be Bliss-scored (no PRISM AUC for RSL3); '
+                       'it stays a wet-lab-only question. Every value here inherits the LOW '
+                       'confidence of 9-22 training rows per agent.')
+            fpred = preds.copy()
             if 'pred_auc' in fpred.columns:
                 fpred['pred_auc'] = fpred['pred_auc'].astype(float).round(3)
             if 'confidence' in fpred.columns:
