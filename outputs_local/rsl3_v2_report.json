@@ -37,7 +37,7 @@
     "RandomForest": {
       "n": 788,
       "mae": 0.10826707560740216,
-      "rmse": 0.13572748248229954,
+      "rmse": 0.13572748248229957,
       "spearman": 0.46176179646209503,
       "bootstrap_spearman": {
         "mean": 0.4614954416419608,
@@ -47,5 +47,6 @@
       }
     }
   },
-  "winner": "RandomForest"
+  "winner": "RandomForest",
+  "model_file": "rsl3_v2_winner.joblib"
 }

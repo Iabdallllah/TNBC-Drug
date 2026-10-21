@@ -221,7 +221,10 @@ lower = more cell death), `ctpv2_panel_train.parquet` (4,959 lines × 7 drugs
 with 62 pca features), `ctpv2_meta.json`, `rsl3_v2_report.json` and
 `rsl3_v2_gold_predictions.csv` (GroupKFold-5-by-line OOF for the proposal
 trio; RandomForest wins at OOF Spearman 0.462, 95% CI 0.400-0.518 —
-far below the published lab-vs-CTRP RSL3 agreement ceiling 0.83).
+far below the published lab-vs-CTRP RSL3 agreement ceiling 0.83), plus the
+fitted artifact `rsl3_v2_winner.joblib` — load with `joblib.load` and call
+`model.predict(pca_matrix)` where `pca_matrix` is the 62-column
+pca_0..pca_61 projection of the line's expression (same recipe as v1).
 
 Gold lines, measured (raw CTRP AUC → 0-1 scale → % of cohort less sensitive):
 MDA-MB-231 6.18 → 0.31 → 30% most-sensitive third (mesenchymal/GPX4-dependent,

@@ -385,6 +385,19 @@ def train_v2(train, feat):
         if m['spearman'] > best:
             winner, best = name, m['spearman']
     report['winner'] = winner
+    # refit the winner on ALL cohort rows and export the artifact
+    from sklearn.base import clone
+    import joblib
+    final = clone(models[winner]).fit(X, y)
+    model_file = 'rsl3_v2_winner.joblib'
+    joblib.dump({'model': final, 'winner': winner, 'drug': 'RSL3',
+                 'feature_names': [f'pca_{i}' for i in range(X.shape[1])],
+                 'target': 'auc_norm_0_1 (0-1, lower = more sensitive)',
+                 'screen': 'CTRPv2.1', 'n_train_rows': int(len(y)),
+                 'n_lines': int(rsl.ModelID.nunique()), 'seed': SEED},
+                os.path.join(OUT, model_file))
+    report['model_file'] = model_file
+    log(f"winner refit on all {len(y)} rows -> {model_file}")
     log("ceiling: published lab-vs-CTRP agreement is RSL3 0.83 / ML210 0.70 "
         "/ ML162 0.79 - OOF Spearman must stay below the RSL3 ceiling")
     view = rsl[rsl.ModelID.isin(GOLD)][
