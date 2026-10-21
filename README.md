@@ -202,6 +202,33 @@ logic in silico before the plates are poured.
   (single agents + killer x statin additive unions), ranked rescue-competent
   first, then membrane/secreted (UniProt-annotated), then effect size.
 
+### 6D. CTRPv2 external ground truth for RSL3 (v2 track; sealed v1 untouched)
+
+PRISM never profiled RSL3, so the sealed v1 ranking cannot score it. CTRPv2.1
+(Nat Chem Biol 2016, NCI CTD² portal) DID: the published AUC table covers
+RSL-3 (609060) across 808 lines plus ML210/ML162/erastin/CIL56/simvastatin/
+lovastatin (sulfasalazine is absent from CTRP). `src/models/ctpv2_rsl3.py`
+ingests those measurements, maps 831/835 CTRP line names → ACH ids via
+`Data/Model.csv`, and projects every line into the SAME pca_0..61 feature
+space v1 consumed (the basis is re-derived in fp64 and verified both against
+the published loadings — min |r| > 0.999 on all 61 attributable components —
+and against the shipped scores on pca_0..pca_58 of the refreshed file;
+near-zero-variance comps 59/60/61 are kept but flagged).
+
+Artifacts (outputs_local/, v2 namespaces only): `ctpv2_ferroptosis_auc.csv`
+(5,078 measured AUC rows, `auc_raw` CTRP units + `auc_norm_0_1 = raw/20`,
+lower = more cell death), `ctpv2_panel_train.parquet` (4,959 lines × 7 drugs
+with 62 pca features), `ctpv2_meta.json`, `rsl3_v2_report.json` and
+`rsl3_v2_gold_predictions.csv` (GroupKFold-5-by-line OOF for the proposal
+trio; RandomForest wins at OOF Spearman 0.462, 95% CI 0.400-0.518 —
+far below the published lab-vs-CTRP RSL3 agreement ceiling 0.83).
+
+Gold lines, measured (raw CTRP AUC → 0-1 scale → % of cohort less sensitive):
+MDA-MB-231 6.18 → 0.31 → 30% most-sensitive third (mesenchymal/GPX4-dependent,
+matching Viswanathan 2017); MDA-MB-468 10.32 → 0.52; MCF7 11.06 → 0.55.
+The FerroSelect view shows this block under "CTRPv2 external ground truth
+for RSL3"; nothing sealed is modified.
+
 ---
 
 ## 7. API

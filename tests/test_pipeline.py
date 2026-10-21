@@ -300,6 +300,57 @@ def test_panel_ranking_covers_the_eight_members_in_order():
         'the combined RSL3+simvastatin suppression count must stay visible'
 
 
+def test_ctpv2_external_ground_truth_and_v2_model():
+    """CTRPv2.1 RSL-3 measured AUCs exist, gold lines are real measurements and
+    every v2 OOF Spearman stays below the published lab-vs-CTRP ceiling."""
+    auc_csv = os.path.join(OUT, 'ctpv2_ferroptosis_auc.csv')
+    if not os.path.exists(auc_csv):
+        return
+    t = pd.read_csv(auc_csv)
+    rsl = t[t['target'] == 'RSL3']
+    assert 700 <= len(rsl) <= 900, f'RSL3 cohort size {len(rsl)} unexpected'
+    gold = {r.ModelID: r for _, r in rsl.iterrows()
+            if r.ModelID in (MDA, 'ACH-000849', 'ACH-000019')}
+    assert set(gold) == {MDA, 'ACH-000849', 'ACH-000019'}, 'gold lines missing'
+    lens = [gold[MDA].auc_raw, gold['ACH-000849'].auc_raw,
+            gold['ACH-000019'].auc_raw]
+    assert len(set(lens)) == 3, 'AUC values for the lines must differ'
+    lo, hi = sorted((gold[MDA].auc_norm_0_1, gold['ACH-000019'].auc_norm_0_1))
+    assert lo < hi - 0.05, 'MDA-MB-231 must be clearly more sensitive than MCF7'
+    report = os.path.join(OUT, 'rsl3_v2_report.json')
+    if os.path.exists(report):
+        rep = json.load(open(report))
+        assert rep['winner'] in ('Lasso', 'Ridge', 'RandomForest')
+        ceil = rep['ceiling_lab_vs_ctrp']
+        assert rep['models'][rep['winner']]['spearman'] < ceil['RSL3'], \
+            'v2 OOF Spearman may not beat the published lab-vs-CTRP ceiling'
+        gp = pd.read_csv(os.path.join(OUT, 'rsl3_v2_gold_predictions.csv'))
+        assert set(gp.ModelID) == {MDA, 'ACH-000849', 'ACH-000019'}
+        assert gp.oof_auc_norm_0_1.between(0, 1).all()
+        assert gp.loc[gp.ModelID == MDA, 'oof_auc_norm_0_1'].iloc[0] < \
+            gp.loc[gp.ModelID == 'ACH-000019', 'oof_auc_norm_0_1'].iloc[0]
+
+
+def test_ctpv2_block_visible_in_ferroselect_view():
+    """The measured CTRPv2 RSL-3 AUCs must show in the app (truth, not sealth)."""
+    from streamlit.testing.v1 import AppTest
+    at = AppTest.from_file(os.path.join(ROOT, 'dashboard', 'app.py'),
+                           default_timeout=300)
+    at.run()
+    at.radio[0].set_value('FerroSelect inducer panel')
+    at.run()
+    assert not at.exception, [e.value for e in at.exception]
+    heads = [e.value for e in at.subheader if e.value is not None]
+    assert any('CTRPv2 external ground truth for RSL3' in h for h in heads), heads
+    tables = [d.value for d in at.dataframe]
+    ctp = next((t for t in tables if 'RSL-3 raw AUC (CTRPv2)' in list(t.columns)), None)
+    assert ctp is not None, 'the measured RSL-3 AUC table is missing'
+    assert len(ctp) == 3, 'expected the three gold lines'
+    v = dict(zip(ctp['Cell line'], ctp['RSL-3 raw AUC (CTRPv2)']))
+    lo = pd.to_numeric(pd.Series(v.values()), errors='coerce')
+    assert lo.between(1, 20).all(), v
+
+
 if __name__ == '__main__':
     fns = [(k, v) for k, v in sorted(globals().items())
            if k.startswith('test_') and callable(v)]

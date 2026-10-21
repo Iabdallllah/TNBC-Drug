@@ -1,0 +1,104 @@
+{
+  "source_zip": {
+    "CTRPv2.0_2015_ctd2_ExpandedDataset.zip": "https://d1hp0ufb0xxisr.cloudfront.net/CTD2/Broad/CTRPv2.0_2015_ctd2_ExpandedDataset.zip",
+    "CTRPv2.1_2016_pub_NatChemBiol_12_109.zip": "https://d1hp0ufb0xxisr.cloudfront.net/CTD2/Broad/CTRPv2.1_2016_pub_NatChemBiol_12_109.zip"
+  },
+  "source_paper": "CTRPv2.1 / Nat Chem Biol 2016 published AUCs; ferroptosis context: Viswanathan et al., Nat Chem Biol 2017",
+  "auc_definition": "v21 published: integrated area under the sigmoid-fit concentration-response curve (0-1 viability x ~20 log dose units); LOWER = more death (sensitive)",
+  "auc_norm_scale": "auc_norm_0_1 = auc_raw / 20.0",
+  "n_rows": 5078,
+  "n_ccls_per_drug": {
+    "CIL56": 407,
+    "ERASTIN": 792,
+    "LOVASTATIN": 797,
+    "ML162": 795,
+    "ML210": 768,
+    "RSL3": 808,
+    "SIMVASTATIN": 711
+  },
+  "n_matched_ach": 5051,
+  "n_matched_ach_rsl3": 804,
+  "sulfasalazine": "not profiled in CTRP - the v1 PRISM-GRADED source remains",
+  "ceiling_lab_vs_ctrp": {
+    "RSL3": 0.83,
+    "ML210": 0.7,
+    "ML162": 0.79
+  },
+  "rsl3_gold_lines": {
+    "MCF7": {
+      "ach": "ACH-000019",
+      "auc_raw": 11.061,
+      "auc_norm_0_1": 0.5531,
+      "sens_percentile": 82.9
+    },
+    "MDAMB231": {
+      "ach": "ACH-000768",
+      "auc_raw": 6.181,
+      "auc_norm_0_1": 0.3091,
+      "sens_percentile": 29.6
+    },
+    "MDAMB468": {
+      "ach": "ACH-000849",
+      "auc_raw": 10.323,
+      "auc_norm_0_1": 0.5161,
+      "sens_percentile": 76.6
+    }
+  },
+  "panel_train": {
+    "rows": 4959,
+    "lines": 808,
+    "drugs": 7,
+    "features": 62
+  },
+  "rsl3_v2": {
+    "drug": "RSL3",
+    "screen": "CTRPv2.1",
+    "target": "auc_norm_0_1 (0-1, lower = more sensitive)",
+    "features": "pca_0..pca_61 replayed from pca_loadings.py",
+    "cv": "GroupKFold(5) by cell line",
+    "ceiling_lab_vs_ctrp": {
+      "RSL3": 0.83,
+      "ML210": 0.7,
+      "ML162": 0.79
+    },
+    "models": {
+      "Lasso": {
+        "n": 788,
+        "mae": 0.10930967351260978,
+        "rmse": 0.13723085576940228,
+        "spearman": 0.4525803456042157,
+        "bootstrap_spearman": {
+          "mean": 0.45359364911813604,
+          "lo95": 0.3901036946706196,
+          "hi95": 0.5104572985622523,
+          "n_boot": 1000
+        }
+      },
+      "Ridge": {
+        "n": 788,
+        "mae": 0.10937093054109873,
+        "rmse": 0.13756985017767182,
+        "spearman": 0.45128398338649317,
+        "bootstrap_spearman": {
+          "mean": 0.4521375940530495,
+          "lo95": 0.39079854486580157,
+          "hi95": 0.5081639576748318,
+          "n_boot": 1000
+        }
+      },
+      "RandomForest": {
+        "n": 788,
+        "mae": 0.10826707560740216,
+        "rmse": 0.13572748248229954,
+        "spearman": 0.46176179646209503,
+        "bootstrap_spearman": {
+          "mean": 0.4614954416419608,
+          "lo95": 0.40050331687810437,
+          "hi95": 0.5178862798985983,
+          "n_boot": 1000
+        }
+      }
+    },
+    "winner": "RandomForest"
+  }
+}

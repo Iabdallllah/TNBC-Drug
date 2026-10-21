@@ -1,0 +1,51 @@
+{
+  "drug": "RSL3",
+  "screen": "CTRPv2.1",
+  "target": "auc_norm_0_1 (0-1, lower = more sensitive)",
+  "features": "pca_0..pca_61 replayed from pca_loadings.py",
+  "cv": "GroupKFold(5) by cell line",
+  "ceiling_lab_vs_ctrp": {
+    "RSL3": 0.83,
+    "ML210": 0.7,
+    "ML162": 0.79
+  },
+  "models": {
+    "Lasso": {
+      "n": 788,
+      "mae": 0.10930967351260978,
+      "rmse": 0.13723085576940228,
+      "spearman": 0.4525803456042157,
+      "bootstrap_spearman": {
+        "mean": 0.45359364911813604,
+        "lo95": 0.3901036946706196,
+        "hi95": 0.5104572985622523,
+        "n_boot": 1000
+      }
+    },
+    "Ridge": {
+      "n": 788,
+      "mae": 0.10937093054109873,
+      "rmse": 0.13756985017767182,
+      "spearman": 0.45128398338649317,
+      "bootstrap_spearman": {
+        "mean": 0.4521375940530495,
+        "lo95": 0.39079854486580157,
+        "hi95": 0.5081639576748318,
+        "n_boot": 1000
+      }
+    },
+    "RandomForest": {
+      "n": 788,
+      "mae": 0.10826707560740216,
+      "rmse": 0.13572748248229954,
+      "spearman": 0.46176179646209503,
+      "bootstrap_spearman": {
+        "mean": 0.4614954416419608,
+        "lo95": 0.40050331687810437,
+        "hi95": 0.5178862798985983,
+        "n_boot": 1000
+      }
+    }
+  },
+  "winner": "RandomForest"
+}

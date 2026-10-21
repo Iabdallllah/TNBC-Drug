@@ -714,6 +714,41 @@ with tab_rank:
                        'its combo carry no PRISM AUC (lab-only lanes, shaded in the note) and '
                        'the two rescue controls sit last because they are not killers — they '
                        'must bring the death back, not add to it.')
+
+            # CTRPv2.1 external ground truth for RSL3 (measured AUCs, v2 track)
+            if os.path.exists(os.path.join(DATA, 'ctpv2_ferroptosis_auc.csv')):
+                st.subheader('CTRPv2 external ground truth for RSL3 (measured, not modelled)')
+                ctp = load('ctpv2_ferroptosis_auc.csv')
+                gold_map = {'ACH-000768': 'MDA-MB-231', 'ACH-000849': 'MDA-MB-468',
+                            'ACH-000019': 'MCF7'}
+                rsl_g = ctp[(ctp['target'] == 'RSL3') & ctp.ModelID.isin(gold_map)].copy()
+                rsl_g['line'] = rsl_g.ModelID.map(gold_map)
+                rsl_g = rsl_g.sort_values('auc_norm_0_1')
+                gx = rsl_g[['line', 'auc_raw', 'auc_norm_0_1', 'sens_percentile']]
+                gx.columns = ['Cell line', 'RSL-3 raw AUC (CTRPv2)',
+                              'AUC on 0-1 scale', 'Percentile most sensitive (of 808 lines)']
+                st.dataframe(gx, hide_index=True, use_container_width=True,
+                             column_config={'RSL-3 raw AUC (CTRPv2)':
+                                            st.column_config.NumberColumn(format='%.2f'),
+                                            'AUC on 0-1 scale':
+                                            st.column_config.NumberColumn(format='%.3f')})
+                note2 = ('RSL-3 was profiled in CTRPv2.1 (Nat Chem Biol 2016): integrated '
+                         'area under the concentration-response curve, LOWER = more cell '
+                         'death. MDA-MB-231 sits in the most-sensitive 30% of the 808-line '
+                         'cohort while MCF7/MB-468 are mid-pack - the mesenchymal/GPX4 '
+                         'dependency pattern Viswanathan 2017 published. The v2 model '
+                         '(Lasso/Ridge/RF on the same pca features v1 used, GroupKFold '
+                         'OOF on 804 lines) tracks this cohort at Spearman ~0.46 — '
+                         'expression-only signal, far below the 0.83 published lab-vs-CTRP '
+                         'ceiling. Sealed v1 files are untouched; these AUCs are real '
+                         'measurements, not predictions.')
+                if os.path.exists(os.path.join(DATA, 'ctpv2_meta.json')):
+                    md3 = load_json('ctpv2_meta.json').get('rsl3_v2', {})
+                    sp = md3.get('models', {}).get(md3.get('winner', ''), {}).get('spearman')
+                    if sp is not None:
+                        note2 = note2.replace('Spearman ~0.46',
+                                              f'Spearman {sp:.3f} ({md3["winner"]})')
+                st.caption(note2)
             st.subheader('Combination Bliss ranking - the three Simvastatin pairs')
             st.plotly_chart(combo_bliss_chart(preds), use_container_width=True,
                             config={'displaylogo': False})
