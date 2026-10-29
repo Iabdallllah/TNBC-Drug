@@ -5,6 +5,7 @@ Run:  python -m pytest tests/test_pipeline.py -q
 """
 import json
 import os
+import re
 import sys
 
 import numpy as np
@@ -681,6 +682,89 @@ def test_api_rank_pairs_returns_additivity_pairs():
         assert 0 <= pair['E_AB_MDA231'] <= 1
         assert 0 <= pair['E_AB_MCF7'] <= 1
         assert pair['pair_rank'] in (1, 2)
+
+
+# ---------- v1.1 stale-claim regression guard ----------
+
+# Each entry is (regex, why).  The test scans shipped prose/UI sources, not the
+# frozen v1.0 ranking CSVs (those keep the legacy raw label and are relabelled
+# at display time).
+STALE_CLAIMS = [
+    (r'validated experimentally', 'claims wet-lab validation'),
+    (r'fully blind', 'overstates blinding'),
+    (r'strong predictor', 'model-strength overclaim'),
+    (r'strong cell-line-specific predictor', 'model-strength overclaim'),
+    (r'expression adds (value|signal)', 'unproven expression claim'),
+    (r'\b77 lines\b', 'old 77-line count'),
+    (r'77 with expression', 'old 77-line count'),
+    (r'killing percentage(?!s?\s*\(proxy\))', 'killing percentage without proxy label'),
+    (r'champion model', 'champion used as a quality claim'),
+    (r'gradient-boosted champion', 'champion used as a quality claim'),
+    (r'outperforms? the champion', 'champion used as a quality claim'),
+    (r'beats? the champion', 'champion used as a quality claim'),
+    (r'your champion', 'champion used as a quality claim'),
+    (r'the champion (does not|was selected|loses)', 'champion used as a quality claim'),
+    (r'NDCG[^.\n]{0,40}\bbinary\b', 'NDCG described as binary'),
+    (r'\bbinary\b[^.\n]{0,40}NDCG', 'NDCG described as binary'),
+    (r'Exatecan[^.\n]{0,100}0\.0000', 'stale Exatecan delta'),
+    (r'0\.0000[^.\n]{0,100}Exatecan', 'stale Exatecan delta'),
+    (r'Exatecan[^.\n]{0,100}no selectivity', 'stale Exatecan conclusion'),
+    (r"(?-i:['\"]Selective['\"])", 'unqualified Select(ive) badge'),
+]
+
+
+def _stale_scan():
+    """Return a list of (file, line, reason, snippet) for stale-claim hits."""
+    paths = []
+    for name in ('README.md', 'REPORT_v1.1.md'):
+        paths.append(os.path.join(ROOT, name))
+    for folder, pattern in (('dashboard', r'.*\.py$'), ('src', r'.*\.py$')):
+        for base, _, files in os.walk(os.path.join(ROOT, folder)):
+            paths.extend(os.path.join(base, f) for f in files
+                         if re.search(pattern, f))
+    paths.extend(os.path.join(ROOT, f) for f in os.listdir(ROOT)
+                 if f.endswith('.ipynb'))
+    for ext in ('.md', '.html', '.json'):
+        paths.extend(os.path.join(OUT, f) for f in os.listdir(OUT)
+                     if f.endswith(ext) and not f.startswith('.'))
+    hits = []
+    for path in sorted(set(paths)):
+        if not os.path.isfile(path):
+            continue
+        rel = os.path.relpath(path, ROOT)
+        try:
+            text = open(path, encoding='utf-8', errors='replace').read()
+        except OSError:
+            continue
+        for lineno, line in enumerate(text.splitlines(), 1):
+            for pattern, why in STALE_CLAIMS:
+                if re.search(pattern, line, flags=re.I):
+                    hits.append((rel, lineno, why, line.strip()[:180]))
+    # The baseline and selectivity analyses must always carry their status.
+    for path in (os.path.join(ROOT, 'README.md'),
+                 os.path.join(ROOT, 'REPORT_v1.1.md'),
+                 os.path.join(ROOT, 'dashboard', 'app.py'),
+                 os.path.join(ROOT, 'dashboard', 'defense_report.py'),
+                 os.path.join(OUT, 'defense_report.html')):
+        if not os.path.isfile(path):
+            continue
+        low = open(path, encoding='utf-8', errors='replace').read().lower()
+        mentioned = ('per-drug mean' in low) or ('selectivity null' in low)
+        if mentioned and ('post-hoc' not in low or 'exploratory' not in low):
+            hits.append((os.path.relpath(path, ROOT), 0,
+                         'baseline/selectivity missing post-hoc, exploratory label',
+                         ''))
+    return hits
+
+
+def test_no_stale_claims():
+    """Banned overclaims must not reappear in shipped text or UI source."""
+    hits = _stale_scan()
+    if hits:
+        table = '\n'.join(f'{f}:{ln}: {why} | {snip}'
+                          for f, ln, why, snip in hits)
+        raise AssertionError(f'{len(hits)} stale claim(s):\n{table}')
+    print('stale-claim scan: 0 hits')
 
 
 if __name__ == '__main__':

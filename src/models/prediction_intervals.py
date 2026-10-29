@@ -1,6 +1,6 @@
 """Calibrate prediction intervals for the v1 CatBoost AUC model.
 
-The champion model ships point predictions only. For the dashboard (and the
+The CatBoost v1.0 model ships point predictions only. For the dashboard (and the
 defence report) we need an honest error bar per prediction. CatBoost was not
 trained with a quantile objective, so tree-variance intervals are not available
 from the saved artifact; instead we use a conformal-style calibration on the

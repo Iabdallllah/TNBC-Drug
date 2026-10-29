@@ -145,8 +145,9 @@ def _expression_line_audit(ml_holdout):
                                              and len(pca_holdout_ids) == 16
                                              and len(wanted) == 76),
         'v1_0_count': 77,
-        'correction': ('v1.0 reported 77 lines with expression; 77 was a row/counting '
-                       'artifact. The shipped table has 79 rows and 76 unique ModelIDs.'),
+        'correction': ('v1.0 over-counted the expression lines by one. The shipped table has 79 '
+                       'rows for 76 unique ModelIDs; the old 77 was a row/counting '
+                       'artifact.'),
     }
 
 

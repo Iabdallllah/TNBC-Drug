@@ -501,7 +501,7 @@
     "all_ml_holdout_excluded_from_pca_fit": true,
     "reconciles_60_plus_16_equals_76": true,
     "v1_0_count": 77,
-    "correction": "v1.0 reported 77 lines with expression; 77 was a row/counting artifact. The shipped table has 79 rows and 76 unique ModelIDs."
+    "correction": "v1.0 over-counted the expression lines by one. The shipped table has 79 rows for 76 unique ModelIDs; the old 77 was a row/counting artifact."
   },
   "ndcg_definition": "graded relevance = 1 - AUC; lower AUC = higher relevance. Only Recall@10 uses the binary AUC < 0.3 threshold.",
   "limitations": [

@@ -39,6 +39,10 @@ OUT = os.path.join(ROOT, 'outputs_local')
 SENSITIVE_AUC = 0.30          # pre-registered sensitivity gate (unchanged)
 SELECTIVE_AUC_MAX = 0.40      # a selective drug must be predicted to kill TNBC
 SELECTIVITY_DELTA_MIN = 0.0   # relative: beats the control line
+# The badge is a prediction, not a measured result. The frozen v1.0 CSVs still
+# carry the legacy raw label; the dashboard maps it for display.
+SELECTIVE_LABEL = 'Predicted selective (unvalidated)'
+NON_SELECTIVE_LABEL = 'Not predicted selective'
 FILES = ['mda_mb_231_full_ranking.csv', 'mda_mb_231_top20_killers.csv',
          'wetlab_shortlist.csv', 'candidate_rankings.csv']
 
@@ -50,7 +54,7 @@ def apply_rule(df, auc_max, delta_min, sensitive_auc=SENSITIVE_AUC):
     d['sensitive_call'] = np.where(
         auc < sensitive_auc, 'SENSITIVE (AUC<0.3)', 'resistant/intermediate')
     d['selective_call'] = np.where(
-        (auc < auc_max) & (delta > delta_min), 'Selective', 'non-selective')
+        (auc < auc_max) & (delta > delta_min), SELECTIVE_LABEL, NON_SELECTIVE_LABEL)
     return d
 
 
@@ -93,7 +97,7 @@ def main():
             continue
         before = pd.read_csv(path)
         after = apply_rule(before, a.auc_max, a.delta_min)
-        n = int((after['selective_call'] == 'Selective').sum())
+        n = int((after['selective_call'] == SELECTIVE_LABEL).sum())
         after.to_csv(path, index=False)
         changed += 1
         print(f'{name}: {len(after)} rows, selective={n}, '
@@ -101,7 +105,7 @@ def main():
         rule.setdefault('per_file', {})[name] = {
             'rows': int(len(after)),
             'n_selective': n,
-            'selective_drugs': sorted(after.loc[after['selective_call'] == 'Selective',
+            'selective_drugs': sorted(after.loc[after['selective_call'] == SELECTIVE_LABEL,
                                                 'drug_name'].astype(str).tolist()),
         }
 

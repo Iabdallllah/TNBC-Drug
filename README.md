@@ -3,7 +3,7 @@
 An end-to-end computational platform that predicts and ranks drug sensitivity
 for **Triple-Negative Breast Cancer (TNBC)**, with a pre-registered wet-lab test
 of selectivity against a non-TNBC control. The v1.1 audit reports the model as a
-**negative result**: a one-line per-drug mean baseline outperforms the champion.
+**negative result**: a one-line per-drug mean baseline outperforms the CatBoost v1.0 model.
 
 **One-liner:** given a breast cancer cell line's molecular profile, the system
 predicts its sensitivity (AUC) to every screened drug, ranks the strongest
@@ -323,7 +323,7 @@ against predictions (Spearman) with per-drug Selectivity Indexes.
 | Wet-lab | Pending: MTT results (`raw_absorbance.csv`) for the panel + 2 pairs |
 
 Success criteria: computational (beat DummyMean on unseen lines — **met**, but the
-stronger per-drug mean baseline beats the champion, so this is reported as a
+stronger per-drug mean baseline beats the CatBoost v1.0 model, so this is reported as a
 negative result); experimental (predicted-vs-actual Spearman > 0 and SI > 1.5 for
 at least one candidate — **awaiting lab data**).
 

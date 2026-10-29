@@ -412,7 +412,7 @@ training on <b>{_fmt(audit.get('ml_rows'))}</b> unique (cell line, drug) pairs a
 {_fmt((audit.get('subtype_counts') or {}).get('Luminal'))}, HER2+
 {_fmt((audit.get('subtype_counts') or {}).get('HER2+'))}, other
 {_fmt((audit.get('subtype_counts') or {}).get('other'))}.</p>
-<div class="note"><b>v1.1 correction.</b> v1.0 said “77 lines with expression”. The
+<div class="note"><b>v1.1 correction.</b> v1.0 over-counted the expression lines by one. The
 correct count is <b>{_fmt(expr.get('breast_lines_with_expression'))} unique lines</b>.
 The shipped PCA table has <b>{_fmt(expr.get('expression_rows'))}</b> rows because MCF7,
 ACH-001396 and ACH-001662 are duplicated. The PCA was fit on
@@ -448,8 +448,9 @@ top-10 is 10/10 inside that set. This is <b>coverage</b> — the plateau does no
 actives — not model lift. The baseline covers those drugs trivially.</p>
 <div class="note"><b>Metric definition fix.</b> NDCG@10 uses <b>graded relevance
 1 − AUC</b> (lower AUC = more relevant). Only Recall@10 uses the binary
-<b>AUC &lt; 0.3</b> sensitivity threshold. v1.0 described NDCG as binary; that was wrong.
-NDCG is saturated near 0.94 for both models and is a weak discriminator.</div>
+<b>AUC &lt; 0.3</b> sensitivity threshold. v1.0's metric note was inaccurate; the
+graded definition above is the one implemented. NDCG is saturated near 0.94 for both
+models and is a weak discriminator.</div>
 
 <h2>3. Selectivity null and the “Predicted selective (unvalidated)” relabel</h2>
 <p>Predicted selectivity Δ = predicted AUC(MCF7) − predicted AUC(MDA-MB-231). Positive
@@ -474,7 +475,7 @@ from their kill proxies, so a combo rank is not a discovery.</p>
 
 <h2>4. The eight-member wet-lab panel (pre-registered mechanism hypothesis)</h2>
 {_table(panel, nd=3)}
-<p class="muted">Rank 1 = strongest expected killing by the frozen model. The panel was
+<p class="muted">Rank 1 = strongest expected killing proxy by the frozen model. The panel was
 selected on mechanism (GPX4, system xc⁻, iron) and agreed with the lab before any plate;
 the model outputs are a frozen, falsifiable record, not the justification. RSL3 lanes are
 lab-only by design: PRISM never profiled RSL3, so no model AUC is fabricated for them.
@@ -582,7 +583,7 @@ Cloperastine regression test</td><td>Data layer, tests</td></tr>
 </table>
 
 <h2>Appendix B. Short defence Q&amp;A</h2>
-<p><b>Q1. “Your champion loses to a column mean. Why is it in the project?”</b><br>
+<p><b>Q1. “Your CatBoost model loses to a column mean. Why is it in the project?”</b><br>
 It is reported as a negative result. The baseline wins because CatBoost never learned 85%
 of drug identities. Within the 227 drugs it did learn, it ties the baseline. The expression
 contribution is unproven, and we say so. The project’s value is the audit that found this,

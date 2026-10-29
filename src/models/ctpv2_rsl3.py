@@ -26,7 +26,7 @@ auc_raw (CTRP units) and auc_norm_0_1 = auc_raw / 20 (PRISM-like 0-1
 convention, same direction).
 
 Features: replayed shipped PCA basis -------------------------------------------------------
-The champion consumed pca_0..61 built by src/models/pca_loadings.py:
+The CatBoost v1.0 model consumed pca_0..61 built by src/models/pca_loadings.py:
 top-2000-variance genes (fit rows), median imputation, StandardScaler fit on
 the fit-pool, PCA-62 fit, then projection of every line. To stay
 apples-to-apples with the shipped sample, this script re-derives that exact

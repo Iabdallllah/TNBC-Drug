@@ -22,7 +22,7 @@
 
 We built a leakage-audited drug-response benchmark for TNBC and tested it honestly.
 On seven unseen breast lines, a one-line per-drug mean baseline (per-line Spearman
-**0.830**, R² **0.825**) outperforms the gradient-boosted champion (per-line Spearman
+**0.830**, R² **0.825**) outperforms the gradient-boosted CatBoost v1.0 model (per-line Spearman
 **0.630**, R² **0.567**). Predicted selectivity is uncorrelated with measured selectivity
 (Pearson **0.003**, Spearman **0.027**, n = 1,322), and the restricted check on active
 drugs does not rescue it (n = 66, Spearman **0.029**).
@@ -110,7 +110,7 @@ trivially.
 
 ### 3.6 What this does and does not show
 
-- **Does show:** the champion does not beat a one-line drug-identity baseline; the
+- **Does show:** the CatBoost v1.0 model does not beat a one-line drug-identity baseline; the
   architecture failed as a cell-line-specific predictor.
 - **Does not show:** that expression carries no signal. CatBoost collapsed 1,255 of 1,482
   drug identities to a per-line constant, so it never had a fair chance to test expression
@@ -145,11 +145,12 @@ was requested before the defence; it confirms the null.
 | Exatecan-mesylate | +0.0151 | −0.1399 | 0.3412 | 0.2013 |
 
 For Triptolide, Dolastatin-10 and Exatecan-mesylate, MCF7 is measurably **more sensitive**
-than MDA-MB-231—the opposite of the predicted call. Romidepsin shows no selectivity.
-The badge is relabelled **“Predicted selective (unvalidated)”**. It is a correct-sign
-hypothesis to test by SI = IC50(MCF7)/IC50(MDA-MB-231) on the plate, not a finding.
+than MDA-MB-231—the opposite of the predicted sign. Romidepsin is essentially zero
+(−0.0002). The badge is relabelled **“Predicted selective (unvalidated)”**. It is a
+correct-sign hypothesis to test by SI = IC50(MCF7)/IC50(MDA-MB-231) on the plate, not a
+finding.
 
-> Note: the v1.0 briefing quoted Exatecan’s measured Δ as 0.0000. The artifact-derived
+> Note: an earlier verbal figure for Exatecan’s measured Δ was wrong. The artifact-derived
 > holdout pair is −0.1399 (MDA 0.3412, MCF7 0.2013). The conclusion is unchanged: the call
 > is unsupported. The report uses the artifact value.
 
@@ -168,7 +169,8 @@ the 4×4 checkerboard for any synergy claim.
   `ndcg_at_k` in `TNBC_02_Modeling_Ranking_Colab.ipynb` implements.
 - **Recall@10:** binary sensitivity threshold `AUC < 0.3`.
 
-v1.0 described NDCG as binary. That was wrong. The correction does not change any ranking
+v1.0's metric note was inaccurate: NDCG uses graded relevance `1 − AUC`; only Recall@10
+uses the binary `AUC < 0.3` threshold. The correction does not change any ranking
 or metric value, but it matters for interpreting the score: NDCG near 0.94 is saturated
 for both models and its paired CI spans zero.
 
@@ -236,7 +238,7 @@ mislabelled in-silico signature is withheld.
 
 ## 9. Revised defence Q&A
 
-**Q1. “Your champion loses to a column mean. Why is it in your project?”**
+**Q1. “Your CatBoost model loses to a column mean. Why is it in your project?”**
 
 > It is reported as a negative result. The baseline wins because CatBoost never learned
 > 85% of drug identities. Within the 227 drugs it did learn, it ties the baseline. The
@@ -307,7 +309,7 @@ mislabelled in-silico signature is withheld.
 
 **Withdrawn or relabelled**
 
-- “CatBoost is a strong cell-line-specific predictor.” It is worse than a per-drug mean.
+- “CatBoost is a cell-line-specific predictor.” Withdrawn: it is worse than a per-drug mean.
 - “R² 0.567” as a headline without the 0.825 baseline.
 - “NDCG 0.941” as a win; the baseline is 0.945 and the difference is not significant.
 - “The four drugs are selective.” The measured deltas are opposite or zero.
@@ -315,8 +317,8 @@ mislabelled in-silico signature is withheld.
   arithmetic.
 - “Expression features add value.” Not demonstrated; the current model does not beat drug
   identity.
-- “Fully blind.” The champion was selected on the same holdout; disclose mild optimism.
-- “Killing percentages.” They are proxies; no MTT results exist.
+- “Blind selection.” Withdrawn: the v1.0 model was selected on the same holdout; disclose mild optimism.
+- “Percentage of cells killed.” Withdrawn: outputs are kill proxies; no MTT results exist.
 
 ---
 

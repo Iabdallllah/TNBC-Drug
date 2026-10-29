@@ -138,7 +138,7 @@ def selectivity_caption():
     r = selectivity_rule()
     if not r:
         return ('**Predicted selective (unvalidated)** = the model predicts stronger '
-                'killing of MDA-MB-231 than MCF7. This is not a measured selectivity call.')
+                'predicted effect on MDA-MB-231 than MCF7. This is not a measured selectivity call.')
     ds = r['delta_stats']
     null = ((baseline_audit or {}).get('selectivity') or {}).get('all_shared_drugs') or {}
     restricted = ((baseline_audit or {}).get('selectivity') or {}).get(
@@ -257,7 +257,7 @@ RANK_COL_CFG = {
     'drug_name': st.column_config.TextColumn('Drug'),
     'pred_AUC_MDA231': st.column_config.ProgressColumn(
         'MDA-MB-231 AUC', format='%.3f', min_value=0.0, max_value=1.0,
-        help='Predicted AUC. The bar is only a visual aid — shorter bar = stronger killing.'),
+        help='Predicted AUC. The bar is only a visual aid — shorter bar = stronger predicted effect (kill proxy).'),
     'auc_ci_mda231': st.column_config.TextColumn(
         'Predicted AUC ± 80% CI',
         help='Conformal 80% interval calibrated on the seven blind holdout lines '
@@ -514,7 +514,7 @@ def panel_ranking_chart(d):
                  color='role', color_discrete_map=ROLE_COLORS,
                  category_orders={'Panel member': d['Panel member'].tolist()[::-1]},
                  labels={'Predicted AUC (MDA-MB-231)':
-                         'Predicted AUC on MDA-MB-231 (lower = stronger expected killing)',
+                         'Predicted AUC on MDA-MB-231 (lower = stronger expected killing proxy)',
                          'role': 'Role'})
     fig.update_traces(texttemplate='%{x:.3f}', textposition='outside',
                       marker_line_width=0)
@@ -605,7 +605,7 @@ def live_tab():
     line_ids = sorted(pca_live['ModelID'].unique().tolist())
     drug_ids = sorted(rank_full['drug_id'].astype(str).unique().tolist())
     name_of = dict(zip(rank_full['drug_id'].astype(str), rank_full['drug_name']))
-    st.caption(f'Model coverage: the champion model split on {len(scored_drugs):,} of the '
+    st.caption(f'Model coverage: the CatBoost v1.0 model split on {len(scored_drugs):,} of the '
                f'{len(drug_ids):,} screened drugs. A drug outside that set carries no '
                f'learned signal — its column was never used in training — so scoring it '
                f'returns the drug-free baseline for that cell line, not a drug-specific '
@@ -660,7 +660,7 @@ def live_tab():
             x0[0, [pos[c] for c in pca_cols]] = row.to_numpy(dtype=np.float32)[0]
             base = float(np.clip(model.predict(x0)[0], 0, 1))
             m3.warning('no learned signal')
-            st.warning(f'{name} has no learned signal in the champion model, so this number is '
+            st.warning(f'{name} has no learned signal in the CatBoost v1.0 model, so this number is '
                        f'the drug-free baseline for this cell line (AUC {base:.3f}), not a '
                        f'prediction about {name}. For the panel agents use the FerroSelect '
                        f'panel predictions (the Lasso/Ridge/RF track scores them separately).')
@@ -783,10 +783,11 @@ def synergy_tab():
     observed_top = float(np.clip(1.0 - viab[-1, -1], 0.0, 1.0))
 
     k1, k2, k3, k4 = st.columns(4)
-    k1.metric('Observed killing (top doses)', f'{observed_top:.3f}',
-              help='1 − viability at the highest concentration of both drugs.')
+    k1.metric('Observed killing proxy (top doses)', f'{observed_top:.3f}',
+              help='1 − viability at the highest concentration of both drugs. A proxy, '
+                   'not a percentage of cells killed.')
     k2.metric('Mean Bliss excess', f"{bliss['summary']['mean_excess']:+.3f}",
-              help='Positive = more killing than additive expectation.')
+              help='Positive = more killing proxy than additive expectation.')
     k3.metric('Synergistic cells (Bliss > +0.10)',
               f"{bliss['summary']['n_synergistic']}/{bliss['summary']['n_cells']}")
     med_ci = loewe['summary']['median_ci']
@@ -1003,7 +1004,7 @@ def defense_tab():
 st.title('FerroSelect: which drugs kill TNBC, and by what mechanism')
 st.write('Predicted sensitivity for **MDA-MB-231**, compared with the luminal '
          'control **MCF7**, plus the ferroptosis inducer panel from the proposal. '
-         'Lower predicted AUC means stronger killing. The v1.1 audit reports the '
+         'Lower predicted AUC means a stronger predicted effect (kill proxy). The v1.1 audit reports the '
          'model as a **negative result**; the wet-lab panel is the hypothesis test.')
 st.info('Predicted sensitivity in a cell model, not a clinical recommendation. '
         f"Model version: {info.get('model_version', 'n/a')}")
@@ -1022,8 +1023,8 @@ if _cb and _bm:
         f"vs {_cb['per_line_spearman']:.3f}**, R² **{_bm['r2']:.3f} vs {_cb['r2']:.3f}**. "
         f"NDCG@10 is a tie ({_bm['ndcg10']:.3f} vs {_cb['ndcg10']:.3f})."
         + learned_text +
-        " The expression contribution is unproven. Do not cite the champion as a "
-        "validated cell-line-specific predictor.")
+        " The expression contribution is unproven. Do not cite it as a "
+        "validated predictor of cell-line-specific response.")
 
 with st.expander('How to read this dashboard (60 seconds, no ML background needed)'):
     st.write('**AUC** — predicted area under the dose-response curve, 0 to 1. '
@@ -1065,9 +1066,9 @@ dummy = lb.loc['DummyMean'] if 'DummyMean' in lb.index else None
 
 with st.container(border=True):
     k1, k2, k3, k4 = st.columns(4)
-    k1.metric('Champion (v1.0)', champion,
-              help='Pre-registered model-selection winner. Champion is a convention, '
-                   'not a finding: the gap to XGBoost is within 7-line resolution.')
+    k1.metric('v1.0 model-selection winner', champion,
+              help='Selected by NDCG@10, a saturated metric; this is a convention, '
+                   'not evidence of quality. The gap to XGBoost is within 7-line resolution.')
     k2.metric('CatBoost per-line Spearman', f"{(_cb or best)['per_line_spearman']:.3f}",
               help='Pre-registered holdout metric. Higher is better.')
     k3.metric('Per-drug mean baseline', f"{(_bm or {}).get('per_line_spearman', float('nan')):.3f}",
@@ -1186,7 +1187,7 @@ with tab_rank:
                                         st.column_config.NumberColumn(format='%.3f')})
             st.plotly_chart(panel_ranking_chart(prank), use_container_width=True,
                             config={'displaylogo': False})
-            st.caption('Rank 1 = strongest expected killing. Where the model has a number the '
+            st.caption('Rank 1 = strongest expected killing proxy. Where the model has a number the '
                        'order follows the sealed predicted AUC (lower = stronger). RSL3 and '
                        'its combo carry no PRISM AUC (lab-only lanes, shaded in the note) and '
                        'the two rescue controls sit last because they are not killers — they '
