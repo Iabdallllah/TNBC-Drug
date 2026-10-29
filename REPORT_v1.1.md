@@ -367,3 +367,7 @@ The sealed record is the supervisor’s. Before plate 1:
 | `tests/test_pipeline.py` | 32-test suite, including four API tests and the quarantine/Erastin checks |
 
 *Prepared for the defence. The plate decides the biology.*
+
+### 7. Diagnostic (post-hoc, exploratory)
+Pre-registration 57b363e → results 8e903c4 (23 train lines, holdout excluded, label everywhere: post-hoc, exploratory). Honest null: M1=M0; M2 no evidence (CI spans zero); M3 skipped.
+

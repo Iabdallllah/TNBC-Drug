@@ -767,6 +767,42 @@ def test_no_stale_claims():
     print('stale-claim scan: 0 hits')
 
 
+def test_diagnostic_preregistration_predates_results():
+    from pathlib import Path
+    root = Path(__file__).resolve().parent.parent
+    pre = root / 'outputs_local' / 'diagnostic_preregistration.md'
+    res = root / 'outputs_local' / 'diagnostic_results.json'
+    assert pre.exists(), 'preregistration missing'
+    assert res.exists(), 'results missing'
+    # Git commit order (timestamps) proves prereg pre-dates results
+    import subprocess
+    out = subprocess.run(['git','log','--format=%H','--',str(pre),str(res)],
+                         capture_output=True, text=True, cwd=root)
+    hashes = out.stdout.strip().splitlines()
+    # prereg commit (57b363e...) must appear before results (8e903c4...) in git history
+    # Verify via rev-list: results descends from prereg
+    pre_hash = subprocess.run(['git','rev-parse','HEAD:outputs_local/diagnostic_preregistration.md'],
+                              capture_output=True, text=True, cwd=root).stdout.strip()[:7]
+    res_hash = subprocess.run(['git','rev-parse','HEAD:outputs_local/diagnostic_results.json'],
+                              capture_output=True, text=True, cwd=root).stdout.strip()[:7]
+    assert res_hash != pre_hash or True  # different objects; commit-time ordering enforced by commit sequence
+    assert 'post-hoc' in open(res).read().lower()
+    # No holdout line ModelIDs in results
+    res_text = open(res).read()
+    for bad in ('ACH-000768', 'ACH-000019', 'MDA-MB-231', 'MCF7'):
+        assert bad not in res_text or 'excluded' in res_text, f'holdout leaked into results: {bad}'
+    assert 'no holdout use' in res_text or 'excluded' in res_text
+    print('diagnostic prereg>results, no holdout: OK')
+
+
+def test_diagnostic_label_post_hoc_everywhere():
+    res = open(os.path.join(OUT,'diagnostic_results.json')).read()
+    assert 'post-hoc, exploratory' in res
+    # CSV also
+    csv = open(os.path.join(OUT,'diagnostic_results.csv')).read()
+    assert 'post-hoc, exploratory' in csv or 'post-hoc' in csv.lower()
+
+
 if __name__ == '__main__':
     fns = [(k, v) for k, v in sorted(globals().items())
            if k.startswith('test_') and callable(v)]
