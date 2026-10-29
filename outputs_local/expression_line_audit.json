@@ -1,0 +1,55 @@
+{
+  "breast_lines_annotated": 96,
+  "expression_rows": 79,
+  "expression_unique_lines": 76,
+  "breast_lines_with_expression": 76,
+  "duplicate_model_ids": {
+    "ACH-000019": 2,
+    "ACH-001662": 2,
+    "ACH-001396": 2
+  },
+  "pca_fit_rows": 62,
+  "pca_fit_unique_lines": 60,
+  "pca_holdout_unique_lines": 16,
+  "pca_holdout_ids": [
+    "ACH-000019",
+    "ACH-000097",
+    "ACH-000196",
+    "ACH-000212",
+    "ACH-000248",
+    "ACH-000349",
+    "ACH-000643",
+    "ACH-000725",
+    "ACH-000755",
+    "ACH-000768",
+    "ACH-000857",
+    "ACH-000934",
+    "ACH-001683",
+    "ACH-001819",
+    "ACH-001820",
+    "ACH-002883"
+  ],
+  "ml_holdout_ids": [
+    "ACH-000019",
+    "ACH-000097",
+    "ACH-000212",
+    "ACH-000248",
+    "ACH-000643",
+    "ACH-000768",
+    "ACH-000934"
+  ],
+  "ml_holdout_in_pca_fit": [],
+  "ml_holdout_in_pca_holdout": [
+    "ACH-000019",
+    "ACH-000097",
+    "ACH-000212",
+    "ACH-000248",
+    "ACH-000643",
+    "ACH-000768",
+    "ACH-000934"
+  ],
+  "all_ml_holdout_excluded_from_pca_fit": true,
+  "reconciles_60_plus_16_equals_76": true,
+  "v1_0_count": 77,
+  "correction": "v1.0 reported 77 lines with expression; 77 was a row/counting artifact. The shipped table has 79 rows and 76 unique ModelIDs."
+}

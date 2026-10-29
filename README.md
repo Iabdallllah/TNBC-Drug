@@ -1,8 +1,9 @@
 # TNBC Drug Response Predictor
 
 An end-to-end computational platform that predicts and ranks drug sensitivity
-for **Triple-Negative Breast Cancer (TNBC)**, validated experimentally for
-selectivity against a non-TNBC control.
+for **Triple-Negative Breast Cancer (TNBC)**, with a pre-registered wet-lab test
+of selectivity against a non-TNBC control. The v1.1 audit reports the model as a
+**negative result**: a one-line per-drug mean baseline outperforms the champion.
 
 **One-liner:** given a breast cancer cell line's molecular profile, the system
 predicts its sensitivity (AUC) to every screened drug, ranks the strongest
@@ -11,6 +12,14 @@ luminal control **MCF7** — first computationally, then in the wet lab.
 
 > Outputs are *predicted sensitivities in cell models*, never clinical
 > treatment recommendations.
+
+> **v1.1 audit status (2026-10-29, post-hoc, exploratory).** The holdout is spent.
+> CatBoost reaches per-line Spearman 0.630 / R² 0.567; a per-drug training-mean
+> baseline reaches 0.830 / 0.825. Predicted selectivity is uncorrelated with measured
+> selectivity (Spearman 0.027, n = 1,322; restricted n = 66, 0.029). The four v1.0
+> “selective” calls are relabelled **“Predicted selective (unvalidated)”**. The
+> defensible contributions are the leakage/audit machinery, the external CTRPv2 RSL3
+> evidence, and the pre-registered mechanism panel. See `REPORT_v1.1.md`.
 
 ---
 
@@ -113,18 +122,37 @@ raw CSVs → ID-unified cleaning → variance filter + PCA-128 (fit on train fol
 
 ---
 
-## 6. v1 results snapshot
+## 6. v1 results snapshot (and the v1.1 post-hoc baseline)
 
-| Metric (unseen cell lines) | CatBoost-800 | Gate |
-|---|---|---|
-| R2 | 0.567 | > 0.25 |
-| Per-line Spearman | 0.630 | > 0.4 |
-| NDCG@10 | 0.941 | ranking primary |
+**Post-hoc, exploratory** — the holdout was already seen when the baseline was
+defined. Both models are scored on the identical 7,336 holdout rows (7 lines),
+with the per-drug mean learned on the 23 training lines only.
+
+| Metric (unseen cell lines) | CatBoost-800 | Per-drug mean | Gate |
+|---|---:|---:|---|
+| MAE | 0.0811 | **0.0437** | — |
+| RMSE | 0.1003 | **0.0638** | — |
+| R² | 0.5669 | **0.8246** | > 0.25 (CatBoost met it; baseline beats it) |
+| Pooled Spearman | 0.4169 | **0.8449** | — |
+| Per-line Spearman | 0.6304 | **0.8295** | > 0.4 (CatBoost met it; baseline beats it) |
+| NDCG@10 (graded relevance 1 − AUC) | 0.9411 | 0.9452 | tie; CI spans zero |
+| Recall@10 (binary AUC < 0.3) | 0.6933 | **0.7458** | — |
+
+Paired bootstrap over the seven lines (2,000 resamples, seed 20261029):
+CatBoost − baseline per-line Spearman **−0.199 [−0.250, −0.134]** and R²
+**−0.257 [−0.271, −0.236]**; the baseline wins 100% of resamples. NDCG@10 is
+**−0.004 [−0.014, +0.007]**, i.e. a tie, and is not evidence either way.
+Within the 227 drugs CatBoost actually learned, it ties the baseline
+(per-line 0.801 vs 0.804); the expression contribution is **unproven**, not
+disproven. The four v1.0 “selective” calls are relabelled **“Predicted selective
+(unvalidated)”**; see `REPORT_v1.1.md` and `outputs_local/baseline_audit.json`.
 
 - Training set: **30,994** unique (cell line, drug) pairs — 30 lines x 1,482 drugs.
+- CatBoost plateaus: **1,255 / 1,482** drugs (84.7%) carry zero importance and
+  collapse to **one prediction per line** (MDA-MB-231: 0.906574).
 - Top predicted killers of MDA-MB-231: **Triptolide, Dolastatin-10, Romidepsin,
   Echinomycin, Exatecan** (see `outputs_local/mda_mb_231_top20_killers.csv`).
-  Selectivity deltas vs MCF7 are modest (~0.02), reported as-is.
+  Selectivity deltas vs MCF7 are modest (~0.02), predicted and unvalidated.
 - Top Bliss pair: **Triptolide + Maytansinol-isobutyrate** (gap 0.025).
   Additivity assumption — synergy verdict requires checkerboard validation.
 - Full artifacts: `outputs_local/` (leaderboard, rankings, models, SHAP plots,
@@ -170,21 +198,28 @@ proposal's computational half verbatim: same data, proposal-mandated methods.
 Pending (blocked on downloads, not on code): raw expression matrix for the
 small FerrDb-gene model + Aim-0 ssGSEA baseline, CTRP bulk for RSL3 coverage.
 
-### 6C. Off-target protein-effect layer (additive, computed, wet-lab-validated)
+### 6C. Off-target protein-effect layer (additive, computed, pre-plate hypothesis)
 
 The panel kills the cell; this layer predicts what ELSE each panel member does
-to the proteins of MDA-MB-231 — the side-effect profile — and proves the rescue
-logic in silico before the plates are poured.
+to the proteins of MDA-MB-231 — the side-effect profile — and tests the rescue
+logic in silico before the plates are poured. It is a hypothesis layer, not a
+validated result.
 
 - **Coverage audit** (`offtarget_coverage_ferroselect.csv`): 5/7 panel members
   have a **verified** LINCS L1000 chem-pert consensus signature (Erastin,
   Sulfasalazine, Deferoxamine, Simvastatin, Lovastatin). RSL3 is absent from
   L1000 (66k terms), ChEMBL and GEO (no published RSL3-on-MDA-MB-231 data).
-  **Audit note (2026-10-28):** the legacy matcher resolved the abbreviation
-  “NAC” inside “Solife**NAC**in-Succinate”, so the archived NAC rows (172 down /
-  166 up genes) are **Solifenacin, not N-acetylcysteine**. The dashboard now
-  withholds the NAC rescue arm instead of plotting a mislabelled signature;
-  Deferoxamine is unaffected.
+  **Audit note (2026-10-28, data-layer quarantine in v1.1):** the legacy matcher
+  resolved the abbreviation “NAC” inside “Solife**NAC**in-Succinate”, so the
+  archived NAC rows (172 down / 166 up genes) are **Solifenacin, not
+  N-acetylcysteine**. All four CSVs that carry legacy NAC rows now include a
+  **`quarantined`** column (`offtarget_panel_map.csv`,
+  `offtarget_rescue_reversal.csv`, `protein_array_shortlist.csv`,
+  `offtarget_coverage_ferroselect.csv`); the dashboard withholds the NAC rescue
+  arm and the test suite asserts the marker. The resolver is exact-match-first
+  with token-boundary fallback, which also blocks the latent
+  Erastin/Cloperastine substring collision (regression-tested). Deferoxamine is
+  unaffected.
 - **RSL3 recovered** (`rsl3_signature.py` -> `rsl3_mini_signature.csv`): from
   GSE247883 (A549, DMSO / RSL3 / RSL3+Fer-1, 24h, n=3 each) — top-150 Up/Down
   signature, labelled single-paper. 38 RSL3-suppressed proteins are expressed in
@@ -282,13 +317,15 @@ against predictions (Spearman) with per-drug Selectivity Indexes.
 
 | Stream | Status |
 |---|---|
-| ML / Data / API / UI | **Done**: pipeline, models, rankings, combos, API, tests (7/7), dashboard |
+| ML / Data / API / UI | **Done with a negative model result**: pipeline, leakage audit, rankings, combos, API, **32/32 tests**, seven-tab dashboard, zero-JS v1.1 report |
+| Baseline / selectivity audit | **Done (post-hoc, exploratory)**: per-drug mean beats CatBoost; selectivity null incl. restricted check; 76-line correction |
 | Bioinformatics | Pending: confirm distinct targets/pathways for shortlisted pairs |
-| Wet-lab | Pending: MTT results (`raw_absorbance.csv`) for Top candidates + 2 pairs |
+| Wet-lab | Pending: MTT results (`raw_absorbance.csv`) for the panel + 2 pairs |
 
-Success criteria: computational (beat DummyMean on unseen lines — **met**),
-experimental (predicted-vs-actual Spearman > 0 and SI > 1.5 for at least one
-candidate — **awaiting lab data**).
+Success criteria: computational (beat DummyMean on unseen lines — **met**, but the
+stronger per-drug mean baseline beats the champion, so this is reported as a
+negative result); experimental (predicted-vs-actual Spearman > 0 and SI > 1.5 for
+at least one candidate — **awaiting lab data**).
 
 ---
 
@@ -296,5 +333,18 @@ candidate — **awaiting lab data**).
 
 - Dataset versions: DepMap Public 26Q3, GDSC2 fitted 27Oct23 (release 8.5).
 - Seeds fixed (42) across splits, PCA, and model training.
-- `tests/test_pipeline.py` re-verifies leakage guards, schema, artifacts, and
-  PRD gates on every run.
+- `tests/test_pipeline.py` re-verifies leakage guards, schema, artifacts, API
+  parity, the quarantine markers and the PRD gates on every run. Run
+  `python -m pytest tests/test_pipeline.py -q`; `tests/conftest.py` writes
+  `outputs_local/validation_status.json` (currently **32 passed**), which the
+  dashboard and `defense_report.py` read instead of a hand-typed count.
+- Regenerate the post-hoc audit with `python src/models/baseline_audit.py`
+  (`baseline_audit.json`, `baseline_audit.csv`, `expression_line_audit.json`).
+- Regenerate the printable report with
+  `python -c "import sys; sys.path.insert(0,'dashboard'); import defense_report as d; open('outputs_local/defense_report.html','w').write(d.build_defense_report('outputs_local'))"`.
+- Version provenance: v1.0 is preserved at tag `v1.0-defense` (commit `8be8319`);
+  v1.1 is a dated addendum that does not modify the sealed prediction or v1.0
+  artifacts. Sealed timestamp/hash and access policy:
+  `outputs_local/sealed_prediction_manifest.json`.
+- Raw data are git-ignored (`Data/*.csv`, `Data/*.xlsx`); re-download with
+  `python src/ingestion/download.py --small-only`.

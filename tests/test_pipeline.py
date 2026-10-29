@@ -446,16 +446,23 @@ def test_defence_report_is_self_contained_and_complete():
     assert h.startswith('<!DOCTYPE html>') and h.rstrip().endswith('</html>')
     assert '@page' in h and 'Print' not in h.split('</style>')[0]  # printable CSS
     assert '<script' not in h.lower(), 'the report must stay JavaScript-free'
-    for marker in ['1. Dataset and cell-line status', '2. The eight-member wet-lab panel',
-                   '3. Top-ranked killers', '4. Bliss combination expectations',
-                   '5. CTRPv2.1 measured ground truth', '6. Prediction uncertainty',
-                   '7. Validation gates', '8. Sign-off']:
+    for marker in ['1. Dataset, leakage controls', '2. Model vs a one-line baseline',
+                   '3. Selectivity null', '4. The eight-member wet-lab panel',
+                   '5. Top-ranked killers', '6. Bliss combination expectations',
+                   '7. CTRPv2.1 measured ground truth', '8. Prediction uncertainty',
+                   '9. Validation gates', '10. Sign-off']:
         assert marker in h, marker
     for _, member, _ in defense_report.PANEL:
         assert member in h, f'{member} missing from the defence report'
     assert 'RSL-3 raw AUC (CTRPv2)' in h
     assert 'MDA-MB-231' in h and 'MCF7' in h
     assert '±0.104' in h, 'global 80% interval missing'
+    assert 'Per-drug mean baseline' in h
+    assert 'post-hoc, exploratory' in h.lower()
+    assert 'Predicted selective (unvalidated)' in h
+    assert 'graded relevance' in h.lower()
+    assert '76 unique lines' in h
+    assert 'v1.0-defense' in h
     assert '>nan<' not in h.lower() and '>None<' not in h
 
 
@@ -468,6 +475,35 @@ def test_rescue_network_uses_real_protein_lists():
     rv = pd.read_csv(os.path.join(OUT, 'offtarget_rescue_reversal.csv'))
     pm = pd.read_csv(os.path.join(OUT, 'offtarget_panel_map.csv'))
     cov = pd.read_csv(os.path.join(OUT, 'offtarget_coverage_ferroselect.csv'))
+
+    # Data-layer quarantine: the legacy NAC rows must carry a marker, not just
+    # be filtered by a UI string comparison.
+    for name, column in [('offtarget_panel_map.csv', 'drug'),
+                         ('offtarget_rescue_reversal.csv', 'rescue'),
+                         ('protein_array_shortlist.csv', 'drug'),
+                         ('offtarget_coverage_ferroselect.csv', 'panel_drug')]:
+        d = pd.read_csv(os.path.join(OUT, name))
+        assert 'quarantined' in d.columns, f'{name}: missing quarantined column'
+        marked = d[d[column].astype(str).str.upper().str.startswith('N-ACETYL')]
+        assert len(marked) > 0, f'{name}: no NAC rows found to check'
+        assert marked['quarantined'].astype(str).str.lower().isin(
+            ['true', '1']).all(), f'{name}: an NAC row is not quarantined'
+        others = d[~d[column].astype(str).str.upper().str.startswith('N-ACETYL')]
+        assert not others['quarantined'].astype(str).str.lower().isin(
+            ['true', '1']).any(), f'{name}: a non-NAC row is wrongly quarantined'
+
+    # Exact match must beat the latent Erastin/Cloperastine substring collision.
+    from src.models.offtarget_coverage import resolve_l1000_term
+    terms = {'erastin': {'term': 'Erastin Down'},
+             'cloperastine': {'term': 'Cloperastine Down'}}
+    assert resolve_l1000_term('ERASTIN', terms)['term'] == 'Erastin Down'
+    assert resolve_l1000_term(
+        'ERASTIN', {'cloperastine': {'term': 'Cloperastine Down'}}) is None
+    assert resolve_l1000_term(
+        'NAC', {'solifenacinsuccinate': {'term': 'Solifenacin-Succinate Down'}}) is None
+    assert resolve_l1000_term(
+        'DEFEROXAMINE', {'deferoxaminemesylate': {
+            'term': 'Deferoxamine-Mesylate Down'}})['term'] == 'Deferoxamine-Mesylate Down'
 
     fig, info = network_graph.rescue_network_figure(
         sl, rv, 'RSL3 + SIMVASTATIN', 'DEFEROXAMINE', MDA, panel_map=pm, coverage=cov)
@@ -583,6 +619,68 @@ def test_dashboard_ci_and_defence_export_are_visible():
     assert rescue is not None, 'the rescue-reversal table disappeared'
     assert 'N-ACETYLCYSTEINE' not in set(rescue['Rescue drug']), \
         'the mislabelled Solifenacin rows are still presented as NAC'
+
+
+def _api_client():
+    sys.path.insert(0, ROOT)
+    from fastapi.testclient import TestClient
+    from src.api.main import app
+    return TestClient(app)
+
+
+def test_api_health_and_model_info():
+    c = _api_client()
+    h = c.get('/health')
+    assert h.status_code == 200
+    assert h.json()['ok'] is True
+    assert h.json()['model_version'] == 'catboost-v1.0'
+    m = c.get('/model-info')
+    assert m.status_code == 200
+    body = m.json()
+    assert body['features'] == 1544
+    assert body['cell_lines_with_pca'] == 76
+    assert body['drugs'] == 1482
+    assert 'NOT a clinical' in body['disclaimer']
+
+
+def test_api_predict_matches_sealed_ranking():
+    c = _api_client()
+    r = c.post('/predict', json={'cell_line_id': MDA, 'drug_id': 'DPC-006658'})
+    assert r.status_code == 200
+    body = r.json()
+    sealed = pd.read_csv(os.path.join(OUT, 'mda_mb_231_full_ranking.csv'))
+    expected = float(sealed.loc[sealed['drug_id'] == 'DPC-006658',
+                                'pred_AUC_MDA231'].iloc[0])
+    assert abs(body['predicted_auc'] - expected) < 1e-9
+    assert body['model_version'] == 'catboost-v1.0'
+    assert 'NOT a clinical' in body['disclaimer']
+
+
+def test_api_rank_is_sorted_and_bounded():
+    c = _api_client()
+    r = c.post('/rank', json={'cell_line_id': MDA, 'top_k': 3})
+    assert r.status_code == 200
+    ranking = r.json()['ranking']
+    assert len(ranking) == 3
+    scores = [row['predicted_auc'] for row in ranking]
+    assert scores == sorted(scores), 'ranking must be ascending AUC'
+    assert [row['rank'] for row in ranking] == [1, 2, 3]
+    assert ranking[0]['drug_id'] == 'DPC-006658'  # Triptolide, sealed rank 1
+    assert ranking[0]['call'] == 'SENSITIVE (AUC<0.3)'
+
+
+def test_api_rank_pairs_returns_additivity_pairs():
+    c = _api_client()
+    r = c.post('/rank-pairs', json={'top_singles': 3, 'top_pairs': 2})
+    assert r.status_code == 200
+    body = r.json()
+    assert 'additivity' in body['method'].lower()
+    assert len(body['pairs']) == 2
+    for pair in body['pairs']:
+        assert pair['drugA_id'] != pair['drugB_id']
+        assert 0 <= pair['E_AB_MDA231'] <= 1
+        assert 0 <= pair['E_AB_MCF7'] <= 1
+        assert pair['pair_rank'] in (1, 2)
 
 
 if __name__ == '__main__':

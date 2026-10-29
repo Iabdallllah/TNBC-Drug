@@ -30,7 +30,8 @@ DEFAULT_LINE = 'ACH-000768'             # MDA-MB-231
 LINE_NAMES = {'ACH-000768': 'MDA-MB-231', 'ACH-000849': 'MDA-MB-468',
               'ACH-000019': 'MCF7', 'ACH-000049': 'MCF7'}
 CSVS = ['mda_mb_231_full_ranking.csv', 'mda_mb_231_top20_killers.csv',
-        'wetlab_shortlist.csv', 'combo_rankings.csv', 'leaderboard.csv']
+        'wetlab_shortlist.csv', 'combo_rankings.csv', 'leaderboard.csv',
+        'baseline_audit.csv']
 RANK_COLS = ['rank', 'drug_name', 'pred_AUC_MDA231', 'auc_ci_mda231', 'pred_AUC_MCF7',
              'selectivity_delta', 'sensitive_call', 'selective_call']
 AUC_RANGE = (0.2, 0.6)                  # keeps the colour scale informative
@@ -94,6 +95,12 @@ top20 = load('mda_mb_231_top20_killers.csv')
 shortlist = load('wetlab_shortlist.csv')
 combos = load('combo_rankings.csv')
 leaderboard = load('leaderboard.csv')
+baseline_table = load('baseline_audit.csv')
+baseline_audit = (load_json('baseline_audit.json')
+                  if os.path.exists(os.path.join(DATA, 'baseline_audit.json')) else None)
+expression_audit = (load_json('expression_line_audit.json')
+                    if os.path.exists(os.path.join(DATA, 'expression_line_audit.json'))
+                    else None)
 info = load_json('model_info.json')
 intervals = (load_json('prediction_intervals.json')
              if os.path.exists(os.path.join(DATA, 'prediction_intervals.json')) else None)
@@ -115,8 +122,9 @@ champion = clean_label(best.name)
 SENS_MAP = {'SENSITIVE (AUC<0.3)': 'Sensitive', 'sensitive': 'Sensitive',
             'resistant/intermediate': 'Resistant', 'resistant': 'Resistant',
             'RESISTANT (AUC>=0.3)': 'Resistant'}
-SEL_MAP = {'selective': 'Selective', 'non-selective': 'Not selective',
-           'tnbc-selective': 'Selective'}
+SEL_MAP = {'selective': 'Predicted selective (unvalidated)',
+           'non-selective': 'Not predicted selective',
+           'tnbc-selective': 'Predicted selective (unvalidated)'}
 PENDING = 'Pending annotation'
 
 
@@ -129,14 +137,29 @@ def selectivity_rule():
 def selectivity_caption():
     r = selectivity_rule()
     if not r:
-        return ('Selective = the drug is predicted to kill MDA-MB-231 and beats MCF7. '
-                'Rule: `python src/models/selectivity.py`.')
+        return ('**Predicted selective (unvalidated)** = the model predicts stronger '
+                'killing of MDA-MB-231 than MCF7. This is not a measured selectivity call.')
     ds = r['delta_stats']
-    return (f"**Selective** = {r['selectivity_rule']}  \n"
+    null = ((baseline_audit or {}).get('selectivity') or {}).get('all_shared_drugs') or {}
+    restricted = ((baseline_audit or {}).get('selectivity') or {}).get(
+        'restricted_measured_auc_below_0_5_either') or {}
+    null_text = ''
+    if null.get('spearman', {}).get('statistic') is not None:
+        rs = restricted.get('spearman', {}).get('statistic')
+        rs_text = f'{rs:.3f}' if isinstance(rs, (int, float)) else '—'
+        null_text = (
+            f"  \n**Post-hoc, exploratory null:** predicted Δ is uncorrelated with "
+            f"measured Δ on the {null['n']:,} drugs shared by MDA-MB-231 and MCF7 "
+            f"(Pearson {null['pearson']['statistic']:.3f}, "
+            f"Spearman {null['spearman']['statistic']:.3f}, sign agreement "
+            f"{null['sign_agreement']:.1%}). The restricted check (measured AUC < 0.5 "
+            f"in either line, n={restricted.get('n', '—')}) gives Spearman "
+            f"{rs_text}. The badge is a hypothesis to test by SI, not a finding.")
+    return (f"**Predicted selective (unvalidated)** = {r['selectivity_rule']}  \n"
             f"Only {ds['n_positive']:,} of {r['panel_size']:,} drugs have a positive Δ "
             f"(the old fixed cut-off Δ > 0.05 was unreachable: max Δ = {ds['max']:.3f}), "
             f"so the relative rule is what carries information here. "
-            f"**Sensitive** = {r['sensitivity_rule']}.")
+            f"**Sensitive** = {r['sensitivity_rule']}." + null_text)
 
 
 def pretty(df):
@@ -245,7 +268,7 @@ RANK_COL_CFG = {
         'Selectivity Δ', format='%.3f',
         help='MCF7 AUC minus MDA-MB-231 AUC. Positive = hits TNBC harder than control.'),
     'sensitive_call': st.column_config.TextColumn('Verdict', help='Cut-off at AUC 0.30'),
-    'selective_call': st.column_config.TextColumn('Selective'),
+    'selective_call': st.column_config.TextColumn('Selectivity call (unvalidated)'),
     'role': st.column_config.TextColumn('Role'),
 }
 
@@ -465,7 +488,8 @@ def panel_ranking_table(preds):
             note = ('Sealed nomination' if 'nomination' in role
                     else 'Bliss expectation from the sealed single-agent AUCs')
             if not np.isnan(auc_val):
-                note += f'; E_AB = {1 - auc_val:.3f}; needs the checkerboard test'
+                note += (f'; E_AB = {1 - auc_val:.3f}; Bliss arithmetic, not synergy — '
+                         'needs the checkerboard test')
         else:
             auc_val, note = value(key)
         rows.append({'Rank': rank, 'Panel member': member, 'Role': role,
@@ -938,10 +962,12 @@ def _defence_html(stamp):
 def defense_tab():
     """One-click, self-contained HTML executive report (print → PDF)."""
     st.subheader('Automated defence report (HTML, print-to-PDF)')
-    st.write('Builds a self-contained report from the committed artifacts: cell-line status, '
-             'the 8-member panel ranking and bars, Bliss combination expectations, the CTRPv2 '
-             'RSL3 ground truth, calibrated prediction intervals, validation gates and a '
-             'sign-off block. No numbers are typed by hand.')
+    st.write('Builds the **v1.1 dated addendum** from the committed artifacts: the '
+             'leakage controls and 76-line correction, the post-hoc per-drug baseline, '
+             'the selectivity null, the 8-member panel, the plateau, Bliss expectations, '
+             'the CTRPv2 RSL3 evidence, prediction intervals, validation gates and a '
+             'sign-off block. No numbers are typed by hand. v1.0 is preserved at tag '
+             '`v1.0-defense`; the sealed prediction is unchanged.')
     try:
         stamp = max(os.path.getmtime(os.path.join(DATA, f)) for f in os.listdir(DATA))
         html_report = _defence_html(stamp)
@@ -958,14 +984,16 @@ def defense_tab():
                    '16 mm). The report is offline-safe: CSS only, no JavaScript, no external '
                    'fonts or images.')
     st.dataframe(pd.DataFrame([
-        {'Section': '1', 'Contents': 'Dataset and cell-line status, blind holdouts'},
-        {'Section': '2', 'Contents': 'The eight-member wet-lab panel, ranked 1–8'},
-        {'Section': '3', 'Contents': 'Top-ranked killers and the model-resolution caveat'},
-        {'Section': '4', 'Contents': 'Bliss combination expectations per cell line'},
-        {'Section': '5', 'Contents': 'CTRPv2.1 measured RSL-3 AUCs and v2 model honesty check'},
-        {'Section': '6', 'Contents': 'Conformal prediction intervals (±80% / ±95%)'},
-        {'Section': '7', 'Contents': 'Validation gates and selectivity rule'},
-        {'Section': '8', 'Contents': 'Signature block for the defence appendix'},
+        {'Section': '1', 'Contents': 'Dataset, leakage controls and the 76-line correction'},
+        {'Section': '2', 'Contents': 'CatBoost vs per-drug baseline (post-hoc, exploratory)'},
+        {'Section': '3', 'Contents': 'Selectivity null and “Predicted selective (unvalidated)”'},
+        {'Section': '4', 'Contents': 'The eight-member wet-lab panel, as a mechanism hypothesis'},
+        {'Section': '5', 'Contents': 'Top-ranked killers, plateau and sensitive-tail coverage'},
+        {'Section': '6', 'Contents': 'Bliss additivity arithmetic — test on the plate'},
+        {'Section': '7', 'Contents': 'CTRPv2.1 measured RSL-3 AUCs (external evidence)'},
+        {'Section': '8', 'Contents': 'Conformal prediction intervals (±80% / ±95%)'},
+        {'Section': '9', 'Contents': 'Validation gates, quarantine and test status'},
+        {'Section': '10', 'Contents': 'Signature block for the defence appendix'},
     ]), hide_index=True, use_container_width=True)
     with st.expander('Preview the report'):
         components.html(html_report, height=760, scrolling=True)
@@ -973,20 +1001,40 @@ def defense_tab():
 
 # ---------- header ----------
 st.title('FerroSelect: which drugs kill TNBC, and by what mechanism')
-st.write('Predicted sensitivity for **MDA-MB-231**, measured against the luminal '
+st.write('Predicted sensitivity for **MDA-MB-231**, compared with the luminal '
          'control **MCF7**, plus the ferroptosis inducer panel from the proposal. '
-         'Lower predicted AUC means stronger killing.')
+         'Lower predicted AUC means stronger killing. The v1.1 audit reports the '
+         'model as a **negative result**; the wet-lab panel is the hypothesis test.')
 st.info('Predicted sensitivity in a cell model, not a clinical recommendation. '
         f"Model version: {info.get('model_version', 'n/a')}")
+
+_cb = ((baseline_audit or {}).get('metrics') or {}).get('catboost') or {}
+_bm = ((baseline_audit or {}).get('metrics') or {}).get('per_drug_mean') or {}
+_learn = ((baseline_audit or {}).get('subsets') or {}).get('learned_227') or {}
+_lcb = (_learn.get('catboost') or {}).get('per_line_spearman')
+_lbm = (_learn.get('per_drug_mean') or {}).get('per_line_spearman')
+if _cb and _bm:
+    learned_text = (f" Within the 227 drugs CatBoost actually learned, it ties the "
+                    f"baseline ({_lcb:.3f} vs {_lbm:.3f});" if _lcb and _lbm else '')
+    st.warning(
+        f"**Post-hoc, exploratory (v1.1):** a one-line per-drug mean baseline beats "
+        f"CatBoost on the spent holdout — per-line Spearman **{_bm['per_line_spearman']:.3f} "
+        f"vs {_cb['per_line_spearman']:.3f}**, R² **{_bm['r2']:.3f} vs {_cb['r2']:.3f}**. "
+        f"NDCG@10 is a tie ({_bm['ndcg10']:.3f} vs {_cb['ndcg10']:.3f})."
+        + learned_text +
+        " The expression contribution is unproven. Do not cite the champion as a "
+        "validated cell-line-specific predictor.")
 
 with st.expander('How to read this dashboard (60 seconds, no ML background needed)'):
     st.write('**AUC** — predicted area under the dose-response curve, 0 to 1. '
              '**Lower means the drug kills more.** Below 0.30 we call it SENSITIVE.')
-    st.write('**Selectivity Δ** — MCF7 AUC minus MDA-MB-231 AUC. Positive means the drug '
-             'hits the TNBC line harder than the control line.')
+    st.write('**Selectivity Δ** — MCF7 AUC minus MDA-MB-231 AUC. Positive means the '
+             'model predicts the drug hits the TNBC line harder than the control line. '
+             'This is a prediction, not a measured selectivity result.')
     st.write('**R² / Spearman / NDCG@10** — how well the model ranked unseen cell lines '
-             'during testing. Higher is better; gates were R² > 0.25 and per-line '
-             'Spearman > 0.4, both passed.')
+             'during testing. CatBoost met the pre-registered gates (R² > 0.25, per-line '
+             'Spearman > 0.4), but a post-hoc per-drug mean baseline beats it on both. '
+             'Read the gates as “not useless”, not as “validated”.')
     st.write('**LOW confidence** — fewer than 25 training rows for that drug. A hypothesis '
              'to test, not a result.')
     st.write('**Bliss pairs** — expected combined effect if two drugs simply add up. '
@@ -1017,22 +1065,27 @@ dummy = lb.loc['DummyMean'] if 'DummyMean' in lb.index else None
 
 with st.container(border=True):
     k1, k2, k3, k4 = st.columns(4)
-    k1.metric('Champion model', champion, help='Highest NDCG@10 on unseen cell lines.')
-    k2.metric('R² (holdout)', f"{best['r2']:.3f}", delta=delta_str(best['r2'], dummy, 'r2'),
-              delta_color='normal', help='Unseen cell lines. Acceptance gate: > 0.25.')
-    k3.metric('Per-line Spearman', f"{best['per_line_spearman']:.3f}",
-              delta=gate_str(best['per_line_spearman'], ACCEPTANCE_GATES['per_line_spearman']),
-              delta_color='normal',
-              help='Pre-registered acceptance gate: > 0.40 on unseen lines. The dummy '
-                   'baseline cannot be ranked, so the delta shows the gate margin.')
-    k4.metric('NDCG@10', f"{best['ndcg10']:.3f}", delta=delta_str(best['ndcg10'], dummy, 'ndcg10'),
-              delta_color='normal', help='Top-10 ranking quality. Higher is better.')
-    st.caption('Acceptance gates: R² > 0.25 '
+    k1.metric('Champion (v1.0)', champion,
+              help='Pre-registered model-selection winner. Champion is a convention, '
+                   'not a finding: the gap to XGBoost is within 7-line resolution.')
+    k2.metric('CatBoost per-line Spearman', f"{(_cb or best)['per_line_spearman']:.3f}",
+              help='Pre-registered holdout metric. Higher is better.')
+    k3.metric('Per-drug mean baseline', f"{(_bm or {}).get('per_line_spearman', float('nan')):.3f}",
+              help='Post-hoc, exploratory. Each drug’s mean training AUC; global-mean '
+                   'fallback for unseen drugs (0 rows needed it here).')
+    k4.metric('Δ CatBoost − baseline',
+              f"{(_cb or best)['per_line_spearman'] - (_bm or {'per_line_spearman': float('nan')})['per_line_spearman']:+.3f}",
+              help='Paired bootstrap over the seven holdout lines; negative means the '
+                   'baseline ranks better. NDCG@10 is a tie.')
+    st.caption('Pre-registered gates on CatBoost: R² > 0.25 '
                f"({'PASS' if best['r2'] > ACCEPTANCE_GATES['r2'] else 'FAIL'}, "
                f"{best['r2']:.3f}) and per-line Spearman > "
                f"{ACCEPTANCE_GATES['per_line_spearman']:.2f} "
                f"({'PASS' if best['per_line_spearman'] > ACCEPTANCE_GATES['per_line_spearman'] else 'FAIL'}, "
-               f"{best['per_line_spearman']:.3f}) — both met on unseen cell lines.")
+               f"{best['per_line_spearman']:.3f}). **But the post-hoc per-drug mean "
+               f"baseline wins both** (R² {(_bm or {}).get('r2', float('nan')):.3f}; "
+               f"per-line {(_bm or {}).get('per_line_spearman', float('nan')):.3f}); "
+               'the model is reported as a negative result.')
 
 # ---------- sidebar ----------
 with st.sidebar:
@@ -1314,9 +1367,11 @@ with tab_rank:
 # ---------------- 2. selectivity + combos ----------------
 with tab_sel:
     st.subheader('Selectivity: MDA-MB-231 vs MCF7')
+    st.warning(selectivity_caption())
     st.write(f'Below the dashed diagonal means the drug is predicted to kill the TNBC line '
              f'more than the control. The dotted lines mark the sensitivity cut-off '
-             f'(AUC {SENSITIVE_AUC}). Hover for values; drag to zoom.')
+             f'(AUC {SENSITIVE_AUC}). Hover for values; drag to zoom. These are model '
+             'predictions; measured selectivity requires the SI from the plate.')
     n_top = st.slider('Label the top N drugs', 0, 10, 5)
     st.plotly_chart(selectivity_chart(rank_full, n_top), use_container_width=True,
                     config={'displaylogo': False})
@@ -1350,11 +1405,85 @@ with tab_net:
 
 # ---------------- 5. model & audit ----------------
 with tab_model:
-    st.subheader('Holdout benchmark on unseen cell lines')
+    st.subheader('Holdout benchmark: CatBoost vs a one-line baseline')
+    st.caption('**Post-hoc, exploratory.** The holdout was already seen when this '
+               'baseline was defined, so it is not a pre-registered result. Both models '
+               'are scored on the identical 7,336 holdout rows (7 cell lines).')
+    bshow = baseline_table.copy()
+    for c in ['mae', 'rmse', 'r2', 'pooled_spearman', 'per_line_spearman',
+              'ndcg10', 'recall10']:
+        if c in bshow.columns:
+            bshow[c] = bshow[c].astype(float).round(3)
+    bshow = bshow.rename(columns={
+        'model': 'Model', 'analysis_status': 'Analysis status', 'n': 'n rows',
+        'mae': 'MAE', 'rmse': 'RMSE', 'r2': 'R²',
+        'pooled_spearman': 'Pooled Spearman',
+        'per_line_spearman': 'Per-line Spearman', 'ndcg10': 'NDCG@10',
+        'recall10': 'Recall@10'})
+    st.dataframe(bshow[['Model', 'Analysis status', 'n rows', 'MAE', 'RMSE', 'R²',
+                        'Pooled Spearman', 'Per-line Spearman', 'NDCG@10',
+                        'Recall@10']],
+                 hide_index=True, use_container_width=True)
+
+    if baseline_audit:
+        paired = baseline_audit.get('paired_bootstrap_catboost_minus_baseline') or {}
+        p1, p2, p3 = st.columns(3)
+        for col, key, label in [(p1, 'per_line_spearman', 'Per-line Spearman'),
+                                (p2, 'r2', 'R²'),
+                                (p3, 'ndcg10', 'NDCG@10')]:
+            v = paired.get(key) or {}
+            if v:
+                col.metric(f'Δ {label}', f"{v['mean']:+.3f}",
+                           delta=f"95% CI {v['lo95']:+.3f} to {v['hi95']:+.3f}",
+                           delta_color='off')
+        st.caption('Δ = CatBoost − per-drug mean. Negative favors the baseline. The '
+                   'paired bootstrap resamples the seven holdout **lines**, not rows, '
+                   'because rows within a line are not independent. NDCG@10 is saturated '
+                   'near 0.94 for both models; its interval spans zero and is not evidence '
+                   'for either model.')
+
+        with st.expander('Subsets, calibration and sensitive-tail coverage'):
+            rows = []
+            for name, models in (baseline_audit.get('subsets') or {}).items():
+                cb = models['catboost']
+                bm = models['per_drug_mean']
+                rows.append({'Subset': name.replace('_', ' '), 'n': cb['n'],
+                             'CatBoost per-line': round(cb['per_line_spearman'], 3),
+                             'Baseline per-line': round(bm['per_line_spearman'], 3),
+                             'CatBoost R²': round(cb['r2'], 3),
+                             'Baseline R²': round(bm['r2'], 3),
+                             'CatBoost NDCG': round(cb['ndcg10'], 3),
+                             'Baseline NDCG': round(bm['ndcg10'], 3)})
+            st.write('**Subsets** — the learned 227 is a tie, not a lift.')
+            st.dataframe(pd.DataFrame(rows), hide_index=True, use_container_width=True)
+            cal = baseline_audit.get('calibration') or {}
+            if cal:
+                crows = []
+                for name, c in cal.items():
+                    crows.append({'Subset': name.replace('_', ' '), 'n': c['n'],
+                                  'Measured mean AUC': round(c['measured_mean_auc'], 3),
+                                  'CatBoost mean': round(c['catboost_mean_auc'], 3),
+                                  'Baseline mean': round(c['per_drug_mean_auc'], 3)})
+                st.write('**Calibration** — CatBoost overpredicts AUC on the drugs it learned.')
+                st.dataframe(pd.DataFrame(crows), hide_index=True,
+                             use_container_width=True)
+            cov = baseline_audit.get('coverage') or {}
+            if cov:
+                st.write('**Sensitive-tail coverage** — the plateau does not hide the actives.')
+                st.write(f"{cov['measured_sensitive_in_learned']} of "
+                         f"{cov['measured_sensitive_rows']} measured AUC < 0.3 rows are "
+                         f"inside the {cov['learned_drugs']} learned drugs. Every line’s "
+                         'measured top-10 is 10/10 inside that set. This is coverage, '
+                         'not lift: the baseline covers them trivially.')
+
+    st.subheader('Pre-registered model-selection leaderboard (v1.0)')
     lb_show = leaderboard.copy()
     for c in ['mae', 'rmse', 'r2', 'spearman', 'per_line_spearman', 'ndcg10', 'recall10']:
         lb_show[c] = lb_show[c].astype(float).round(3)
     st.dataframe(lb_show, hide_index=True, use_container_width=True)
+    st.caption('The v1.0 leaderboard remains unchanged. The per-drug mean row lives in '
+               '`baseline_audit.csv` as a separate post-hoc artifact, so the v1.0 '
+               'selection record is not silently rewritten.')
 
     st.subheader('Prediction uncertainty (80% and 95% intervals)')
     if not intervals:

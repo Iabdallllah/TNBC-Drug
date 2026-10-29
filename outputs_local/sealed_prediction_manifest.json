@@ -1,0 +1,23 @@
+{
+  "sealed_file": "outputs_local/sealed_prediction.md",
+  "sealed_file_sha256": "de0922e70c97b416eb46bc9df73a417dfa959551f74cb2043e543dba4f4db851",
+  "sealed_file_bytes": 2165,
+  "sealed_file_mtime_utc": "2026-10-16 13:53:03 UTC",
+  "declared_timestamp_utc": "2026-10-16 13:53",
+  "internal_predictions_sha256_prefix": "cc8e2216a19695b1",
+  "v1_0_reference_tag": "v1.0-defense",
+  "v1_0_reference_commit": "8be8319",
+  "rule": "Any hyperparameter, feature-set, or training-data change after the declared timestamp voids the seal.",
+  "dashboard_access_policy": {
+    "computational_lead": "full access",
+    "supervisor": "full access; holds signed sealed copy",
+    "bench_team": "blinded: no Defense report or Live predictor access before unblinding",
+    "others": "none recorded"
+  },
+  "access_log_status": "TO COMPLETE: attach Streamlit/git access logs if available before plate 1",
+  "sign_off": {
+    "computational_lead": null,
+    "supervisor": null,
+    "date": null
+  }
+}

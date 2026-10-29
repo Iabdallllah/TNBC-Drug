@@ -1,0 +1,514 @@
+{
+  "report_version": "1.1",
+  "analysis_status": "post-hoc, exploratory",
+  "analysis_date_utc": "2026-10-29",
+  "seed": 20261029,
+  "bootstrap": {
+    "unit": "cell line",
+    "n_resamples": 2000,
+    "n_lines": 7
+  },
+  "holdout": {
+    "lines": [
+      "ACH-000019",
+      "ACH-000097",
+      "ACH-000212",
+      "ACH-000248",
+      "ACH-000643",
+      "ACH-000768",
+      "ACH-000934"
+    ],
+    "n_lines": 7,
+    "n_rows": 7336,
+    "n_drugs": 1482,
+    "training_lines": 23,
+    "training_rows": 23658,
+    "global_training_mean": 0.8829888230126698,
+    "fallback_drugs_in_holdout": 0,
+    "fallback_rows": 0,
+    "fallback_policy": "drug mean from the 23 training lines; drugs with no training row use the global training mean",
+    "paired_evaluation_frame": "identical 7,336 holdout rows for both models"
+  },
+  "metrics": {
+    "catboost": {
+      "n": 7336,
+      "mae": 0.08112297596863757,
+      "rmse": 0.10027021857515739,
+      "r2": 0.5669030018940561,
+      "pooled_spearman": 0.41685028681013586,
+      "per_line_spearman": 0.630404561351272,
+      "ndcg10": 0.9411393070796752,
+      "recall10": 0.6933333333333334
+    },
+    "per_drug_mean": {
+      "n": 7336,
+      "mae": 0.043735983153086355,
+      "rmse": 0.06381568332191295,
+      "r2": 0.8245731367049317,
+      "pooled_spearman": 0.8449078749434866,
+      "per_line_spearman": 0.8294946455961086,
+      "ndcg10": 0.9452135343738325,
+      "recall10": 0.7458333333333333
+    }
+  },
+  "paired_bootstrap_catboost_minus_baseline": {
+    "per_line_spearman": {
+      "mean": -0.199236658863012,
+      "lo95": -0.25026792410961096,
+      "hi95": -0.13447440534237393,
+      "catboost_better_fraction": 0.0,
+      "baseline_better_fraction": 1.0
+    },
+    "r2": {
+      "mean": -0.2566755251270236,
+      "lo95": -0.2705283448119027,
+      "hi95": -0.23562412878354963,
+      "catboost_better_fraction": 0.0,
+      "baseline_better_fraction": 1.0
+    },
+    "ndcg10": {
+      "mean": -0.0042774017855606375,
+      "lo95": -0.014450603297441526,
+      "hi95": 0.006807601165308097,
+      "catboost_better_fraction": 0.2355,
+      "baseline_better_fraction": 0.7645
+    }
+  },
+  "catboost_bootstrap_ci": {
+    "r2": {
+      "mean": 0.566700550629032,
+      "lo95": 0.5403821309373421,
+      "hi95": 0.5893947060285332
+    },
+    "pooled_spearman": {
+      "mean": 0.43080999627966005,
+      "lo95": 0.3890165799688406,
+      "hi95": 0.5007983209597495
+    },
+    "per_line_spearman": {
+      "mean": 0.6298622437407653,
+      "lo95": 0.5979591635175716,
+      "hi95": 0.6723104108692024
+    },
+    "ndcg10": {
+      "mean": 0.9408389144717411,
+      "lo95": 0.9218027809343711,
+      "hi95": 0.9599765527719665
+    }
+  },
+  "baseline_bootstrap_ci": {
+    "r2": {
+      "mean": 0.8233760757560556,
+      "lo95": 0.7976779574480235,
+      "hi95": 0.8436437701964309
+    },
+    "pooled_spearman": {
+      "mean": 0.8446411475664922,
+      "lo95": 0.8382158165375757,
+      "hi95": 0.8488404971475297
+    },
+    "per_line_spearman": {
+      "mean": 0.8290989026037774,
+      "lo95": 0.7927131291847348,
+      "hi95": 0.8492108275952777
+    },
+    "ndcg10": {
+      "mean": 0.9451163162573019,
+      "lo95": 0.9220080081192191,
+      "hi95": 0.9650371491098323
+    }
+  },
+  "per_line": [
+    {
+      "ModelID": "ACH-000019",
+      "n": 1360,
+      "catboost_per_line_spearman": 0.6049179528839631,
+      "per_drug_mean_per_line_spearman": 0.8485685064510736,
+      "catboost_r2": 0.5920163321070986,
+      "per_drug_mean_r2": 0.8461787612932697,
+      "catboost_ndcg10": 0.9866264630053897,
+      "per_drug_mean_ndcg10": 0.9784230084244138
+    },
+    {
+      "ModelID": "ACH-000097",
+      "n": 1447,
+      "catboost_per_line_spearman": 0.5947250949729385,
+      "per_drug_mean_per_line_spearman": 0.8504484203188125,
+      "catboost_r2": 0.555257209346022,
+      "per_drug_mean_r2": 0.8057874404252112,
+      "catboost_ndcg10": 0.9298998540299386,
+      "per_drug_mean_ndcg10": 0.945182896413351
+    },
+    {
+      "ModelID": "ACH-000212",
+      "n": 1351,
+      "catboost_per_line_spearman": 0.5951907512428366,
+      "per_drug_mean_per_line_spearman": 0.8513862051815886,
+      "catboost_r2": 0.5812476446716363,
+      "per_drug_mean_r2": 0.8437865806075401,
+      "catboost_ndcg10": 0.9496773064214483,
+      "per_drug_mean_ndcg10": 0.9720596299692009
+    },
+    {
+      "ModelID": "ACH-000248",
+      "n": 152,
+      "catboost_per_line_spearman": 0.6732191478196226,
+      "per_drug_mean_per_line_spearman": 0.721697647586543,
+      "catboost_r2": 0.43569231192047053,
+      "per_drug_mean_r2": 0.5215143823211481,
+      "catboost_ndcg10": 0.8912519100318903,
+      "per_drug_mean_ndcg10": 0.883817731379964
+    },
+    {
+      "ModelID": "ACH-000643",
+      "n": 1438,
+      "catboost_per_line_spearman": 0.597716229205127,
+      "per_drug_mean_per_line_spearman": 0.8465152632723484,
+      "catboost_r2": 0.5167137520416296,
+      "per_drug_mean_r2": 0.8001491433070507,
+      "catboost_ndcg10": 0.9406753846671002,
+      "per_drug_mean_ndcg10": 0.9547763374175031
+    },
+    {
+      "ModelID": "ACH-000768",
+      "n": 1396,
+      "catboost_per_line_spearman": 0.6041862342024479,
+      "per_drug_mean_per_line_spearman": 0.8402466853590186,
+      "catboost_r2": 0.5867195030291349,
+      "per_drug_mean_r2": 0.8565606410946379,
+      "catboost_ndcg10": 0.9496437079773213,
+      "per_drug_mean_ndcg10": 0.9612883302303062
+    },
+    {
+      "ModelID": "ACH-000934",
+      "n": 192,
+      "catboost_per_line_spearman": 0.7428765191319687,
+      "per_drug_mean_per_line_spearman": 0.8475997910033753,
+      "catboost_r2": 0.6549628032276795,
+      "per_drug_mean_r2": 0.8334931213155253,
+      "catboost_ndcg10": 0.9402005234246373,
+      "per_drug_mean_ndcg10": 0.92094680678209
+    }
+  ],
+  "subsets": {
+    "all_holdout": {
+      "catboost": {
+        "n": 7336,
+        "mae": 0.08112297596863757,
+        "rmse": 0.10027021857515739,
+        "r2": 0.5669030018940561,
+        "pooled_spearman": 0.41685028681013586,
+        "per_line_spearman": 0.630404561351272,
+        "ndcg10": 0.9411393070796752,
+        "recall10": 0.6933333333333334
+      },
+      "per_drug_mean": {
+        "n": 7336,
+        "mae": 0.043735983153086355,
+        "rmse": 0.06381568332191295,
+        "r2": 0.8245731367049317,
+        "pooled_spearman": 0.8449078749434866,
+        "per_line_spearman": 0.8294946455961086,
+        "ndcg10": 0.9452135343738325,
+        "recall10": 0.7458333333333333
+      }
+    },
+    "learned_227": {
+      "catboost": {
+        "n": 1211,
+        "mae": 0.14178132053546114,
+        "rmse": 0.16090971037651625,
+        "r2": -0.02802673060628247,
+        "pooled_spearman": 0.8025709627490035,
+        "per_line_spearman": 0.8009654906185687,
+        "ndcg10": 0.9411393070796752,
+        "recall10": 0.6933333333333334
+      },
+      "per_drug_mean": {
+        "n": 1211,
+        "mae": 0.0681159169558286,
+        "rmse": 0.08980126066024585,
+        "r2": 0.6798122089883467,
+        "pooled_spearman": 0.8130429683426565,
+        "per_line_spearman": 0.8041100345859038,
+        "ndcg10": 0.9452135343738325,
+        "recall10": 0.7458333333333333
+      }
+    },
+    "measured_auc_below_0_5": {
+      "catboost": {
+        "n": 286,
+        "mae": 0.2012104241346462,
+        "rmse": 0.22237432822237488,
+        "r2": -3.690991450251696,
+        "pooled_spearman": 0.6842891923797715,
+        "per_line_spearman": 0.6317260205174821,
+        "ndcg10": 0.9572190746623328,
+        "recall10": 0.6933333333333334
+      },
+      "per_drug_mean": {
+        "n": 286,
+        "mae": 0.10546733951189044,
+        "rmse": 0.13547150125142252,
+        "r2": -0.7409697704390479,
+        "pooled_spearman": 0.6635998368113825,
+        "per_line_spearman": 0.6149330197221253,
+        "ndcg10": 0.9651058584271296,
+        "recall10": 0.7458333333333333
+      }
+    },
+    "learned_and_measured_auc_below_0_5": {
+      "catboost": {
+        "n": 279,
+        "mae": 0.19469267528220963,
+        "rmse": 0.21282725119127247,
+        "r2": -3.249745942558186,
+        "pooled_spearman": 0.6941048083192433,
+        "per_line_spearman": 0.6421516216495479,
+        "ndcg10": 0.9572190746623328,
+        "recall10": 0.6933333333333334
+      },
+      "per_drug_mean": {
+        "n": 279,
+        "mae": 0.09871359891038259,
+        "rmse": 0.12349337803100795,
+        "r2": -0.43085569735804086,
+        "pooled_spearman": 0.6721640959480727,
+        "per_line_spearman": 0.6243390759528634,
+        "ndcg10": 0.9651058584271296,
+        "recall10": 0.7458333333333333
+      }
+    },
+    "measured_auc_below_0_3": {
+      "catboost": {
+        "n": 55,
+        "mae": 0.21507357789280282,
+        "rmse": 0.22810344236097418,
+        "r2": -10.843655976772288,
+        "pooled_spearman": 0.44184704184704193,
+        "per_line_spearman": 0.4301069518716577,
+        "ndcg10": 0.9856717731215834,
+        "recall10": 0.925
+      },
+      "per_drug_mean": {
+        "n": 55,
+        "mae": 0.10857769768975997,
+        "rmse": 0.13201825763201466,
+        "r2": -2.967254838942991,
+        "pooled_spearman": 0.4643732771618156,
+        "per_line_spearman": 0.4550267379679143,
+        "ndcg10": 0.9865487881950739,
+        "recall10": 0.925
+      }
+    }
+  },
+  "calibration": {
+    "all_holdout": {
+      "n": 7336,
+      "measured_mean_auc": 0.8678086001898313,
+      "catboost_mean_auc": 0.8743651140588318,
+      "per_drug_mean_auc": 0.8853204836835081,
+      "catboost_bias": 0.006556513869000469,
+      "per_drug_mean_bias": 0.017511883493676828
+    },
+    "learned_227": {
+      "n": 1211,
+      "measured_mean_auc": 0.6057743097859619,
+      "catboost_mean_auc": 0.741186427462981,
+      "per_drug_mean_auc": 0.6328241653588391,
+      "catboost_bias": 0.1354121176770191,
+      "per_drug_mean_bias": 0.0270498555728772
+    }
+  },
+  "coverage": {
+    "learned_drugs": 227,
+    "plateau_drugs": 1255,
+    "plateau_fraction": 0.8468286099865048,
+    "plateau_prediction_values": [
+      0.895855,
+      0.897718,
+      0.898035,
+      0.898958,
+      0.903622,
+      0.904976,
+      0.906574
+    ],
+    "plateau_mda_values": [
+      0.906574
+    ],
+    "plateau_mda_value": 0.906574,
+    "holdout_rows_in_learned": 1211,
+    "holdout_rows_total": 7336,
+    "holdout_fraction_in_learned": 0.1650763358778626,
+    "measured_sensitive_rows": 55,
+    "measured_sensitive_in_learned": 55,
+    "measured_sensitive_fraction_in_learned": 1.0,
+    "per_line_top10_measured_in_learned": {
+      "ACH-000019": 10,
+      "ACH-000097": 10,
+      "ACH-000212": 10,
+      "ACH-000248": 10,
+      "ACH-000643": 10,
+      "ACH-000768": 10,
+      "ACH-000934": 10
+    },
+    "interpretation": "coverage only: the plateau does not hide the measured actives; the baseline covers them trivially"
+  },
+  "selectivity": {
+    "definition": "delta = AUC(MCF7) - AUC(MDA-MB-231); positive = MDA-selective",
+    "all_shared_drugs": {
+      "n": 1322,
+      "pearson": {
+        "statistic": 0.0025089267998522815,
+        "p": 0.92738395692894,
+        "note": "ok"
+      },
+      "spearman": {
+        "statistic": 0.02732570100358565,
+        "p": 0.32081260234294057,
+        "note": "ok"
+      },
+      "sign_agreement": 0.5279878971255674,
+      "predicted_delta_min": -0.055726079417657504,
+      "predicted_delta_max": 0.03853285928922934,
+      "predicted_delta_unique": 117,
+      "measured_delta_min": -0.29082000601040403,
+      "measured_delta_max": 0.449666419406155
+    },
+    "learned_227": {
+      "n": 214,
+      "pearson": {
+        "statistic": -0.0010558096587274877,
+        "p": 0.9877491974355977,
+        "note": "ok"
+      },
+      "spearman": {
+        "statistic": 0.04602918556422378,
+        "p": 0.5030105956875763,
+        "note": "ok"
+      },
+      "sign_agreement": 0.4953271028037383,
+      "predicted_delta_min": -0.055726079417657504,
+      "predicted_delta_max": 0.03853285928922934,
+      "predicted_delta_unique": 117,
+      "measured_delta_min": -0.284065400050409,
+      "measured_delta_max": 0.449666419406155
+    },
+    "restricted_measured_auc_below_0_5_either": {
+      "n": 66,
+      "pearson": {
+        "statistic": -0.017944918335137255,
+        "p": 0.8862813248485262,
+        "note": "ok"
+      },
+      "spearman": {
+        "statistic": 0.028692249370844122,
+        "p": 0.8191096441498781,
+        "note": "ok"
+      },
+      "sign_agreement": 0.4393939393939394,
+      "predicted_delta_min": -0.055726079417657504,
+      "predicted_delta_max": 0.03853285928922934,
+      "predicted_delta_unique": 61,
+      "measured_delta_min": -0.284065400050409,
+      "measured_delta_max": 0.449666419406155
+    },
+    "v1_0_selective_calls": [
+      {
+        "drug_name": "DOLASTATIN-10",
+        "drug_id": "DPC-002321",
+        "predicted_delta": 0.0186474865320585,
+        "measured_delta": -0.023575758290398013,
+        "measured_mda_auc": 0.207128986963157,
+        "measured_mcf7_auc": 0.183553228672759
+      },
+      {
+        "drug_name": "EXATECAN-MESYLATE",
+        "drug_id": "DPC-002682",
+        "predicted_delta": 0.015122030297283984,
+        "measured_delta": -0.13992228870106202,
+        "measured_mda_auc": 0.34119803495889,
+        "measured_mcf7_auc": 0.201275746257828
+      },
+      {
+        "drug_name": "ROMIDEPSIN",
+        "drug_id": "DPC-005646",
+        "predicted_delta": 0.021411224136244078,
+        "measured_delta": -0.00017937236705500847,
+        "measured_mda_auc": 0.276780154853948,
+        "measured_mcf7_auc": 0.276600782486893
+      },
+      {
+        "drug_name": "TRIPTOLIDE",
+        "drug_id": "DPC-006658",
+        "predicted_delta": 0.033890096175682505,
+        "measured_delta": -0.033855609788473504,
+        "measured_mda_auc": 0.116932964601152,
+        "measured_mcf7_auc": 0.0830773548126785
+      }
+    ]
+  },
+  "expression_lines": {
+    "breast_lines_annotated": 96,
+    "expression_rows": 79,
+    "expression_unique_lines": 76,
+    "breast_lines_with_expression": 76,
+    "duplicate_model_ids": {
+      "ACH-000019": 2,
+      "ACH-001662": 2,
+      "ACH-001396": 2
+    },
+    "pca_fit_rows": 62,
+    "pca_fit_unique_lines": 60,
+    "pca_holdout_unique_lines": 16,
+    "pca_holdout_ids": [
+      "ACH-000019",
+      "ACH-000097",
+      "ACH-000196",
+      "ACH-000212",
+      "ACH-000248",
+      "ACH-000349",
+      "ACH-000643",
+      "ACH-000725",
+      "ACH-000755",
+      "ACH-000768",
+      "ACH-000857",
+      "ACH-000934",
+      "ACH-001683",
+      "ACH-001819",
+      "ACH-001820",
+      "ACH-002883"
+    ],
+    "ml_holdout_ids": [
+      "ACH-000019",
+      "ACH-000097",
+      "ACH-000212",
+      "ACH-000248",
+      "ACH-000643",
+      "ACH-000768",
+      "ACH-000934"
+    ],
+    "ml_holdout_in_pca_fit": [],
+    "ml_holdout_in_pca_holdout": [
+      "ACH-000019",
+      "ACH-000097",
+      "ACH-000212",
+      "ACH-000248",
+      "ACH-000643",
+      "ACH-000768",
+      "ACH-000934"
+    ],
+    "all_ml_holdout_excluded_from_pca_fit": true,
+    "reconciles_60_plus_16_equals_76": true,
+    "v1_0_count": 77,
+    "correction": "v1.0 reported 77 lines with expression; 77 was a row/counting artifact. The shipped table has 79 rows and 76 unique ModelIDs."
+  },
+  "ndcg_definition": "graded relevance = 1 - AUC; lower AUC = higher relevance. Only Recall@10 uses the binary AUC < 0.3 threshold.",
+  "limitations": [
+    "The holdout was already seen before this audit; all numbers are post-hoc and exploratory.",
+    "The effective sample size is 7 cell lines, not 7,336 rows.",
+    "A tie within the learned 227 drugs is not proof that expression carries no signal.",
+    "NDCG@10 is saturated near 0.94 for both models and is a weak discriminator.",
+    "The selectivity correlation uses MDA-MB-231 and MCF7 only; it is not an external validation."
+  ]
+}

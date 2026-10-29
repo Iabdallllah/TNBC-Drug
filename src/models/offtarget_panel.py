@@ -90,6 +90,8 @@ def main():
                 break
             cands = [(tn, m) for tn, m in sigs.items()
                      if len(k) >= 5 and len(tn) >= 5 and (k in tn or tn in k)
+                     and (tn.startswith(k) or tn.endswith(k)
+                          or k.startswith(tn) or k.endswith(tn))
                      and 'Up' in m and 'Down' in m]
             if cands:
                 drug_keys[d] = max(cands, key=lambda c: len(c[0]))[0]
@@ -115,6 +117,9 @@ def main():
                     'genes': ', '.join(sorted(inter)[:25]),
                 })
     amap = pd.DataFrame(rows)
+    # The legacy NAC rows came from a Solifenacin-Succinate signature. Mark them
+    # at the data layer so no downstream script can cite them as NAC evidence.
+    amap['quarantined'] = amap['drug'].astype(str).str.upper().str.startswith('N-ACETYL')
     amap.to_csv(os.path.join(OUT, 'offtarget_panel_map.csv'), index=False)
 
     # ---- rescue reversal test (reciprocal overlap within expressed genes) ----
@@ -150,6 +155,8 @@ def main():
     rv = pd.DataFrame(res)
     if rv.empty:
         sys.exit('no killer x rescue pair resolved - check signatures')
+    rv['quarantined'] = rv[['killer', 'rescue']].apply(
+        lambda row: any(str(v).upper().startswith('N-ACETYL') for v in row), axis=1)
     rv.to_csv(os.path.join(OUT, 'offtarget_rescue_reversal.csv'), index=False)
 
     log('\n=== expressed-protein suppression (MDA-MB-231) ===')

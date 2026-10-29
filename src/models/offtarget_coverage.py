@@ -42,6 +42,31 @@ def norm(s):
     return re.sub(r'[^a-z0-9]+', '', str(s).lower())
 
 
+def resolve_l1000_term(name, terms):
+    """Resolve a requested drug to one L1000 term, exact match first.
+
+    The legacy matcher used an unguarded substring fallback.  That is how the
+    abbreviation ``NAC`` matched inside ``SolifeNACin`` and how ``erastin`` is a
+    latent substring of ``Cloperastine``.  Exact matches always win; a fallback
+    is accepted only when the shorter string touches a token boundary of the
+    longer one, so a mid-word fragment cannot masquerade as a drug name.
+    """
+    nkey = norm(name)
+    if nkey in terms:
+        return terms[nkey]
+    cands = []
+    for tn, meta in terms.items():
+        if len(nkey) < 5 or len(tn) < 6:
+            continue
+        if nkey not in tn and tn not in nkey:
+            continue
+        if not (tn.startswith(nkey) or tn.endswith(nkey)
+                or nkey.startswith(tn) or nkey.endswith(tn)):
+            continue
+        cands.append((tn, meta))
+    return max(cands, key=lambda c: len(c[0]))[1] if cands else None
+
+
 def load_l1000_terms():
     """term -> n_genes, from the consensus chem-pert library (cached download)."""
     if not os.path.exists(LIB_CACHE):
@@ -135,14 +160,7 @@ def main():
     terms = load_l1000_terms()
     for _, r in df.iterrows():
         name = str(r['drug_name']).strip()
-        nkey = norm(name)
-        sig = terms.get(nkey)
-        if sig is None:                      # substring fallback, longest first
-            cands = [(tn, m) for tn, m in terms.items()
-                     if len(nkey) >= 5 and len(tn) >= 6
-                     and (nkey in tn or tn in nkey)]
-            if cands:
-                sig = max(cands, key=lambda c: len(c[0]))[1]
+        sig = resolve_l1000_term(name, terms)
         cid, phase, mech = chembl_lookup(name)
         row = {'drug_id': r['drug_id'], 'drug_name': name, 'rank': int(r['rank']),
                'l1000_term': sig['term'] if sig else '',

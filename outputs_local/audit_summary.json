@@ -1,19 +1,31 @@
 {
- "expression_file": "{\"gene_start\": 6, \"id_col\": \"ModelID\", \"n_file_rows\": 2314, \"file\": \"OmicsExpressionTPMLogp1HumanAllGenes.csv\"}",
- "breast_lines_total": 96,
- "subtype_counts": {
-  "other": 75,
-  "TNBC": 10,
-  "Luminal": 7,
-  "HER2+": 4
- },
- "wanted_with_expression": 77,
- "ml_rows": 30994,
- "ml_cell_lines": 30,
- "ml_drugs": 1482,
- "mda_mb_231_present": true,
- "mcf7_present": true,
- "auc_min": 0.0271079890265864,
- "auc_max": 1.0,
- "note": "ml_rows deduped to unique (cell_line, drug) pairs actually used for training"
+  "expression_file": "{\"gene_start\": 6, \"id_col\": \"ModelID\", \"n_file_rows\": 2314, \"file\": \"OmicsExpressionTPMLogp1HumanAllGenes.csv\"}",
+  "breast_lines_total": 96,
+  "subtype_counts": {
+    "other": 75,
+    "TNBC": 10,
+    "Luminal": 7,
+    "HER2+": 4
+  },
+  "wanted_with_expression": 76,
+  "ml_rows": 30994,
+  "ml_cell_lines": 30,
+  "ml_drugs": 1482,
+  "mda_mb_231_present": true,
+  "mcf7_present": true,
+  "auc_min": 0.0271079890265864,
+  "auc_max": 1.0,
+  "note": "ml_rows deduped to unique (cell_line, drug) pairs actually used for training",
+  "wanted_with_expression_v1_0": 77,
+  "expression_rows_in_shipped_table": 79,
+  "expression_duplicate_model_ids": {
+    "ACH-000019": 2,
+    "ACH-001662": 2,
+    "ACH-001396": 2
+  },
+  "pca_fit_rows": 62,
+  "pca_fit_unique_lines": 60,
+  "pca_holdout_unique_lines": 16,
+  "ml_holdout_excluded_from_pca_fit": true,
+  "expression_count_correction": "v1.1 correction: 76 unique breast lines with expression, not 77. The shipped PCA table has 79 rows because MCF7, ACH-001396 and ACH-001662 are duplicated; 62 fit rows are 60 unique lines and the 16-line PCA holdout contains all 7 ML holdout lines."
 }

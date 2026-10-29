@@ -152,6 +152,8 @@ def main():
     short = short.sort_values(['drug', 'in_rescue_reversal', 'array_friendly',
                                'in_statin_core'],
                               ascending=[True, False, False, False])
+    # Legacy NAC rows are a Solifenacin-Succinate signature; quarantine them.
+    short['quarantined'] = short['drug'].astype(str).str.upper().str.startswith('N-ACETYL')
     short.to_csv(os.path.join(OUT, 'protein_array_shortlist.csv'), index=False)
 
     log('\n=== shortlist preview (top 5 per drug) ===')

@@ -62,7 +62,15 @@ def signature_audit(rescue, coverage=None):
     sub = coverage[coverage['panel_drug'].map(_norm) == _norm(rescue)]
     if not len(sub):
         return True, None, ''
-    term = str(sub.iloc[0].get('l1000_term') or '').strip()
+    first = sub.iloc[0]
+    if 'quarantined' in sub.columns and str(first.get('quarantined')).strip().lower() in (
+            'true', '1', 'yes'):
+        term = str(first.get('l1000_term') or '').strip()
+        return False, term, (
+            f'{rescue} is quarantined in the provenance table: the legacy L1000 match '
+            f'resolved “NAC” inside “Solifenacin” to the wrong molecule ({term}). '
+            'The rescue network is withheld.')
+    term = str(first.get('l1000_term') or '').strip()
     if not term or term.lower() == 'nan':
         return False, term, (f'{rescue}: no L1000 consensus signature is available. '
                              'The rescue network is withheld rather than guessed.')

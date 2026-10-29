@@ -162,6 +162,9 @@ def main():
     rv = pd.read_csv(os.path.join(OUT, 'offtarget_rescue_reversal.csv'))
     rv = pd.concat([rv, pd.DataFrame(res)], ignore_index=True)
     rv = rv.drop_duplicates(subset=['line', 'killer', 'rescue'], keep='last')
+    # Data-layer quarantine marker: legacy NAC rows are Solifenacin, not NAC.
+    rv['quarantined'] = rv[['killer', 'rescue']].apply(
+        lambda row: any(str(v).upper().startswith('N-ACETYL') for v in row), axis=1)
     rv.to_csv(os.path.join(OUT, 'offtarget_rescue_reversal.csv'), index=False)
 
     meta = {
