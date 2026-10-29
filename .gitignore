@@ -11,3 +11,6 @@ __pycache__/
 .ipynb_checkpoints/
 *.crdownload
 .DS_Store
+
+# Regenerable local artifacts (incl. expression PCA cache)
+outputs_local/cache/

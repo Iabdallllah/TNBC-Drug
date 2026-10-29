@@ -17,6 +17,8 @@ luminal control **MCF7** — first computationally, then in the wet lab.
 > CatBoost reaches per-line Spearman 0.630 / R² 0.567; a per-drug training-mean
 > baseline reaches 0.830 / 0.825. Predicted selectivity is uncorrelated with measured
 > selectivity (Spearman 0.027, n = 1,322; restricted n = 66, 0.029). The four v1.0
+**v1.2-defense** (962028f) superseded by **v1.2.1-defense** (5d398fe) — fix-forward only, no sealed artifact change.
+
 > “selective” calls are relabelled **“Predicted selective (unvalidated)”**. The
 > defensible contributions are the leakage/audit machinery, the external CTRPv2 RSL3
 > evidence, and the pre-registered mechanism panel. See `REPORT_v1.1.md`.
@@ -317,7 +319,7 @@ against predictions (Spearman) with per-drug Selectivity Indexes.
 
 | Stream | Status |
 |---|---|
-| ML / Data / API / UI | **Done with a negative model result**: pipeline, leakage audit, rankings, combos, API, **32/32 tests**, seven-tab dashboard, zero-JS v1.1 report |
+| ML / Data / API / UI | **Done with a negative model result**: pipeline, leakage audit, rankings, combos, API, **36/36 tests** (read live from `outputs_local/validation_status.json`), seven-tab dashboard, zero-JS v1.1 report |
 | Baseline / selectivity audit | **Done (post-hoc, exploratory)**: per-drug mean beats CatBoost; selectivity null incl. restricted check; 76-line correction |
 | Bioinformatics | Pending: confirm distinct targets/pathways for shortlisted pairs |
 | Wet-lab | Pending: MTT results (`raw_absorbance.csv`) for the panel + 2 pairs |

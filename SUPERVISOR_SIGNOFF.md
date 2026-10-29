@@ -14,6 +14,14 @@ Status: NOT SIGNED (fields blank per rules — do not invent names/signatures/da
 - CLAIMED (post-hoc, exploratory): baseline comparison; null selectivity; 76-line correction; zero-JS report; 33/33 tests.
 - NOT CLAIMED: validated predictor; validated selective drugs; expression contribution proven; blind design fully validated; any panel kill percentage as an absolute rate.
 
+## Blinding scope (Phase 4.1 fix-forward)
+- UI blinding (BLIND_MODE ON) hides: panel predictions table, FerroSelect panel ranking, kill proxies, Live predictor for panel agents; a banner replaces them. UNBLIND path records timestamped log entry (see UNBLIND.md).
+- UI blinding does NOT hide committed files. The following files remain in the repo and must be withheld from the bench team out-of-band:
+  - outputs_local/sealed_prediction.md (+ sealed_prediction_manifest.json) — sealed record, SHA de0922e7…4db851
+  - outputs_local/leaderboard.csv, outputs_local/ferroselect_panel_predictions.csv, outputs_local/mda_mb_231_full_ranking.csv, outputs_local/candidate_rankings.csv — sealed/panel numbers
+  - catboost_tnbc_v1.cbm, outputs_local/prediction_intervals.json, outputs_local/ctpv2_* — model artifacts
+- The bench team must receive only the protocol / plate map and the blinded dashboard until unblinding is authorised.
+
 ## Checklist (all blank until supervisor completes)
 - [ ] Supervisor name / role: ___________________________
 - [ ] Signature (text or digital): ______________________

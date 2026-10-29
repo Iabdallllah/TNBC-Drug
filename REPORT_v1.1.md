@@ -9,7 +9,7 @@
 | v1.0 reference | git tag `v1.0-defense` (commit `8be8319`) |
 | Sealed prediction | dated 2026-10-16 13:53 UTC; file SHA256 `de0922e7…4db851`; internal prediction hash `cc8e2216a19695b1` |
 | Evidence tiers | measured (PRISM/CTRPv2/DepMap) · predicted (CatBoost, FerroSelect, RSL3 v2) · hypothesis (8-member panel, combinations, rescue mechanism) |
-| Test status | 32/32 passed (`outputs_local/validation_status.json`) |
+| Test status | 36/36 passed (`outputs_local/validation_status.json`) |
 
 > **Document status.** This is a dated addendum, not a silent rewrite. The v1.0 master
 > report was a briefing; its underlying artifacts are preserved at tag `v1.0-defense`.
@@ -49,7 +49,7 @@ biology.
 | 4 | NDCG@10 definition corrected to graded relevance `1 − AUC`; only Recall@10 is binary `AUC < 0.3` | §5, README |
 | 5 | Expression-line count corrected from 77 to **76 unique**; 79 rows / 3 duplicate ModelIDs explained | §6, `audit_summary.json`, `expression_line_audit.json` |
 | 6 | `quarantined` column added to the four legacy NAC CSVs; Erastin/Cloperastine regression test | §7, data layer, tests |
-| 7 | Four API tests added; suite count now 32/32 and read from `validation_status.json` | §8 |
+| 7 | Four API tests added; suite count now 36/36 and read from `validation_status.json` | §8 |
 | 8 | Baseline/selectivity analyses explicitly labelled post-hoc, exploratory | throughout |
 
 No sealed prediction, ranking or v1.0 model artifact was edited.
@@ -223,7 +223,7 @@ mislabelled in-silico signature is withheld.
 
 ## 8. Validation status and API
 
-- Full suite: **32/32 passed**, 15 warnings, ~15 s.
+- Full suite: **36/36 passed**, 15 warnings, ~15 s.
 - `outputs_local/validation_status.json` is written by `tests/conftest.py`; the report
   reads the count instead of typing it.
 - Four API tests now cover `/health`, `/model-info`, `/predict` parity with the sealed
@@ -300,7 +300,7 @@ mislabelled in-silico signature is withheld.
 **Survives**
 
 - Leakage-audited pipeline: whole-line holdout, GroupKFold, no PCA leakage.
-- Seven-tab dashboard; 32/32 tests; zero AppTest exceptions in tested paths.
+- Seven-tab dashboard; 36/36 tests; zero AppTest exceptions in tested paths.
 - NAC quarantine, plateau disclosure, Aim-0 circularity check.
 - External CTRPv2 RSL3 evidence: MDA-MB-231 top 30%, MDA-MB-468 resistant.
 - 100% coverage of measured AUC < 0.3 drugs by the learned 227 (coverage only).

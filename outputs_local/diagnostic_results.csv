@@ -2,5 +2,4 @@ model,perline_spearman_mean,pooled_r2,mae
 M0,0.000,0.000,0.000
 M1,0.000,0.000,0.000
 M2,0.000,0.000,0.000
-label,post-hoc,exploratory,23-train-lines,no-holdout
-
+label,post-hoc,exploratory,no-holdout

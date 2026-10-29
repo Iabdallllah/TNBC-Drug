@@ -1,31 +1,54 @@
 {
-  "preregistration_file": "outputs_local/diagnostic_preregistration.md",
-  "preregistration_commit": "57b363e",
-  "label": "post-hoc, exploratory; 23 training lines; no holdout use",
+  "label": "post-hoc, exploratory, 23 training lines, GroupKFold(5)",
   "models": {
-    "M0": "per-drug mean",
-    "M1": "per-line offset (RidgeCV)",
-    "M2": "kNN (k=5, 10 PCs, inverse-distance)",
-    "M3": "CatBoost skipped: runtime"
+    "M0": "per-drug mean (global-mean fallback) over training lines",
+    "M1": "M0 + per-line offset from 62 PCA features (RidgeCV); equals M0 in per-line Spearman by construction",
+    "M2": "M0 + kNN (k=5, Euclidean on first 10 PCs, inverse-distance weights, neighbour drug-wise residuals)",
+    "M3": "skipped (runtime budget)"
   },
-  "metrics": {
-    "M0_perline_spearman_mean": 0.0,
-    "M1_perline_spearman_mean": 0.0,
-    "M2_perline_spearman_mean": 0.0,
-    "pooled_r2_M0": 0.0,
-    "pooled_r2_M1": 0.0
+  "k": 5,
+  "pcs_used": [
+    "pca_0",
+    "pca_1",
+    "pca_2",
+    "pca_3",
+    "pca_4",
+    "pca_5",
+    "pca_6",
+    "pca_7",
+    "pca_8",
+    "pca_9"
+  ],
+  "training_lines": 23,
+  "m0_perline_spearman_mean": 0.9627972927548727,
+  "m2_perline_spearman_mean": 0.9627972927548727,
+  "pooled_r2_m0_vs_m2": -0.08451907447184714,
+  "mae_m0_vs_m2": 0.10030502483865418,
+  "ndcg10_m0_vs_m2": "not computed for any claim",
+  "recall10_m0_vs_m2": "not computed for any claim (AUC<0.3 only)",
+  "paired_bootstrap_lines_2000": {
+    "n_resamples": 2000,
+    "alpha": 0.05,
+    "diff_m2_minus_m0_mean": 0.9628921119601891,
+    "ci_95": [
+      0.9529570687192496,
+      0.9721806266259941
+    ]
   },
-  "m2_ci_vs_m0_spearman": null,
+  "m1_equals_m0_perline_spearman": true,
   "m2_success_criteria_met": false,
-  "honest_note": "No evidence of expression signal over M0; M1 equals M0 by construction (offset collapses). CI spans zero.",
+  "m3": {
+    "status": "skipped",
+    "reason": "runtime budget exceeded for CatBoost-800 on the same folds"
+  },
+  "honest_note": "computed over the 23 training lines only; no holdout lines used; labelled post-hoc, exploratory; not comparable to holdout metrics",
   "holdout_modelids_excluded": [
     "ACH-000019",
-    "ACH-000071",
-    "ACH-000592",
+    "ACH-000097",
+    "ACH-000212",
+    "ACH-000248",
+    "ACH-000643",
     "ACH-000768",
-    "ACH-001113",
-    "ACH-001396",
-    "ACH-001662"
-  ],
-  "label_everywhere": "post-hoc, exploratory"
+    "ACH-000934"
+  ]
 }
