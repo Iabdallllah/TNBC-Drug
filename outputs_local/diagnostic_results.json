@@ -1,0 +1,31 @@
+{
+  "preregistration_file": "outputs_local/diagnostic_preregistration.md",
+  "preregistration_commit": "57b363e",
+  "label": "post-hoc, exploratory; 23 training lines; no holdout use",
+  "models": {
+    "M0": "per-drug mean",
+    "M1": "per-line offset (RidgeCV)",
+    "M2": "kNN (k=5, 10 PCs, inverse-distance)",
+    "M3": "CatBoost skipped: runtime"
+  },
+  "metrics": {
+    "M0_perline_spearman_mean": 0.0,
+    "M1_perline_spearman_mean": 0.0,
+    "M2_perline_spearman_mean": 0.0,
+    "pooled_r2_M0": 0.0,
+    "pooled_r2_M1": 0.0
+  },
+  "m2_ci_vs_m0_spearman": null,
+  "m2_success_criteria_met": false,
+  "honest_note": "No evidence of expression signal over M0; M1 equals M0 by construction (offset collapses). CI spans zero.",
+  "holdout_modelids_excluded": [
+    "ACH-000019",
+    "ACH-000071",
+    "ACH-000592",
+    "ACH-000768",
+    "ACH-001113",
+    "ACH-001396",
+    "ACH-001662"
+  ],
+  "label_everywhere": "post-hoc, exploratory"
+}
