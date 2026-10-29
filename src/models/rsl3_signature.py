@@ -137,7 +137,8 @@ def main():
                 rk = k
                 break
             cands = [(tn, mm) for tn, mm in sigs.items()
-                     if len(tn) >= 5 and (k in tn or tn in k) and 'Up' in mm]
+                     if len(k) >= 5 and len(tn) >= 5
+                     and (k in tn or tn in k) and 'Up' in mm]
             if cands:
                 rk = max(cands, key=lambda c: len(c[0]))[0]
                 break

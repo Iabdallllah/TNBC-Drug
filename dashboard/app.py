@@ -7,14 +7,21 @@ Reads all artifacts from ../outputs_local (no retraining, no API needed).
 import json
 import os
 import re
+import sys
 
 import numpy as np
 import pandas as pd
 import plotly.express as px
 import streamlit as st
+import streamlit.components.v1 as components
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.normpath(os.path.join(HERE, '..', 'outputs_local'))
+sys.path.insert(0, HERE)
+
+import defense_report          # noqa: E402  (local dashboard modules)
+import network_graph           # noqa: E402
+import synergy                 # noqa: E402
 
 SENSITIVE_AUC = 0.3
 HIGHLIGHT, MUTED = '#D9480F', '#868E96'
@@ -24,7 +31,7 @@ LINE_NAMES = {'ACH-000768': 'MDA-MB-231', 'ACH-000849': 'MDA-MB-468',
               'ACH-000019': 'MCF7', 'ACH-000049': 'MCF7'}
 CSVS = ['mda_mb_231_full_ranking.csv', 'mda_mb_231_top20_killers.csv',
         'wetlab_shortlist.csv', 'combo_rankings.csv', 'leaderboard.csv']
-RANK_COLS = ['rank', 'drug_name', 'pred_AUC_MDA231', 'pred_AUC_MCF7',
+RANK_COLS = ['rank', 'drug_name', 'pred_AUC_MDA231', 'auc_ci_mda231', 'pred_AUC_MCF7',
              'selectivity_delta', 'sensitive_call', 'selective_call']
 AUC_RANGE = (0.2, 0.6)                  # keeps the colour scale informative
 
@@ -88,6 +95,10 @@ shortlist = load('wetlab_shortlist.csv')
 combos = load('combo_rankings.csv')
 leaderboard = load('leaderboard.csv')
 info = load_json('model_info.json')
+intervals = (load_json('prediction_intervals.json')
+             if os.path.exists(os.path.join(DATA, 'prediction_intervals.json')) else None)
+LINE_IDS = {'MDA-MB-231': 'ACH-000768', 'MDA-MB-468': 'ACH-000849',
+            'MCF7': 'ACH-000019'}
 
 
 def clean_label(s):
@@ -143,6 +154,57 @@ def pretty(df):
     return d
 
 
+def ci_halfwidth(line_id=None, drug_id=None, level=80):
+    """Half-width of the calibrated prediction interval (per-drug → per-line → global).
+
+    The intervals are conformal-style empirical quantiles of the residuals on the
+    seven blind holdout lines (`src/models/prediction_intervals.py`). They are
+    marginal, not conditional guarantees.
+    """
+    if not intervals:
+        return float('nan')
+    key = 'abs_q80' if int(level) == 80 else 'abs_q95'
+    if drug_id is not None and pd.notna(drug_id):
+        v = (intervals.get('drugs') or {}).get(str(drug_id), {}).get(key)
+        if v is not None and np.isfinite(v):
+            return float(v)
+    if line_id is not None and pd.notna(line_id):
+        v = (intervals.get('lines') or {}).get(str(line_id), {}).get(key)
+        if v is not None and np.isfinite(v):
+            return float(v)
+    v = (intervals.get('global') or {}).get(key)
+    return float(v) if v is not None and np.isfinite(v) else float('nan')
+
+
+def ci_label(auc, line_id=None, drug_id=None, level=80):
+    """Render `AUC ± half-width` (the required presentation) without inventing a number."""
+    if auc is None or pd.isna(auc):
+        return '—'
+    hw = ci_halfwidth(line_id, drug_id, level)
+    if not np.isfinite(hw):
+        return f'{float(auc):.3f}'
+    return f'{float(auc):.3f} ± {hw:.3f}'
+
+
+def attach_ci(df, line_id, drug_col='drug_id', level=80):
+    """Add the display column (`auc_ci_mda231`) and the numeric error array."""
+    d = df.copy()
+    if drug_col in d.columns:
+        hw = d[drug_col].map(lambda v: ci_halfwidth(line_id, v, level))
+    else:
+        hw = pd.Series(ci_halfwidth(line_id, None, level), index=d.index)
+    d['auc_hw80'] = hw.astype(float)
+    d['auc_ci_mda231'] = [ci_label(v, None, None) if not np.isfinite(h)
+                          else f'{float(a):.3f} ± {float(h):.3f}'
+                          for a, h in zip(d.get('pred_AUC_MDA231', pd.Series(np.nan, index=d.index)), hw)]
+    return d
+
+
+rank_full = attach_ci(rank_full, DEFAULT_LINE)
+top20 = attach_ci(top20, DEFAULT_LINE)
+shortlist = attach_ci(shortlist, DEFAULT_LINE)
+
+
 def badge_styler(df, cols, palette):
     """Colour a text column with cell background so the eye scans it instantly."""
     rules = {c: palette for c in cols}
@@ -173,6 +235,10 @@ RANK_COL_CFG = {
     'pred_AUC_MDA231': st.column_config.ProgressColumn(
         'MDA-MB-231 AUC', format='%.3f', min_value=0.0, max_value=1.0,
         help='Predicted AUC. The bar is only a visual aid — shorter bar = stronger killing.'),
+    'auc_ci_mda231': st.column_config.TextColumn(
+        'Predicted AUC ± 80% CI',
+        help='Conformal 80% interval calibrated on the seven blind holdout lines '
+             '(per-line half-width; falls back to the global ±0.104).'),
     'pred_AUC_MCF7': st.column_config.NumberColumn(
         'MCF7 AUC', format='%.3f', help='Predicted AUC in the luminal control.'),
     'selectivity_delta': st.column_config.NumberColumn(
@@ -217,6 +283,18 @@ def bar_chart(df):
                          'drug_name': None, 'selectivity_delta': 'Selectivity Δ'})
     fig.update_layout(height=max(260, 30 * len(d)), margin=dict(l=230, t=10, b=40),
                       yaxis={'automargin': True}, coloraxis_colorbar_title='Δ')
+    # 80% conformal error bars: the bar is a point estimate, the whisker is the
+    # honest uncertainty calibrated on blind holdout lines.
+    hw = None
+    if 'auc_hw80' in d.columns:
+        hw = pd.to_numeric(d['auc_hw80'], errors='coerce')
+    elif 'auc_ci_mda231' in d.columns:
+        hw = pd.to_numeric(d['auc_ci_mda231'].astype(str).str.extract(
+            r'±\s*([0-9.]+)')[0], errors='coerce')
+    if hw is not None and hw.notna().any():
+        fig.update_traces(error_x=dict(type='data', array=hw.fillna(0).tolist(),
+                                       visible=True, thickness=1.3, width=3,
+                                       color='#343A40'))
     return fig
 
 
@@ -253,15 +331,18 @@ def selectivity_chart(df, n_top):
 
 def rescue_bubble(df):
     """Bubble chart: killers (x) vs rescue enrichment (y); size = re-expressed
-    proteins, colour = rescue control. The one-glance picture of rescue power."""
-    d = df.copy()
-    d['rescue'] = d['rescue'].replace({'N-ACETYLCYSTEINE': 'NAC', 'DEFEROXAMINE': 'DFO'})
+    proteins, colour = rescue control. The one-glance picture of rescue power.
+
+    NAC is excluded: the archived NAC rows are a Solifenacin-Succinate signature
+    produced by a substring match on "SolifeNACin" (see the provenance audit).
+    """
+    d = df[df['rescue'].map(lambda v: str(v).upper()) != 'N-ACETYLCYSTEINE'].copy()
+    d['rescue'] = d['rescue'].replace({'DEFEROXAMINE': 'DFO'})
     d['p_text'] = d['reversal_p'].map(
         lambda v: '< 1e-16' if not v or v == 0 else f'{v:.1g}')
     fig = px.scatter(d, x='killer', y='reversal_enrich',
                      size='reversal_hits', size_max=46,
-                     color='rescue', color_discrete_map={'NAC': '#2f7d32',
-                                                        'DFO': '#1c7ed6'},
+                     color='rescue', color_discrete_map={'DFO': '#1c7ed6'},
                      hover_name='killer',
                      hover_data={'reversal_enrich': ':.2f', 'reversal_hits': True,
                                  'p_text': True, 'rescue': True,
@@ -337,7 +418,6 @@ def panel_ranking_table(preds):
         def hits(drug, direction):
             return int(m[(m['drug'] == drug) & (m['direction'] == direction)]['hit_genes'].sum())
         supp['SIMVASTATIN_down'] = hits('SIMVASTATIN', 'Down')
-        supp['NAC_up'] = hits('N-ACETYLCYSTEINE', 'Up')
         supp['DFO_up'] = hits('DEFEROXAMINE', 'Up')
     rsl3_n = None
     if os.path.exists(os.path.join(DATA, 'rsl3_mini_signature_meta.json')):
@@ -355,9 +435,10 @@ def panel_ranking_table(preds):
         if key == 'combo':
             return np.nan, 'Lab-only: PRISM has no AUC for RSL3, so no Bliss number exists'
         if key == 'rsl3combo':
-            note = ('Lab-only (no PRISM AUC for RSL3); together the two signatures suppress '
-                    f'{combined} expressed proteins in MDA-MB-231 '
-                    f'({rsl3_n} RSL3 + {supp["SIMVASTATIN_down"]} simvastatin)') if combined \
+            note = ('Lab-only (no PRISM AUC for RSL3); together the two signatures produce '
+                    f'{combined} suppression events in MDA-MB-231 '
+                    f'({rsl3_n} RSL3 + {supp["SIMVASTATIN_down"]} simvastatin; '
+                    f'{combined - 2} unique proteins, 2 shared)') if combined \
                 else 'Lab-only (no PRISM AUC for RSL3)'
             return np.nan, note
         if key == 'rsl3':
@@ -365,8 +446,10 @@ def panel_ranking_table(preds):
                     f'MDA-MB-231; dose 0.01-5 uM') if rsl3_n else 'Type II GPX4 killer, lab-only'
             return np.nan, note
         if key == 'NAC':
-            note = (f'Rescue control; re-expresses {supp["NAC_up"]} proteins in MDA-MB-231 '
-                    f'(L1000 Up signature)') if supp.get('NAC_up') else 'Rescue control'
+            # The legacy L1000 matcher resolved "NAC" inside "SolifeNACin"; the archived
+            # 166 "NAC up" genes are Solifenacin. Never present that count as NAC evidence.
+            note = ('Rescue control; signature WITHHELD — the legacy L1000 match resolved '
+                    'to Solifenacin, not N-acetylcysteine (provenance audit).')
             return np.nan, note
         if key == 'DFO':
             note = (f'Rescue control; re-expresses {supp["DFO_up"]} proteins in MDA-MB-231 '
@@ -386,9 +469,13 @@ def panel_ranking_table(preds):
         else:
             auc_val, note = value(key)
         rows.append({'Rank': rank, 'Panel member': member, 'Role': role,
-                     'Predicted AUC (MDA-MB-231)': auc_val, 'Evidence / note': note})
+                     'Predicted AUC (MDA-MB-231)': auc_val,
+                     'AUC 80% CI (±)': (ci_halfwidth(DEFAULT_LINE) if not pd.isna(auc_val)
+                                        else np.nan),
+                     'Evidence / note': note})
     d = pd.DataFrame(rows)
     d['Predicted AUC (MDA-MB-231)'] = d['Predicted AUC (MDA-MB-231)'].astype(float).round(3)
+    d['AUC 80% CI (±)'] = d['AUC 80% CI (±)'].astype(float).round(3)
     return d
 
 
@@ -407,6 +494,12 @@ def panel_ranking_chart(d):
                          'role': 'Role'})
     fig.update_traces(texttemplate='%{x:.3f}', textposition='outside',
                       marker_line_width=0)
+    if 'AUC 80% CI (±)' in dd.columns:
+        hw = pd.to_numeric(dd['AUC 80% CI (±)'], errors='coerce')
+        fig.update_traces(error_x=dict(type='data',
+                                       array=[None if pd.isna(v) else float(v) for v in hw],
+                                       visible=True, thickness=1.2, width=3,
+                                       color='#343A40'))
     for _, r in d.iterrows():
         if pd.isna(r['Predicted AUC (MDA-MB-231)']):
             fig.add_annotation(x=0.005, y=r['Panel member'], text='no AUC — lab-only lane',
@@ -524,8 +617,15 @@ def live_tab():
         x[0, [pos[c] for c in pca_cols]] = row.to_numpy(dtype=np.float32)[0]
         x[0, pos[f'drug_{sel_drug}']] = 1.0
         auc = float(np.clip(model.predict(x)[0], 0, 1))
+        hw = ci_halfwidth(sel_line, sel_drug, 80)
+        shown = f'{auc:.3f} ± {hw:.3f}' if np.isfinite(hw) else f'{auc:.3f}'
         m1, m2, m3 = st.columns(3)
-        m1.metric('Predicted AUC', f'{auc:.3f}')
+        m1.metric('Predicted AUC ± 80% CI', shown,
+                  help='Conformal interval calibrated on the blind holdout lines. '
+                       'Per-drug intervals are used when available, otherwise the line/global fallback.')
+        st.caption(f'80% prediction interval half-width: ±{hw:.3f}. '
+                   f'95% half-width: ±{ci_halfwidth(sel_line, sel_drug, 95):.3f}.'
+                   if np.isfinite(hw) else 'No calibrated interval available for this line.')
         if auc < SENSITIVE_AUC:
             m2.success(f'Sensitive (AUC < {SENSITIVE_AUC})')
         else:
@@ -546,6 +646,329 @@ def live_tab():
             if len(ref):
                 st.success(f'Reproduces the sealed rankings tab for {name} on '
                            f'MDA-MB-231: AUC {float(ref.iloc[0]):.3f} (Δ {auc - float(ref.iloc[0]):+.3f}).')
+
+
+# ---------- new feature tabs: synergy, network, defence report ----------
+SYNERGY_PAIRS = {
+    'ERASTIN + SIMVASTATIN': ('ERASTIN', 'SIMVASTATIN'),
+    'RSL3 + SIMVASTATIN': ('RSL3', 'SIMVASTATIN'),
+    'SULFASALAZINE + SIMVASTATIN': ('SULFASALAZINE', 'SIMVASTATIN'),
+    'ERASTIN + N-ACETYLCYSTEINE (rescue test)': ('ERASTIN', 'N-ACETYLCYSTEINE'),
+}
+DEFAULT_DOSES = '0, 0.1, 0.3, 1, 3, 10, 30, 100'
+
+
+def _panel_predictions():
+    path = os.path.join(DATA, 'ferroselect_panel_predictions.csv')
+    return load('ferroselect_panel_predictions.csv') if os.path.exists(path) else None
+
+
+def synergy_tab():
+    """Interactive checkerboard: paste plate readings → Bliss / ZIP / Loewe scores."""
+    st.subheader('Interactive synergy checkerboard (Bliss, ZIP, Loewe)')
+    st.write('Enter the measured viability matrix for a two-drug plate (1.0 = fully alive, '
+             '0.0 = dead). Row 1 / column 1 must be the zero dose of drug A / drug B; the '
+             'calculator reads the single-agent curves from them and computes the synergy '
+             'surface immediately.')
+    st.caption('The grid starts as a **model-additive placeholder** (V_AB = V_A × V_B), not '
+               'measured data — by construction its Bliss excess is zero. Replace the cells '
+               'with plate readings; the scores update on every edit.')
+
+    preds = _panel_predictions()
+    c1, c2, c3 = st.columns([2, 1, 1])
+    pair = c1.selectbox('Drug pair', list(SYNERGY_PAIRS), key='syn_pair')
+    line_name = c2.selectbox('Cell line', list(LINE_IDS), key='syn_line')
+    unit = c3.selectbox('Concentration unit', ['µM', 'nM', 'mM'], key='syn_unit')
+    drug_a, drug_b = SYNERGY_PAIRS[pair]
+
+    d1, d2 = st.columns(2)
+    a_text = d1.text_input(f'{drug_a} concentrations ({unit})', DEFAULT_DOSES,
+                           key='syn_doses_a')
+    b_text = d2.text_input(f'{drug_b} concentrations ({unit})', DEFAULT_DOSES,
+                           key='syn_doses_b')
+    try:
+        conc_a = synergy.parse_conc_text(a_text)
+        conc_b = synergy.parse_conc_text(b_text)
+    except ValueError as e:
+        st.error(f'Concentration series: {e}')
+        return
+
+    ref = synergy.model_reference_effect(preds, line_name, drug_a, drug_b) if preds is not None else None
+    auc_a = ref['auc_a'] if ref else None
+    auc_b = ref['auc_b'] if ref else None
+    placeholder = synergy.placeholder_matrix(conc_a, conc_b, auc_a, auc_b)
+
+    demo = st.toggle(
+        'Load an illustrative synergy demo (not measured data)',
+        value=False,
+        help='Fills the grid with a synthetic matrix that is additive on the single-agent '
+             'wells and strongly synergistic in the combination block. Use it to preview the '
+             'calculator; clear the toggle and paste real plate readings for science.',
+        key=f'syn_demo_{pair}_{line_name}')
+    mat = placeholder
+    if demo:
+        arr = placeholder.to_numpy(float).copy()
+        if arr.shape[0] > 1 and arr.shape[1] > 1:
+            arr[1:, 1:] = np.clip(arr[1:, 1:] * 0.55, 0.0, 1.0)
+        mat = pd.DataFrame(arr, index=placeholder.index, columns=placeholder.columns)
+
+    show = mat.copy()
+    show.index = [f'{v:g}' for v in conc_a]
+    show.columns = [f'{v:g}' for v in conc_b]
+    show = show.reset_index()
+    first_col = f'Drug A \\ Drug B ({unit})'
+    show = show.rename(columns={show.columns[0]: first_col})
+    col_cfg = {first_col: st.column_config.TextColumn(first_col, disabled=True, width='small')}
+    for col in show.columns[1:]:
+        col_cfg[col] = st.column_config.NumberColumn(col, min_value=0.0, max_value=2.0,
+                                                     step=0.01, format='%.3f')
+    st.write('**Plate readings (viability, editable)**')
+    edited = st.data_editor(show, hide_index=True, use_container_width=True,
+                            column_config=col_cfg,
+                            key=f'syn_editor_{pair}_{line_name}_{len(conc_a)}x{len(conc_b)}_{int(demo)}')
+    try:
+        viab = edited.drop(columns=[first_col]).apply(pd.to_numeric, errors='coerce').to_numpy(float)
+    except Exception as e:
+        st.error(f'Could not read the matrix: {e}')
+        return
+    if viab.shape != (len(conc_a), len(conc_b)):
+        st.error('The edited matrix no longer matches the concentration series.')
+        return
+    if not np.isfinite(viab).all():
+        st.error('Some cells are empty or non-numeric — fill every cell before scoring.')
+        return
+    if (viab < 0).any():
+        st.error('Viability cannot be negative.')
+        return
+
+    placeholder_arr = placeholder.to_numpy(float)
+    untouched = (not demo) and np.allclose(viab, placeholder_arr, atol=1e-9)
+    if untouched:
+        st.info('This is still the **model-additive placeholder** (V_AB = V_A × V_B). '
+                'Its observed matrix is shown below, but Bliss/ZIP/Loewe scores are '
+                'suppressed until you replace the cells with plate readings or switch on the '
+                'illustrative demo. That prevents a placeholder from ever looking like synergy.')
+        st.plotly_chart(synergy.observed_heatmap(viab, conc_a, conc_b, unit),
+                        use_container_width=True, config={'displaylogo': False})
+        st.caption('The grid is editable above. One changed cell is enough to activate the '
+                   'three scores; press Ctrl+Enter or click outside the cell to commit the edit.')
+        return
+
+    res = synergy.analyse(viab, conc_a, conc_b)
+    bliss, zipr, loewe = res['bliss'], res['zip'], res['loewe']
+    observed_top = float(np.clip(1.0 - viab[-1, -1], 0.0, 1.0))
+
+    k1, k2, k3, k4 = st.columns(4)
+    k1.metric('Observed killing (top doses)', f'{observed_top:.3f}',
+              help='1 − viability at the highest concentration of both drugs.')
+    k2.metric('Mean Bliss excess', f"{bliss['summary']['mean_excess']:+.3f}",
+              help='Positive = more killing than additive expectation.')
+    k3.metric('Synergistic cells (Bliss > +0.10)',
+              f"{bliss['summary']['n_synergistic']}/{bliss['summary']['n_cells']}")
+    med_ci = loewe['summary']['median_ci']
+    k4.metric('Median Loewe CI', '—' if not np.isfinite(med_ci) else f'{med_ci:.2f}',
+              help='Chou-Talalay combination index: < 1 synergy, 1 additive, > 1 antagonism.')
+
+    st.write('**Observed viability** and **Bliss excess** (red = synergy, blue = antagonism)')
+    h1, h2 = st.columns(2)
+    with h1:
+        st.plotly_chart(synergy.observed_heatmap(viab, conc_a, conc_b, unit),
+                        use_container_width=True, config={'displaylogo': False})
+    with h2:
+        st.plotly_chart(synergy.bliss_heatmap(viab, conc_a, conc_b, unit),
+                        use_container_width=True, config={'displaylogo': False})
+    st.write('**ZIP excess** (4PL-smoothed single-agent expectation) and '
+             '**Loewe / Chou-Talalay CI**')
+    h3, h4 = st.columns(2)
+    with h3:
+        st.plotly_chart(synergy.zip_heatmap(viab, conc_a, conc_b, unit),
+                        use_container_width=True, config={'displaylogo': False})
+    with h4:
+        st.plotly_chart(synergy.loewe_heatmap(viab, conc_a, conc_b, unit),
+                        use_container_width=True, config={'displaylogo': False})
+
+    st.write('**Score summary**')
+    st.dataframe(pd.DataFrame([
+        {'Method': 'Bliss independence',
+         'Synergy statistic': 'mean excess (observed − expected)',
+         'Value': round(bliss['summary']['mean_excess'], 3),
+         'Synergistic cells': bliss['summary']['n_synergistic'],
+         'Antagonistic cells': bliss['summary']['n_antagonistic']},
+        {'Method': 'ZIP (4PL)',
+         'Synergy statistic': 'mean excess vs fitted single agents',
+         'Value': round(zipr['summary']['mean_excess'], 3),
+         'Synergistic cells': zipr['summary']['n_synergistic'],
+         'Antagonistic cells': zipr['summary']['n_antagonistic']},
+        {'Method': 'Loewe / Chou-Talalay',
+         'Synergy statistic': 'median combination index (CI)',
+         'Value': None if not np.isfinite(med_ci) else round(med_ci, 3),
+         'Synergistic cells': loewe['summary']['n_synergy'],
+         'Antagonistic cells': loewe['summary']['n_antagonism']},
+    ]), hide_index=True, use_container_width=True)
+    st.caption('Thresholds: |Bliss/ZIP excess| > 0.10; Loewe synergy CI < 0.9, antagonism '
+               'CI > 1.1. A checkerboard measures one plate — replicate before claiming synergy.')
+
+    st.subheader('Model expectation versus the plate')
+    if ref is None:
+        st.info(f'The sealed model has no PRISM AUC for {drug_a} on {line_name}, so a Bliss '
+                'expectation cannot be computed. The plate result stands on its own; RSL3 is '
+                'a lab-only lane by design.')
+    else:
+        m1, m2, m3 = st.columns(3)
+        m1.metric(f'Model AUC: {drug_a}', f"{ref['auc_a']:.3f}")
+        m2.metric(f'Model AUC: {drug_b}', f"{ref['auc_b']:.3f}")
+        m3.metric('Model Bliss E_AB', f"{ref['e_ab']:.3f}",
+                  help='Additive expectation from the sealed single-agent AUCs.')
+        st.plotly_chart(synergy.comparison_chart(ref['e_ab'], observed_top),
+                        use_container_width=True, config={'displaylogo': False})
+        delta = observed_top - ref['e_ab']
+        st.caption(f'Observed minus model-additive effect at the top doses: **{delta:+.3f}**. '
+                   'Positive means the plate killed more than the model’s additivity baseline; '
+                   'that is the quantity a synergy claim must defend with replicates.')
+    with st.expander('How the three scores are defined'):
+        st.write('**Bliss** — expected effect E_A + E_B − E_A·E_B, using the measured '
+                 'single-agent wells. **ZIP** — the same combination rule but E_A/E_B come '
+                 'from 4-parameter logistic fits, which removes plate noise from the '
+                 'single-agent curves. **Loewe** — combination index CI = a/A_eq + b/B_eq, '
+                 'where A_eq/B_eq are the single-agent doses that would produce the observed '
+                 'effect; CI < 1 is synergy. All three are computed from the exact matrix '
+                 'above; nothing is imputed.')
+
+
+def network_tab():
+    """Interactive protein rescue network from the expressed-protein shortlist."""
+    st.subheader('Interactive protein rescue network')
+    st.write('Nodes are proteins: orange = suppressed by the killer, green = the validated '
+             'killer↓ ∩ rescue↑ overlap (the in-silico rescue evidence). Killer and rescue '
+             'drugs are the large nodes; dotted edges = suppression, solid edges = the '
+             'validated reversal overlap. Only the overlap genes stored in the reversal '
+             'table are drawn — the full rescue-up signature is reported as a count, not '
+             'invented.')
+    short_path = os.path.join(DATA, 'protein_array_shortlist.csv')
+    if not os.path.exists(short_path):
+        st.info('Protein-array shortlist not in this deployment.')
+        return
+    sl = load('protein_array_shortlist.csv')
+    rev_path = os.path.join(DATA, 'offtarget_rescue_reversal.csv')
+    rv = load('offtarget_rescue_reversal.csv') if os.path.exists(rev_path) else None
+    pm_path = os.path.join(DATA, 'offtarget_panel_map.csv')
+    pm = load('offtarget_panel_map.csv') if os.path.exists(pm_path) else None
+    cov_path = os.path.join(DATA, 'offtarget_coverage_ferroselect.csv')
+    cov = load('offtarget_coverage_ferroselect.csv') if os.path.exists(cov_path) else None
+
+    c1, c2, c3 = st.columns([2, 2, 1])
+    killer = c1.selectbox('Killer / combination', network_graph.KILLER_OPTIONS,
+                          index=0, key='net_killer')
+    rescue = c2.selectbox('Rescue control', network_graph.RESCUE_OPTIONS,
+                          index=0, key='net_rescue')
+    line_name = c3.selectbox('Cell line (reversal p)', list(LINE_IDS), key='net_line')
+    c4, c5 = st.columns([1, 2])
+    max_nodes = c4.slider('Maximum protein nodes', 20, 150, 80, step=10, key='net_nodes')
+    label_shared = c5.checkbox('Label the shared rescue proteins', value=True, key='net_labels')
+
+    fig, meta = network_graph.rescue_network_figure(
+        sl, rv, killer, rescue, LINE_IDS[line_name], max_nodes=max_nodes,
+        label_shared=label_shared, panel_map=pm, coverage=cov)
+    if not meta['valid']:
+        st.error(meta['warning'])
+        provenance = pd.DataFrame([
+            {'Field': 'Requested rescue agent', 'Value': str(rescue)},
+            {'Field': 'L1000 term found by the legacy matcher',
+             'Value': str(meta.get('signature_term') or '—')},
+            {'Field': 'Suppressed proteins available', 'Value': str(meta['n_suppressed'])},
+            {'Field': 'Network status', 'Value': 'WITHHELD (wrong molecule)'},
+        ])
+        st.dataframe(provenance, hide_index=True, use_container_width=True)
+        st.caption('This is a provenance audit, not a rendering failure. A rescue network '
+                   'built from the wrong molecule would be worse than no network. Supply a '
+                   'genuine NAC signature to enable this arm; DEFEROXAMINE is validated and '
+                   'available now.')
+        return
+
+    m1, m2, m3, m4 = st.columns(4)
+    m1.metric('Suppressed proteins', f"{meta['n_suppressed']:,}")
+    m2.metric('Rescue-up signature', f"{meta['n_rescued']:,}",
+              help='Full size of the rescue agent’s Up signature in expressed genes.')
+    m3.metric('Validated overlap', f"{meta['n_overlap']:,}",
+              help='Genes stored in offtarget_rescue_reversal.csv (killer-down ∩ rescue-up).')
+    m4.metric('Hypergeometric p', 'n/a' if meta['p'] is None else
+              ('< 1e-16' if meta['p'] == 0 else f"{meta['p']:.2g}"),
+              help='Overlap of killer-suppressed and rescue-up proteins; lower = stronger.')
+    st.caption(meta['note'] or f'{meta["n_suppressed"]} suppressed proteins for {killer}.')
+    if meta['enrich'] is not None:
+        st.caption(f'Enrichment {meta["enrich"]:.2f}× over chance on {line_name}; '
+                   f'{meta["shown"]} of {meta["n_suppressed"]} suppressed proteins are drawn '
+                   f'(raise the slider to see more). All {meta["n_overlap"]} stored overlap '
+                   'proteins are included.')
+    st.plotly_chart(fig, use_container_width=True, config={'displaylogo': False})
+    st.caption('The shortlist carries the MDA-MB-231 expressed-protein signature; the line '
+               'selector changes the hypergeometric reversal statistic, not the killer gene '
+               'list. The rescue-up signature is reported from the reversal table; the full '
+               'gene list is not stored, so no rescue-only nodes are invented.')
+
+    with st.expander('Signature provenance (audit note)'):
+        st.write('**NAC is deliberately withheld.** The legacy coverage run resolved '
+                 '`N-ACETYLCYSTEINE` to the L1000 term **Solifenacin-Succinate** because the '
+                 'three-letter abbreviation “NAC” is a substring of “SolifeNACin”. The 166 '
+                 '“NAC up” genes in the older artifacts therefore belong to a different '
+                 'molecule. The dashboard refuses to plot them as NAC; DEFEROXAMINE '
+                 '(Deferoxamine-Mesylate) is a valid L1000 term and remains available.')
+        if cov is not None and {'panel_drug', 'l1000_term'} <= set(cov.columns):
+            st.dataframe(cov[['panel_drug', 'l1000_term', 'l1000_sig_genes']],
+                         hide_index=True, use_container_width=True)
+
+    paths_path = os.path.join(DATA, 'network_paths.json')
+    if os.path.exists(paths_path):
+        with st.expander('Curated mechanism paths to GPX4 / ferroptosis'):
+            mfig, _ = network_graph.mechanism_path_figure(
+                load_json('network_paths.json'),
+                ['erastin', 'sulfasalazine', 'simvastatin', 'lovastatin', 'RSL3'])
+            if mfig is not None:
+                st.plotly_chart(mfig, use_container_width=True, config={'displaylogo': False})
+                st.caption('Shortest routes computed by src/models/network.py; every route '
+                           'converges on GPX4 and lipid hydroperoxides.')
+
+
+@st.cache_data(show_spinner=False)
+def _defence_html(stamp):
+    del stamp                       # mtime key invalidates the cache when artifacts change
+    return defense_report.build_defense_report(DATA)
+
+
+def defense_tab():
+    """One-click, self-contained HTML executive report (print → PDF)."""
+    st.subheader('Automated defence report (HTML, print-to-PDF)')
+    st.write('Builds a self-contained report from the committed artifacts: cell-line status, '
+             'the 8-member panel ranking and bars, Bliss combination expectations, the CTRPv2 '
+             'RSL3 ground truth, calibrated prediction intervals, validation gates and a '
+             'sign-off block. No numbers are typed by hand.')
+    try:
+        stamp = max(os.path.getmtime(os.path.join(DATA, f)) for f in os.listdir(DATA))
+        html_report = _defence_html(stamp)
+    except Exception as e:
+        st.error('Could not build the report from the current artifacts.')
+        st.caption(f'Details: {type(e).__name__}: {e}')
+        return
+    d1, d2 = st.columns([1, 2])
+    with d1:
+        st.download_button('Download defence report (HTML)', html_report.encode('utf-8'),
+                           'FerroSelect_defence_report.html', 'text/html', key='dl_defence')
+    with d2:
+        st.caption('Open the downloaded file and use **Print → Save as PDF** (A4, margins '
+                   '16 mm). The report is offline-safe: CSS only, no JavaScript, no external '
+                   'fonts or images.')
+    st.dataframe(pd.DataFrame([
+        {'Section': '1', 'Contents': 'Dataset and cell-line status, blind holdouts'},
+        {'Section': '2', 'Contents': 'The eight-member wet-lab panel, ranked 1–8'},
+        {'Section': '3', 'Contents': 'Top-ranked killers and the model-resolution caveat'},
+        {'Section': '4', 'Contents': 'Bliss combination expectations per cell line'},
+        {'Section': '5', 'Contents': 'CTRPv2.1 measured RSL-3 AUCs and v2 model honesty check'},
+        {'Section': '6', 'Contents': 'Conformal prediction intervals (±80% / ±95%)'},
+        {'Section': '7', 'Contents': 'Validation gates and selectivity rule'},
+        {'Section': '8', 'Contents': 'Signature block for the defence appendix'},
+    ]), hide_index=True, use_container_width=True)
+    with st.expander('Preview the report'):
+        components.html(html_report, height=760, scrolling=True)
 
 
 # ---------- header ----------
@@ -622,9 +1045,10 @@ with st.sidebar:
     st.caption('Data: DepMap 26Q3, GDSC2, PRISM-REPURPOSING 27Oct23. '
                'See model_info.json and audit_summary.json for versions.')
 
-# ---------- tabs (4, not 7) ----------
-tab_rank, tab_sel, tab_model, tab_live = st.tabs(
-    ['Rankings & candidates', 'Selectivity & combinations', 'Model & audit', 'Live predictor'])
+# ---------- tabs (7) ----------
+tab_rank, tab_sel, tab_syn, tab_net, tab_model, tab_report, tab_live = st.tabs(
+    ['Rankings & candidates', 'Selectivity & combinations', 'Synergy checkerboard',
+     'Protein network', 'Model & audit', 'Defense report', 'Live predictor'])
 
 # ---------------- 1. rankings ----------------
 with tab_rank:
@@ -651,7 +1075,7 @@ with tab_rank:
         with dl_c:
             st.download_button('Download CSV', to_csv(sl), 'wetlab_shortlist.csv',
                                'text/csv', key='dl_sl')
-        rank_table(sl[['role', 'drug_name', 'pred_AUC_MDA231', 'pred_AUC_MCF7',
+        rank_table(sl[['role', 'drug_name', 'pred_AUC_MDA231', 'auc_ci_mda231', 'pred_AUC_MCF7',
                        'selectivity_delta', 'sensitive_call', 'selective_call']])
         st.subheader('Starting dose brackets (proposal §6.4 — narrow them in pilot)')
         st.caption('Vehicle capped at 0.1% DMSO; every plate carries a vehicle-matched control.')
@@ -759,6 +1183,13 @@ with tab_rank:
             fpred = preds.copy()
             if 'pred_auc' in fpred.columns:
                 fpred['pred_auc'] = fpred['pred_auc'].astype(float).round(3)
+                line_id_map = {'MDA-MB-231': 'ACH-000768', 'MDA-MB-468': 'ACH-000849',
+                               'MCF7': 'ACH-000019'}
+                fpred.insert(
+                    list(fpred.columns).index('pred_auc') + 1, 'pred_auc ± 80% CI',
+                    [ci_label(a, line_id_map.get(str(ln)), did)
+                     for a, ln, did in zip(fpred['pred_auc'], fpred.get('line', ''),
+                                           fpred.get('drug_id', pd.Series([None] * len(fpred))))])
             if 'confidence' in fpred.columns:
                 fpred['confidence'] = fpred['confidence'].astype(str).map(
                     lambda v: 'LOW (<25 rows)' if v.strip().upper().startswith('LOW') else v)
@@ -780,9 +1211,14 @@ with tab_rank:
         if os.path.exists(rescue_path):
             st.subheader('In-silico rescue reversal (protein level)')
             st.caption('Do the rescue controls re-express the proteins each killer '
-                       'suppresses? Hypergeometric test on the expressed-protein overlap.')
+                       'suppresses? Hypergeometric test on the expressed-protein overlap. '
+                       'NAC rows are omitted: the archived NAC signature is a Solifenacin '
+                       'artefact from a legacy substring match (provenance audit); '
+                       'Deferoxamine is the validated rescue arm.')
             res = load('offtarget_rescue_reversal.csv')
-            res = res[res['killer'] != 'LOVASTATIN']      # panel uses SIMVASTATIN only
+            res = res[(res['killer'] != 'LOVASTATIN')
+                      & (res['rescue'].map(lambda v: str(v).upper())
+                         != 'N-ACETYLCYSTEINE')]      # NAC signature is mislabelled
             res['line'] = res['line'].map(lambda v: LINE_NAMES.get(v, v))
             res['signature_source'] = res['signature_source'].fillna('LINCS L1000')
             res = res.rename(columns={'line': 'Line', 'killer': 'Killer',
@@ -871,6 +1307,9 @@ with tab_rank:
         st.subheader(f'Predicted AUC of the top {min(n_k, len(hits))} (lower is stronger)')
         st.plotly_chart(bar_chart(hits[RANK_COLS]), use_container_width=True,
                         config={'displaylogo': False})
+        st.caption('Whiskers are 80% conformal prediction intervals calibrated on the seven '
+                   'blind holdout lines (MDA-MB-231 half-width ±0.093; global ±0.104). '
+                   'They describe model uncertainty, not assay noise — the plate decides.')
 
 # ---------------- 2. selectivity + combos ----------------
 with tab_sel:
@@ -901,13 +1340,51 @@ with tab_sel:
                                 'Pathway check': st.column_config.TextColumn('Pathway check',
                                                                              width='medium')})
 
-# ---------------- 3. model & audit ----------------
+# ---------------- 3. synergy checkerboard ----------------
+with tab_syn:
+    synergy_tab()
+
+# ---------------- 4. protein network ----------------
+with tab_net:
+    network_tab()
+
+# ---------------- 5. model & audit ----------------
 with tab_model:
     st.subheader('Holdout benchmark on unseen cell lines')
     lb_show = leaderboard.copy()
     for c in ['mae', 'rmse', 'r2', 'spearman', 'per_line_spearman', 'ndcg10', 'recall10']:
         lb_show[c] = lb_show[c].astype(float).round(3)
     st.dataframe(lb_show, hide_index=True, use_container_width=True)
+
+    st.subheader('Prediction uncertainty (80% and 95% intervals)')
+    if not intervals:
+        st.info('`prediction_intervals.json` is not in this deployment. '
+                'Run `python src/models/prediction_intervals.py`.')
+    else:
+        glob = intervals.get('global') or {}
+        u1, u2, u3 = st.columns(3)
+        u1.metric('80% half-width (global)', f"±{glob.get('abs_q80', float('nan')):.3f}",
+                  help='Conformal-style empirical quantile of holdout residuals.')
+        u2.metric('95% half-width (global)', f"±{glob.get('abs_q95', float('nan')):.3f}",
+                  help='Use for decision limits; intervals are marginal, not conditional.')
+        u3.metric('Calibration rows', f"{int(glob.get('n', 0)):,}",
+                  help='Out-of-sample rows on the seven pre-registered holdout cell lines.')
+        ci_rows = []
+        for mid, s in (intervals.get('lines') or {}).items():
+            ci_rows.append({'Cell line': LINE_NAMES.get(mid, mid), 'ModelID': mid,
+                            'n': s.get('n'), 'RMSE': round(float(s.get('rmse', np.nan)), 4),
+                            '±80% CI': round(float(s.get('abs_q80', np.nan)), 4),
+                            '±95% CI': round(float(s.get('abs_q95', np.nan)), 4)})
+        st.dataframe(pd.DataFrame(ci_rows).sort_values('Cell line'), hide_index=True,
+                     use_container_width=True)
+        st.caption('Every AUC shown in the rankings and panel tabs carries the 80% half-width '
+                   'for its cell line; per-drug intervals are used when a drug has at least '
+                   f'{intervals.get("min_drug_n", 40)} holdout rows, otherwise the line/global '
+                   'fallback applies. Intervals quantify model error, not experimental noise. '
+                   'The MDA-MB-231 prediction distribution is compressed above ~0.906 for the '
+                   'resistant bulk (84.7% of drugs are tied at the same plateau): ranks below '
+                   '~226 are not a fine-grained order, and the sensitive tail is where the '
+                   'model carries signal.')
 
     st.subheader('Audit: ceiling check and circularity (Aim 0)')
     a1, a2 = st.columns(2)
@@ -1009,7 +1486,11 @@ with tab_model:
              'needed iron. NAC rescues Type I inducers but not RSL3. Z-VAD-FMK must NOT '
              'rescue — if it does, the death was apoptosis.')
 
-# ---------------- 4. live ----------------
+# ---------------- 6. defence report ----------------
+with tab_report:
+    defense_tab()
+
+# ---------------- 7. live ----------------
 with tab_live:
     live_tab()
 

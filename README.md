@@ -176,10 +176,15 @@ The panel kills the cell; this layer predicts what ELSE each panel member does
 to the proteins of MDA-MB-231 — the side-effect profile — and proves the rescue
 logic in silico before the plates are poured.
 
-- **Coverage audit** (`offtarget_coverage_ferroselect.csv`): 6/7 panel members
-  have LINCS L1000 chem-pert consensus signatures (Erastin, Sulfasalazine,
-  N-acetylcysteine, Deferoxamine, Simvastatin, Lovastatin). RSL3 is absent from
+- **Coverage audit** (`offtarget_coverage_ferroselect.csv`): 5/7 panel members
+  have a **verified** LINCS L1000 chem-pert consensus signature (Erastin,
+  Sulfasalazine, Deferoxamine, Simvastatin, Lovastatin). RSL3 is absent from
   L1000 (66k terms), ChEMBL and GEO (no published RSL3-on-MDA-MB-231 data).
+  **Audit note (2026-10-28):** the legacy matcher resolved the abbreviation
+  “NAC” inside “Solife**NAC**in-Succinate”, so the archived NAC rows (172 down /
+  166 up genes) are **Solifenacin, not N-acetylcysteine**. The dashboard now
+  withholds the NAC rescue arm instead of plotting a mislabelled signature;
+  Deferoxamine is unaffected.
 - **RSL3 recovered** (`rsl3_signature.py` -> `rsl3_mini_signature.csv`): from
   GSE247883 (A549, DMSO / RSL3 / RSL3+Fer-1, 24h, n=3 each) — top-150 Up/Down
   signature, labelled single-paper. 38 RSL3-suppressed proteins are expressed in
@@ -190,15 +195,18 @@ logic in silico before the plates are poured.
 - **Suppression map** (`offtarget_panel_map.csv`): per drug x line, the Down/Up
   signature genes intersected with actually-expressed genes (log2TPM+1 > 1).
   Every panel member suppresses 154–206 expressed proteins in MDA-MB-231.
-- **In-silico rescue** (`offtarget_rescue_reversal.csv`): every killer x rescue
-  pair reverses significantly (e.g. Sulfasalazine x NAC: 19 genes, 9.2x
-  enrichment; RSL3 x NAC: 13.6x, p=7.3e-5). Deferoxamine does not reverse RSL3
-  (p=0.41) — consistent with mechanism (GSH restores GPX4's substrate; iron
-  chelation acts upstream). GPX4 itself is expressed in MDA-MB-231 (8.24
-  log2TPM+1) and ACSL4 is 5.77 vs 0.31 in MCF7 — the ferroptosis-competence gap
-  that justifies the MDA-MB-231 focus.
+- **In-silico rescue** (`offtarget_rescue_reversal.csv`): using the validated
+  Deferoxamine arm, every killer x DFO pair reverses significantly
+  (Sulfasalazine 12 genes, 4.87x, p=7e-6; Simvastatin 8 genes, 2.82x,
+  p=6.5e-4; Erastin 10 genes, 4.10x, p=1.7e-4). Deferoxamine does not reverse
+  RSL3 (1 gene, p=0.41) — consistent with mechanism (GSH restores GPX4's
+  substrate; iron chelation acts upstream). The archived NAC comparisons are
+  **Solifenacin** and are withheld from the UI until a genuine NAC signature is
+  supplied. GPX4 itself is expressed in MDA-MB-231 (8.24 log2TPM+1) and ACSL4
+  is 5.77 vs 0.31 in MCF7 — the ferroptosis-competence gap that justifies the
+  MDA-MB-231 focus.
 - **Protein-array shortlist** (`protein_array_shortlist.py` ->
-  `protein_array_shortlist.csv`): 1,569 candidates across the 7 panel members
+  `protein_array_shortlist.csv`): 1,720 candidates across the 7 panel members
   (single agents + killer x statin additive unions), ranked rescue-competent
   first, then membrane/secreted (UniProt-annotated), then effect size.
 

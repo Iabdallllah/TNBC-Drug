@@ -1,8 +1,8 @@
 {
  "model_version": "catboost-v1.0",
- "dataset": "/home/abdallah/Abdallah/Projects/TNBC/outputs_local/tnbc_ml_dataset.parquet",
+ "dataset": "outputs_local/tnbc_ml_dataset.parquet",
  "dataset_version": "DepMap public-26q3-526b.11 + REPURPOSING (see 01 notebook)",
- "features": "1544 (pca_128 + drug_one_hot)",
+ "features": "1544 (pca_62 + drug_one_hot)",
  "holdout": [
   "ACH-000019",
   "ACH-000097",
@@ -53,8 +53,13 @@
   "audit_summary.json (from 01)",
   "catboost_tnbc_v1.cbm",
   "xgb_tnbc_v1.json",
-  "rf_tnbc_v1.pkl",
-  "shap_global_top20.png"
+  "shap_global_top20.png",
+  "prediction_intervals.json",
+  "pca_loadings_status.json",
+  "ferroselect_panel_predictions.csv",
+  "ctpv2_ferroptosis_auc.csv",
+  "rsl3_v2_report.json",
+  "defense_report.html"
  ],
  "disclaimer": "predicted sensitivity in cell model \u2014 NOT a clinical recommendation (PRD \u00a75.2)",
  "date": "2026-10-12"

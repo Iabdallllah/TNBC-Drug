@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<title>TNBC / FerroSelect — Defence Executive Report</title>
+<style>
+    @page { size: A4; margin: 16mm; }
+    * { box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; color: #212529; font-size: 11px;
+           line-height: 1.45; margin: 0 auto; max-width: 980px; padding: 20px 24px;
+           -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    @media print { body { margin: 0; padding: 0; max-width: none; } }
+    h1 { font-size: 22px; margin: 0 0 4px; color: #b3261e; }
+    h2 { font-size: 14px; margin: 20px 0 8px; border-bottom: 2px solid #e9ecef;
+         padding-bottom: 4px; color: #343a40; }
+    h3 { font-size: 12px; margin: 12px 0 6px; color: #495057; }
+    .sub { color: #6c757d; font-size: 11px; }
+    .kpis { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0 4px; }
+    .kpi { border: 1px solid #dee2e6; border-radius: 6px; padding: 8px 10px; min-width: 118px;
+           flex: 1; background: #f8f9fa; }
+    .kpi-v { font-size: 17px; font-weight: 700; color: #212529; }
+    .kpi-l { font-size: 9.5px; color: #6c757d; text-transform: uppercase;
+             letter-spacing: .03em; }
+    table.data { border-collapse: collapse; width: 100%; margin: 6px 0 10px; }
+    table.data th { background: #343a40; color: #fff; text-align: left; padding: 5px 6px;
+                    font-size: 10px; }
+    table.data td { border-bottom: 1px solid #e9ecef; padding: 4px 6px; vertical-align: top; }
+    table.data tr:nth-child(even) td { background: #f8f9fa; }
+    .muted { color: #868e96; font-style: italic; }
+    .bars { margin: 6px 0 10px; }
+    .bar-row { display: flex; align-items: center; gap: 6px; margin: 3px 0; }
+    .bar-label { width: 165px; text-align: right; font-weight: 600; font-size: 10px; }
+    .bar-track { flex: 1; height: 13px; background: #f1f3f5; border-radius: 3px;
+                 overflow: hidden; }
+    .bar-fill { display: block; height: 100%; border-radius: 3px; }
+    .bar-fill.good { background: #b3261e; }
+    .bar-fill.mid { background: #f59f00; }
+    .bar-fill.low { background: #adb5bd; }
+    .bar-val { width: 52px; font-variant-numeric: tabular-nums; font-size: 10px; }
+    .bar-note { width: 150px; font-size: 9px; color: #6c757d; }
+    .callout { border-left: 4px solid #b3261e; background: #fff5f5; padding: 8px 10px;
+               border-radius: 4px; margin: 8px 0; }
+    .ok { color: #2f7d32; font-weight: 700; }
+    .bad { color: #b3261e; font-weight: 700; }
+    .sign { margin-top: 26px; }
+    .sign table { width: 100%; border-collapse: collapse; }
+    .sign td { border: 1px solid #adb5bd; height: 34px; padding: 4px 8px; width: 50%; }
+    .sign .label { border: none; height: auto; color: #6c757d; font-size: 10px;
+                   padding-top: 6px; }
+    footer { margin-top: 22px; border-top: 1px solid #dee2e6; padding-top: 6px;
+             color: #868e96; font-size: 9.5px; }
+    </style></head><body>
+<h1>FerroSelect — TNBC Drug-Response Predictor</h1>
+<div class="sub">Defence executive report · generated 2026-10-28 05:18 UTC · model version
+<b>catboost-v1.0</b></div>
+<div class="callout"><b>Scope:</b> predicted sensitivity in cell models — never a
+clinical treatment recommendation. Wet-lab confirmation is the decision layer.</div>
+<div class="kpis"><div class="kpi"><div class="kpi-v">CatBoost-800</div><div class="kpi-l">Champion model</div></div><div class="kpi"><div class="kpi-v">0.567</div><div class="kpi-l">R² on unseen lines</div></div><div class="kpi"><div class="kpi-v">0.630</div><div class="kpi-l">Per-line Spearman</div></div><div class="kpi"><div class="kpi-v">0.941</div><div class="kpi-l">NDCG@10</div></div><div class="kpi"><div class="kpi-v">30,994</div><div class="kpi-l">Training pairs</div></div><div class="kpi"><div class="kpi-v">1,482</div><div class="kpi-l">Screened drugs</div></div></div>
+
+<h2>1. Dataset and cell-line status</h2>
+<p>The DepMap metadata covers <b>96</b> breast lines,
+<b>77</b> with expression, of which
+<b>30</b> enter training on
+<b>30,994</b> unique (cell line, drug) pairs and
+<b>1,482</b> screened drugs. Subtypes: TNBC
+10, Luminal
+7, HER2+
+4, other
+75.
+MDA-MB-231 and MCF7 were blind holdouts for every fit.</p>
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>ModelID</th>
+      <th>Cell line</th>
+      <th>Role</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>ACH-000019</td>
+      <td>MCF7</td>
+      <td>Blind holdout</td>
+    </tr>
+    <tr>
+      <td>ACH-000097</td>
+      <td>ZR751</td>
+      <td>Blind holdout</td>
+    </tr>
+    <tr>
+      <td>ACH-000212</td>
+      <td>CAL120</td>
+      <td>Blind holdout</td>
+    </tr>
+    <tr>
+      <td>ACH-000248</td>
+      <td>AU565</td>
+      <td>Blind holdout</td>
+    </tr>
+    <tr>
+      <td>ACH-000643</td>
+      <td>HDQP1</td>
+      <td>Blind holdout</td>
+    </tr>
+    <tr>
+      <td>ACH-000768</td>
+      <td>MDAMB231</td>
+      <td>Blind holdout</td>
+    </tr>
+    <tr>
+      <td>ACH-000934</td>
+      <td>MDAMB361</td>
+      <td>Blind holdout</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>2. The eight-member wet-lab panel (ranked 1–8 on MDA-MB-231)</h2>
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>Rank</th>
+      <th>Panel member</th>
+      <th>Role</th>
+      <th>Predicted AUC (MDA-MB-231)</th>
+      <th>Evidence / note</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>ERASTIN + SIMVASTATIN</td>
+      <td>Combo</td>
+      <td>0.764</td>
+      <td>Bliss expectation from the sealed single-agent AUCs.</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>SULFASALAZINE + SIMVASTATIN</td>
+      <td>Combo (sealed nomination)</td>
+      <td>0.785</td>
+      <td>Bliss expectation from the sealed single-agent AUCs.</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>RSL3 + SIMVASTATIN</td>
+      <td>Combo (lab-only lane)</td>
+      <td>—</td>
+      <td>Lab-only: no PRISM AUC for RSL3; test the pair on the plate.</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>ERASTIN</td>
+      <td>Killer (Type I)</td>
+      <td>0.864</td>
+      <td>Sealed single-agent prediction (LOW confidence).</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>SULFASALAZINE</td>
+      <td>Killer (Type I)</td>
+      <td>0.887</td>
+      <td>Sealed single-agent prediction (LOW confidence).</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td>RSL3</td>
+      <td>Killer (Type II, GPX4)</td>
+      <td>—</td>
+      <td>No PRISM AUC; GSE247883 signature + CTRPv2 ground truth.</td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td>N-ACETYLCYSTEINE (NAC)</td>
+      <td>Rescue control</td>
+      <td>—</td>
+      <td>Rescue control: must re-express suppressed proteins.</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>DEFEROXAMINE (DFO)</td>
+      <td>Rescue control</td>
+      <td>—</td>
+      <td>Rescue control: must re-express suppressed proteins.</td>
+    </tr>
+  </tbody>
+</table>
+<p class="muted">Rank 1 = strongest expected killing. RSL3 lanes are lab-only by
+design: PRISM never profiled RSL3, so no model AUC is fabricated for them.</p>
+
+<h2>3. Top-ranked killers and model resolution</h2>
+<div class="bars"><div class="bar-row"><span class="bar-label">TRIPTOLIDE</span><span class="bar-track"><span class="bar-fill good" style="width:72.4%"></span></span><span class="bar-val">0.276</span><span class="bar-note"></span></div><div class="bar-row"><span class="bar-label">DOLASTATIN-10</span><span class="bar-track"><span class="bar-fill mid" style="width:65.1%"></span></span><span class="bar-val">0.349</span><span class="bar-note"></span></div><div class="bar-row"><span class="bar-label">ROMIDEPSIN</span><span class="bar-track"><span class="bar-fill mid" style="width:64.1%"></span></span><span class="bar-val">0.359</span><span class="bar-note"></span></div><div class="bar-row"><span class="bar-label">ECHINOMYCIN</span><span class="bar-track"><span class="bar-fill mid" style="width:62.6%"></span></span><span class="bar-val">0.374</span><span class="bar-note"></span></div><div class="bar-row"><span class="bar-label">EXATECAN-MESYLATE</span><span class="bar-track"><span class="bar-fill mid" style="width:62.2%"></span></span><span class="bar-val">0.378</span><span class="bar-note"></span></div><div class="bar-row"><span class="bar-label">MAYTANSINOL-ISOBUTYRATE</span><span class="bar-track"><span class="bar-fill mid" style="width:59.7%"></span></span><span class="bar-val">0.403</span><span class="bar-note"></span></div><div class="bar-row"><span class="bar-label">SB-743921</span><span class="bar-track"><span class="bar-fill mid" style="width:59.1%"></span></span><span class="bar-val">0.409</span><span class="bar-note"></span></div><div class="bar-row"><span class="bar-label">SN38</span><span class="bar-track"><span class="bar-fill mid" style="width:57.2%"></span></span><span class="bar-val">0.428</span><span class="bar-note"></span></div><div class="bar-row"><span class="bar-label">GEMCITABINE</span><span class="bar-track"><span class="bar-fill mid" style="width:53.6%"></span></span><span class="bar-val">0.464</span><span class="bar-note"></span></div><div class="bar-row"><span class="bar-label">EPOTHILONE-B</span><span class="bar-track"><span class="bar-fill mid" style="width:53.5%"></span></span><span class="bar-val">0.465</span><span class="bar-note"></span></div></div>
+<p class="muted">The predicted-AUC distribution is compressed above ~0.906 for the resistant bulk of the panel; ranks below ~226 are tied within model resolution and should not be read as a fine-grained order. The sensitive tail (AUC &lt; 0.4) is where the model carries signal.</p>
+
+<h2>4. Bliss combination expectations (additivity — test on the plate)</h2>
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>Combination</th>
+      <th>Cell line</th>
+      <th>Bliss E_AB</th>
+      <th>Expected AUC</th>
+      <th>Note</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>ERASTIN + SIMVASTATIN</td>
+      <td>MDA-MB-231</td>
+      <td>0.236</td>
+      <td>0.764</td>
+      <td>additivity expectation — needs the plate</td>
+    </tr>
+    <tr>
+      <td>ERASTIN + SIMVASTATIN</td>
+      <td>MDA-MB-468</td>
+      <td>0.192</td>
+      <td>0.808</td>
+      <td>additivity expectation — needs the plate</td>
+    </tr>
+    <tr>
+      <td>ERASTIN + SIMVASTATIN</td>
+      <td>MCF7</td>
+      <td>0.151</td>
+      <td>0.849</td>
+      <td>additivity expectation — needs the plate</td>
+    </tr>
+    <tr>
+      <td>SULFASALAZINE + SIMVASTATIN</td>
+      <td>MDA-MB-231</td>
+      <td>0.215</td>
+      <td>0.785</td>
+      <td>additivity expectation — needs the plate</td>
+    </tr>
+    <tr>
+      <td>SULFASALAZINE + SIMVASTATIN</td>
+      <td>MDA-MB-468</td>
+      <td>0.144</td>
+      <td>0.856</td>
+      <td>additivity expectation — needs the plate</td>
+    </tr>
+    <tr>
+      <td>SULFASALAZINE + SIMVASTATIN</td>
+      <td>MCF7</td>
+      <td>0.135</td>
+      <td>0.865</td>
+      <td>additivity expectation — needs the plate</td>
+    </tr>
+    <tr>
+      <td>RSL3 + SIMVASTATIN</td>
+      <td>MDA-MB-231</td>
+      <td>—</td>
+      <td>—</td>
+      <td>not computable (no PRISM AUC for RSL3)</td>
+    </tr>
+    <tr>
+      <td>RSL3 + SIMVASTATIN</td>
+      <td>MDA-MB-468</td>
+      <td>—</td>
+      <td>—</td>
+      <td>not computable (no PRISM AUC for RSL3)</td>
+    </tr>
+    <tr>
+      <td>RSL3 + SIMVASTATIN</td>
+      <td>MCF7</td>
+      <td>—</td>
+      <td>—</td>
+      <td>not computable (no PRISM AUC for RSL3)</td>
+    </tr>
+  </tbody>
+</table>
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>drugA_name</th>
+      <th>drugB_name</th>
+      <th>E_AB_MDA231</th>
+      <th>E_AB_MCF7</th>
+      <th>selectivity_gap</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>TRIPTOLIDE</td>
+      <td>MAYTANSINOL-ISOBUTYRATE</td>
+      <td>0.889</td>
+      <td>0.864</td>
+      <td>0.025</td>
+    </tr>
+    <tr>
+      <td>MAYTANSINOL-ISOBUTYRATE</td>
+      <td>GEMCITABINE</td>
+      <td>0.813</td>
+      <td>0.789</td>
+      <td>0.024</td>
+    </tr>
+    <tr>
+      <td>ROMIDEPSIN</td>
+      <td>MAYTANSINOL-ISOBUTYRATE</td>
+      <td>0.855</td>
+      <td>0.833</td>
+      <td>0.023</td>
+    </tr>
+    <tr>
+      <td>MAYTANSINOL-ISOBUTYRATE</td>
+      <td>EPOTHILONE-D</td>
+      <td>0.812</td>
+      <td>0.791</td>
+      <td>0.021</td>
+    </tr>
+    <tr>
+      <td>DOLASTATIN-10</td>
+      <td>MAYTANSINOL-ISOBUTYRATE</td>
+      <td>0.859</td>
+      <td>0.839</td>
+      <td>0.021</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>5. CTRPv2.1 measured ground truth for RSL-3</h2>
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>Cell line</th>
+      <th>RSL-3 raw AUC (CTRPv2)</th>
+      <th>AUC 0-1</th>
+      <th>Percentile most sensitive (of 808)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>MDA-MB-231</td>
+      <td>6.18</td>
+      <td>0.31</td>
+      <td>29.60</td>
+    </tr>
+    <tr>
+      <td>MDA-MB-468</td>
+      <td>10.32</td>
+      <td>0.52</td>
+      <td>76.60</td>
+    </tr>
+    <tr>
+      <td>MCF7</td>
+      <td>11.06</td>
+      <td>0.55</td>
+      <td>82.90</td>
+    </tr>
+  </tbody>
+</table>
+<p class="muted">v21 published: integrated area under the sigmoid-fit concentration-response curve (0-1 viability x ~20 log dose units); LOWER = more death (sensitive)</p>
+<p>RSL-3 v2 model: <b>RandomForest</b>,
+OOF Spearman <b>0.462</b>
+(95% CI 0.401 to
+0.518) on
+788 lines — below the published lab-vs-CTRP ceiling
+(0.830).</p>
+
+<h2>6. Prediction uncertainty (calibrated on blind holdouts)</h2>
+<p>Conformal-style intervals from 7,336 out-of-sample rows:
+<b>±0.104</b> at 80% and
+<b>±0.193</b> at 95% (global half-widths).</p>
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>ModelID</th>
+      <th>n</th>
+      <th>RMSE</th>
+      <th>±80% CI</th>
+      <th>±95% CI</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>ACH-000019</td>
+      <td>1360</td>
+      <td>0.095</td>
+      <td>0.101</td>
+      <td>0.178</td>
+    </tr>
+    <tr>
+      <td>ACH-000097</td>
+      <td>1447</td>
+      <td>0.103</td>
+      <td>0.102</td>
+      <td>0.200</td>
+    </tr>
+    <tr>
+      <td>ACH-000212</td>
+      <td>1351</td>
+      <td>0.099</td>
+      <td>0.104</td>
+      <td>0.190</td>
+    </tr>
+    <tr>
+      <td>ACH-000248</td>
+      <td>152</td>
+      <td>0.108</td>
+      <td>0.120</td>
+      <td>0.225</td>
+    </tr>
+    <tr>
+      <td>ACH-000643</td>
+      <td>1438</td>
+      <td>0.107</td>
+      <td>0.105</td>
+      <td>0.211</td>
+    </tr>
+    <tr>
+      <td>ACH-000768</td>
+      <td>1396</td>
+      <td>0.097</td>
+      <td>0.093</td>
+      <td>0.186</td>
+    </tr>
+    <tr>
+      <td>ACH-000934</td>
+      <td>192</td>
+      <td>0.085</td>
+      <td>0.097</td>
+      <td>0.155</td>
+    </tr>
+  </tbody>
+</table>
+<p class="muted">FerroSelect frozen model (RandomForest,
+64 panel rows): pooled OOF Spearman
+0.195 with bootstrap CI
+-0.063 to
+0.427. This is an honestly
+low, pre-registered hypothesis — the plate decides.</p>
+
+<h2>7. Validation gates</h2>
+<table class="data"><tr><th>Gate</th><th>Value</th><th>Target</th><th>Status</th></tr>
+<tr><td>R² &gt; 0.25</td><td>0.567</td><td>0.250</td><td class="ok">PASS</td></tr><tr><td>Per-line Spearman &gt; 0.40</td><td>0.630</td><td>0.400</td><td class="ok">PASS</td></tr><tr><td>NDCG@10 (ranking)</td><td>0.941</td><td>—</td><td class="">reported</td></tr><tr><td>Selectivity rule</td><td colspan="3">pred_AUC_MDA231 &lt; 0.4 AND selectivity_delta &gt; 0.0 (26 positive-Δ drugs of 1,482)</td></tr><tr><td>PCA gene annotation</td><td colspan="3">PUBLISHED - verified against the shipped scores — 61 of 62 components verified</td></tr></table>
+<h2>8. Sign-off (print, sign, lodge with the sealed prediction)</h2>
+<div class="sign"><table>
+<tr><td class="label">Computational lead</td><td class="label">Supervisor</td></tr>
+<tr><td></td><td></td></tr>
+<tr><td class="label">Date</td><td class="label">Date</td></tr>
+<tr><td></td><td></td></tr>
+</table></div>
+<footer>Artifacts: outputs_local/ · splits by cell line · fixed seed 42 · pinned
+requirements.txt · prediction intervals calibrated on pre-registered holdout lines.
+Report generated automatically from the committed artifacts; no values are typed by hand.</footer>
+</body></html>

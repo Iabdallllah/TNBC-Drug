@@ -1,0 +1,41 @@
+{
+  "goal": "map pca_N features to their top-3 loading genes for the SHAP figures",
+  "outcome": "PUBLISHED - verified against the shipped scores",
+  "status": "resolved",
+  "resolved_commit": "54f3ca9",
+  "previous_state": {
+    "commit": "922df06",
+    "outcome": "BLOCKED - not published",
+    "why": "the shipped expression_pca128_breast.parquet could not be reproduced from the Model.csv at that time"
+  },
+  "root_cause": [
+    "Notebook 01 section 8 wrote wanted_breast_ids.csv with pandas' default header; section 9a read it back with header=None.",
+    "That injected a phantom cell line '0' into the wanted set, so the RandomState(42) holdout draw differed from an intended run.",
+    "The shipped expression_pca128_breast.parquet was produced with that phantom, so reproducing it requires the historical draw (--pool phantom, the default).",
+    "The notebook bug is fixed (section 8 now writes header=False); a fresh run produces a cleaner basis and requires retraining."
+  ],
+  "checks": {
+    "shape_matches": true,
+    "row_order_matches_shipped_ids": true,
+    "n_components": 62,
+    "n_components_verified": 61,
+    "n_genes": 2000,
+    "fit_rows": 62,
+    "dataset_rows": 79,
+    "shipped_scores": [79, 62],
+    "max_reconstruction_error_verified": 0.0009681089500670481,
+    "max_reconstruction_error_all": 1.4527179434597155,
+    "min_abs_correlation_verified": 0.9999999968357548,
+    "explained_variance_sum": 1.0,
+    "components_not_attributable": ["pca_61"],
+    "components_not_attributable_reason": "zero-variance residual direction of the sample space; carries no signal, loadings numerically unstable"
+  },
+  "artifacts": {
+    "loadings": "outputs_local/pca_loadings.parquet",
+    "top_genes": "outputs_local/pca_loadings_top.csv",
+    "meta": "outputs_local/pca_loadings_meta.json"
+  },
+  "verification_method": "Reconstructed scores = scaled_expression @ components.T, matched per component against the shipped expression_pca128_breast.parquet via Hungarian assignment on |corr|; only components with |r| > 0.999 and max reconstruction error < 1e-2 are published with gene names.",
+  "safe_conclusion": "Every attributable PCA feature consumed by the CatBoost model now has a verified gene-level label; pca_61 is deliberately left unattributed and flagged in the dashboard.",
+  "how_to_reproduce": "python src/models/pca_loadings.py  # default --pool phantom reproduces the shipped basis"
+}

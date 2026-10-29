@@ -18,3 +18,5 @@ starlette==0.38.6
 streamlit==1.39.0
 pytest==8.2.2
 plotly==5.9.0
+networkx>=3.6.1
+joblib>=1.2.0

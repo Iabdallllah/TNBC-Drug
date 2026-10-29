@@ -116,13 +116,18 @@ def test_dashboard_runs_without_streamlit_exceptions():
     assert not at.exception, [e.value for e in at.exception]
     assert {t.label for t in at.tabs} == {'Rankings & candidates',
                                           'Selectivity & combinations',
-                                          'Model & audit', 'Live predictor'}
+                                          'Synergy checkerboard', 'Protein network',
+                                          'Model & audit', 'Defense report',
+                                          'Live predictor'}
 
 
 def test_dashboard_charts_serialise_without_nan():
     """Vega rejected the old payload; the plotly JSON must be finite and parseable."""
     json.loads(_chart_json('bar'))
     json.loads(_chart_json('scatter'))
+    ci_blob = _chart_json('bar_ci')
+    json.loads(ci_blob)
+    assert '"error_x"' in ci_blob, 'the AUC bar chart lost its 80% CI error bars'
 
 
 def _chart_json(which):
@@ -139,7 +144,12 @@ def _chart_json(which):
                                                                'selectivity_chart'):
             exec(compile(ast.Module([node], []), '<ast>', 'exec'), ns)
     rank = pd.read_csv(os.path.join(OUT, 'mda_mb_231_full_ranking.csv'))
-    fig = ns['bar_chart'](rank.head(20)) if which == 'bar' else ns['selectivity_chart'](rank, 5)
+    if which == 'bar_ci':
+        rank = rank.head(5).copy()
+        rank['auc_hw80'] = 0.093
+    fig = ns['bar_chart'](rank.head(20)) if which == 'bar' else (
+        ns['bar_chart'](rank) if which == 'bar_ci'
+        else ns['selectivity_chart'](rank, 5))
     blob = fig.to_json()
     for token in ('NaN', 'Infinity'):
         assert token not in blob, f'{token} in plotly payload ({which})'
@@ -349,6 +359,230 @@ def test_ctpv2_block_visible_in_ferroselect_view():
     v = dict(zip(ctp['Cell line'], ctp['RSL-3 raw AUC (CTRPv2)']))
     lo = pd.to_numeric(pd.Series(v.values()), errors='coerce')
     assert lo.between(1, 20).all(), v
+
+
+def test_synergy_math_detects_synergy_and_antagonism():
+    """Bliss, ZIP and Loewe must all recover a known interaction from one matrix."""
+    sys.path.insert(0, os.path.join(ROOT, 'dashboard'))
+    import synergy
+
+    ca = np.array([0, 0.1, 0.3, 1, 3, 10, 30, 100.0])
+    cb = ca.copy()
+    ea = 0.55 * (ca / ca.max()) ** 1.1
+    eb = 0.45 * (cb / cb.max()) ** 1.1
+    additive = ea[:, None] + eb[None, :] - ea[:, None] * eb[None, :]
+    base = 1.0 - additive
+
+    placebo = synergy.placeholder_matrix(ca, cb, auc_a=0.8, auc_b=0.8)
+    p = synergy.bliss_analysis(placebo, ca, cb)
+    assert abs(p['summary']['mean_excess']) < 1e-9, \
+        'the model-additive placeholder must have exactly zero Bliss excess'
+
+    v_syn = base.copy()
+    v_syn[1:, 1:] = np.clip(base[1:, 1:] * 0.5, 0, 1)
+    a = synergy.analyse(v_syn, ca, cb)
+    assert a['bliss']['summary']['mean_excess'] > 0.20
+    assert a['zip']['summary']['mean_excess'] > 0.20
+    assert a['loewe']['summary']['median_ci'] < 1.0
+    assert a['bliss']['summary']['n_synergistic'] > 0
+
+    v_ant = base.copy()
+    v_ant[1:, 1:] = 1.0          # combination fully protects: pure antagonism
+    ant = synergy.bliss_analysis(v_ant, ca, cb)
+    assert ant['summary']['mean_excess'] < -0.15, 'antagonism was not detected'
+
+    for fn in (synergy.observed_heatmap, synergy.bliss_heatmap,
+               synergy.zip_heatmap, synergy.loewe_heatmap):
+        blob = fn(v_syn, ca, cb).to_json()
+        assert 'NaN' not in blob and 'Infinity' not in blob, fn.__name__
+
+    assert list(synergy.parse_conc_text('100, 10, 1, 0')) == [0, 1, 10, 100]
+    for bad in ('', '5', '0, -1, 2', '0, abc, 2'):
+        try:
+            synergy.parse_conc_text(bad)
+        except ValueError:
+            continue
+        raise AssertionError(f'parse_conc_text accepted {bad!r}')
+
+    preds = pd.read_csv(os.path.join(OUT, 'ferroselect_panel_predictions.csv'))
+    ref = synergy.model_reference_effect(preds, 'MDA-MB-231', 'ERASTIN', 'SIMVASTATIN')
+    assert ref is not None and 0 < ref['e_ab'] < 1
+    assert synergy.model_reference_effect(preds, 'MDA-MB-231', 'RSL3', 'SIMVASTATIN') is None
+    blob = synergy.comparison_chart(ref['e_ab'], 0.5).to_json()
+    assert 'NaN' not in blob and 'Infinity' not in blob
+
+
+def test_prediction_intervals_are_calibrated_on_blind_holdouts():
+    """The ±CI presentation must be backed by the committed calibration artifact."""
+    p = json.load(open(os.path.join(OUT, 'prediction_intervals.json')))
+    assert 'conformal' in p['method'].lower()
+    assert p['n_holdout_lines'] == 7
+    hold = _holdout()
+    ml = _ml()
+    n_expected = int(ml['ModelID'].astype(str).isin(hold).sum())
+    assert p['n_rows'] == n_expected, (p['n_rows'], n_expected)
+
+    g = p['global']
+    assert 0.05 < g['abs_q80'] < 0.15, g['abs_q80']
+    assert g['abs_q95'] > g['abs_q80'] + 0.05
+    assert 0.05 < g['rmse'] < 0.20
+    for mid in (MDA, MCF):
+        s = p['lines'][mid]
+        assert s['n'] > 100
+        assert 0 < s['abs_q80'] < s['abs_q95'] <= 0.35
+        assert abs(s['abs_q80'] - g['abs_q80']) < 0.05
+    assert p['min_drug_n'] >= 25
+    assert isinstance(p['drugs'], dict)
+    for s in p['drugs'].values():
+        assert s['abs_q95'] > s['abs_q80'] > 0
+
+
+def test_defence_report_is_self_contained_and_complete():
+    """The export must be printable HTML with every required thesis section."""
+    sys.path.insert(0, os.path.join(ROOT, 'dashboard'))
+    import defense_report
+
+    h = defense_report.build_defense_report(OUT)
+    assert h.startswith('<!DOCTYPE html>') and h.rstrip().endswith('</html>')
+    assert '@page' in h and 'Print' not in h.split('</style>')[0]  # printable CSS
+    assert '<script' not in h.lower(), 'the report must stay JavaScript-free'
+    for marker in ['1. Dataset and cell-line status', '2. The eight-member wet-lab panel',
+                   '3. Top-ranked killers', '4. Bliss combination expectations',
+                   '5. CTRPv2.1 measured ground truth', '6. Prediction uncertainty',
+                   '7. Validation gates', '8. Sign-off']:
+        assert marker in h, marker
+    for _, member, _ in defense_report.PANEL:
+        assert member in h, f'{member} missing from the defence report'
+    assert 'RSL-3 raw AUC (CTRPv2)' in h
+    assert 'MDA-MB-231' in h and 'MCF7' in h
+    assert '±0.104' in h, 'global 80% interval missing'
+    assert '>nan<' not in h.lower() and '>None<' not in h
+
+
+def test_rescue_network_uses_real_protein_lists():
+    """The network must draw the real shortlist and refuse mislabelled signatures."""
+    sys.path.insert(0, os.path.join(ROOT, 'dashboard'))
+    import network_graph
+
+    sl = pd.read_csv(os.path.join(OUT, 'protein_array_shortlist.csv'))
+    rv = pd.read_csv(os.path.join(OUT, 'offtarget_rescue_reversal.csv'))
+    pm = pd.read_csv(os.path.join(OUT, 'offtarget_panel_map.csv'))
+    cov = pd.read_csv(os.path.join(OUT, 'offtarget_coverage_ferroselect.csv'))
+
+    fig, info = network_graph.rescue_network_figure(
+        sl, rv, 'RSL3 + SIMVASTATIN', 'DEFEROXAMINE', MDA, panel_map=pm, coverage=cov)
+    assert info['valid'] is True
+    assert info['n_suppressed'] == 242
+    assert info['n_rescued'] == 197          # full Deferoxamine-Mesylate Up signature
+    assert info['n_overlap'] == 9            # stored killer-down ∩ rescue-up genes
+    assert '244 suppression events' in info['note']
+    assert '206 SIMVASTATIN' in info['note']
+    kinds = {d['kind'] for _, d in info['_graph'].nodes(data=True)}
+    assert {'killer', 'rescue', 'suppressed', 'shared'} <= kinds
+    blob = fig.to_json()
+    json.loads(blob)
+    assert 'NaN' not in blob and 'Infinity' not in blob
+
+    # NAC's legacy L1000 term is Solifenacin-Succinate: a false fuzzy match.
+    assert network_graph.signature_audit('N-ACETYLCYSTEINE', cov)[0] is False
+    assert network_graph.signature_audit('DEFEROXAMINE', cov)[0] is True
+    bad_fig, bad = network_graph.rescue_network_figure(
+        sl, rv, 'RSL3 + SIMVASTATIN', 'N-ACETYLCYSTEINE', MDA, panel_map=pm, coverage=cov)
+    assert bad_fig is None and bad['valid'] is False
+    assert 'Solifenacin' in bad['warning']
+    assert bad['n_shared'] == 0, 'NAC must not inherit the solifenacin overlap'
+
+    fig2, info2 = network_graph.rescue_network_figure(
+        sl, rv, 'ERASTIN', 'DEFEROXAMINE', MDA, max_nodes=40, panel_map=pm, coverage=cov)
+    assert info2['n_suppressed'] == 177 and info2['n_rescued'] == 197
+    assert info2['p'] is not None and info2['p'] < 0.05
+
+    paths = json.load(open(os.path.join(OUT, 'network_paths.json')))
+    mfig, nodes = network_graph.mechanism_path_figure(
+        paths, ['erastin', 'sulfasalazine', 'simvastatin', 'RSL3'])
+    assert mfig is not None and 'GPX4' in nodes
+
+
+def test_model_info_has_no_stale_artifact_references():
+    """model_info.json is the public manifest; a dead file name is a broken contract."""
+    mi = json.load(open(os.path.join(OUT, 'model_info.json')))
+    assert 'pca_62' in mi['features'], mi['features']
+    assert 'pca_128' not in mi['features'], mi['features']
+    assert mi['dataset'].startswith('outputs_local/')
+    assert os.path.exists(os.path.join(ROOT, mi['dataset']))
+    assert not any('rf_tnbc_v1.pkl' in x for x in mi['outputs'])
+    for entry in mi['outputs']:
+        name = entry.split(' ')[0]
+        assert os.path.exists(os.path.join(OUT, name)), f'stale artifact reference: {entry}'
+    assert 'prediction_intervals.json' in mi['outputs']
+    assert 'catboost_tnbc_v1.cbm' in mi['outputs']
+
+
+def test_outputs_local_artifacts_parse():
+    """Integrity sweep: every artifact in outputs_local must load cleanly."""
+    bad = []
+    files = [f for f in sorted(os.listdir(OUT))
+             if os.path.isfile(os.path.join(OUT, f)) and not f.startswith('.')]
+    assert len(files) >= 45, f'only {len(files)} artifacts in outputs_local'
+    for f in files:
+        p = os.path.join(OUT, f)
+        try:
+            assert os.path.getsize(p) > 0, 'empty file'
+            if f.endswith('.csv'):
+                assert pd.read_csv(p, nrows=5).shape[1] >= 1
+            elif f.endswith('.json'):
+                json.load(open(p))
+            elif f.endswith('.npy'):
+                np.load(p, allow_pickle=True)
+            elif f.endswith('.parquet'):
+                pd.read_parquet(p)
+            elif f.endswith(('.md', '.txt')):
+                assert len(open(p, encoding='utf-8', errors='replace').read()) > 0
+            elif f.endswith(('.png', '.joblib', '.cbm')):
+                assert os.path.getsize(p) > 100
+        except Exception as e:
+            bad.append(f'{f}: {type(e).__name__}: {e}')
+    assert not bad, bad
+
+
+def test_dashboard_ci_and_defence_export_are_visible():
+    """The new UI must actually expose the CI column and the report download."""
+    from streamlit.testing.v1 import AppTest
+    at = AppTest.from_file(os.path.join(ROOT, 'dashboard', 'app.py'), default_timeout=300)
+    at.run()
+    assert not at.exception, [e.value for e in at.exception]
+    ranked = next((d.value for d in at.dataframe if 'auc_ci_mda231' in d.value.columns), None)
+    assert ranked is not None, 'the ranking table lost the CI column'
+    ci = ranked['auc_ci_mda231'].astype(str)
+    assert ci.str.match(r'^\d\.\d{3} ± \d\.\d{3}$').all(), ci.head().tolist()
+    assert any(d.label == 'Download defence report (HTML)'
+               for d in at.get('download_button'))
+    assert len(at.get('plotly_chart')) >= 5, 'new charts did not render'
+    # The checkerboard must refuse to score the untouched additive placeholder …
+    assert any('model-additive placeholder' in i.value for i in at.info), \
+        'the placeholder is being scored as if it were measured data'
+    # … and the explicit demo toggle must activate all three scores.
+    demo = next(t for t in at.toggle if 'illustrative synergy demo' in t.label)
+    at = demo.set_value(True).run()
+    assert not at.exception, [e.value for e in at.exception]
+    labels = {m.label for m in at.metric}
+    assert {'Mean Bliss excess', 'Median Loewe CI'} <= labels, labels
+    assert len(at.get('plotly_chart')) >= 8, 'the scored checkerboard charts did not render'
+
+    # NAC quarantine must hold beyond the network tab: the 8-member panel note may
+    # not recycle the 166 Solifenacin genes, and the rescue table must drop NAC rows.
+    view = next(r for r in at.radio if r.label == 'Dataset')
+    at = view.set_value('FerroSelect inducer panel').run()
+    assert not at.exception, [e.value for e in at.exception]
+    panel = next(d.value for d in at.dataframe
+                 if 'Panel member' in d.value.columns and 'Evidence / note' in d.value.columns)
+    nac = panel[panel['Panel member'].str.contains('N-ACETYLCYSTEINE')].iloc[0]
+    assert 'WITHHELD' in nac['Evidence / note'], nac['Evidence / note']
+    assert '166' not in nac['Evidence / note'], 'the Solifenacin count leaked back into NAC'
+    rescue = next((d.value for d in at.dataframe if 'Rescue drug' in d.value.columns), None)
+    assert rescue is not None, 'the rescue-reversal table disappeared'
+    assert 'N-ACETYLCYSTEINE' not in set(rescue['Rescue drug']), \
+        'the mislabelled Solifenacin rows are still presented as NAC'
 
 
 if __name__ == '__main__':

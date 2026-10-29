@@ -64,7 +64,8 @@ def resolve(sigs, name, syns):
         if k in sigs and 'Down' in sigs[k]:
             return sigs[k]
         cands = [(tn, m) for tn, m in sigs.items()
-                 if len(tn) >= 5 and (k in tn or tn in k) and 'Down' in m]
+                 if len(k) >= 5 and len(tn) >= 5 and (k in tn or tn in k)
+                 and 'Down' in m]
         if cands:
             return max(cands, key=lambda c: len(c[0]))[1]
     return None

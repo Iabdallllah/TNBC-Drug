@@ -139,7 +139,8 @@ def main():
         sig = terms.get(nkey)
         if sig is None:                      # substring fallback, longest first
             cands = [(tn, m) for tn, m in terms.items()
-                     if len(tn) >= 6 and (nkey in tn or tn in nkey)]
+                     if len(nkey) >= 5 and len(tn) >= 6
+                     and (nkey in tn or tn in nkey)]
             if cands:
                 sig = max(cands, key=lambda c: len(c[0]))[1]
         cid, phase, mech = chembl_lookup(name)

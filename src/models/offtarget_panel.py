@@ -89,7 +89,7 @@ def main():
                 drug_keys[d] = k
                 break
             cands = [(tn, m) for tn, m in sigs.items()
-                     if len(tn) >= 5 and (k in tn or tn in k)
+                     if len(k) >= 5 and len(tn) >= 5 and (k in tn or tn in k)
                      and 'Up' in m and 'Down' in m]
             if cands:
                 drug_keys[d] = max(cands, key=lambda c: len(c[0]))[0]
