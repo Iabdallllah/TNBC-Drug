@@ -1,0 +1,14 @@
+{
+  "version": "v1.1 defense",
+  "train_lines": 23,
+  "holdout_lines": 7,
+  "new_artifacts": {
+    "baseline_audit.*": "outputs_local/baseline_audit.{json,csv}",
+    "expression_line_audit.json": "outputs_local/expression_line_audit.json",
+    "diagnostic_results.*": "outputs_local/diagnostic_results.{json,csv}"
+  },
+  "current_checksum_note": "Snapshot; new model = leave-line-out CV on the 23 training lines only.",
+  "sealed": "preserved (de0922e7...4db851); unblinded by supervisor only",
+  "posthoc_status": "all new results post-hoc, exploratory",
+  "notes": "README §6, REPORT_v1.1.md §7, diagnostic tests, blinding infra."
+}

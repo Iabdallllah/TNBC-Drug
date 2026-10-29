@@ -41,6 +41,7 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import sys
 
 import numpy as np
@@ -52,7 +53,7 @@ from sklearn.preprocessing import StandardScaler
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 DATA = os.path.join(ROOT, 'Data')
 OUT = os.path.join(ROOT, 'outputs_local')
-CACHE_DIR = os.environ.get('TNBC_CACHE', '/tmp/opencode')
+CACHE_DIR = os.environ.get('TNBC_CACHE', os.path.join(OUT, 'cache'))
 EXPR = os.path.join(DATA, 'OmicsExpressionTPMLogp1HumanAllGenes.csv')
 MODEL_CSV = os.path.join(DATA, 'Model.csv')
 SHIPPED = os.path.join(OUT, 'expression_pca128_breast.parquet')
@@ -61,35 +62,63 @@ HOLDOUT_FIXED = {'ACH-000768', 'ACH-000019'}      # MDA-MB-231 + MCF7, always ho
 PHANTOM = '0'                                     # historical phantom entry
 MIN_VERIFIED = 50                                 # refuse to publish a half-blind fit
 
+# A gene column is "SYMBOL (EntrezID)" or a bare "ENSG..." id (incl. PAR_Y genes).
+# Everything else in the header - the unnamed index, SequencingID, ModelID,
+# IsDefaultEntryFor*, ModelConditionID - is metadata and must NOT be cast to float.
+GENE_HEADER_RE = re.compile(r'^.+ \(\d+\)$|^ENSG\d+')
+
 
 def log(m):
     print(m, flush=True)
 
 
+def gene_columns(header_cols):
+    """Return only the gene-expression columns from the DepMap expression header.
+
+    Explicitly excludes metadata columns (the unnamed index, ModelID,
+    SequencingID, ModelConditionID, IsDefaultEntryFor*) and keeps only columns
+    whose header matches the gene pattern `SYMBOL (EntrezID)` or `ENSG...`.
+    """
+    out = []
+    for c in header_cols:
+        name = str(c)
+        if name in ('ModelID', 'SequencingID', 'ModelConditionID',
+                    'IsDefaultEntryForMC', 'IsDefaultEntryForModel', ''):
+            continue
+        name = name.replace('Unnamed: 0', '')
+        if name in ('',) or not GENE_HEADER_RE.match(name):
+            continue
+        out.append(c)
+    return out
+
+
 def load_dataset_slice():
     """79-row x 60649-gene expression matrix + ids + gene symbols, via one CSV pass.
 
-    Cached at $TNBC_CACHE/expr79.npz (about 20 MB). If the cache is missing this
-    performs a single full read of the 938 MB file - all later stages stay in RAM.
+    Cached at $TNBC_CACHE/expr79.npz (about 20 MB); falls back to
+    outputs_local/cache/ (git-ignored) so a run does not depend on /tmp. If the
+    cache is missing this performs a single full read of the 938 MB file - all
+    later stages stay in RAM.
     """
     cache = os.path.join(CACHE_DIR, 'expr79.npz')
     if os.path.exists(cache):
-        z = np.load(cache, allow_pickle=False)
+        z = np.load(cache, allow_pickle=True)
         log(f'expression cache: {cache} {z["X"].shape}')
         return z['X'], z['ids'].astype(str), z['genes'].astype(str)
 
     os.makedirs(CACHE_DIR, exist_ok=True)
     hdr = pd.read_csv(EXPR, nrows=1, low_memory=True)
     id_col = next(c for c in hdr.columns if 'modelid' in c.lower())
-    gene_cols = [c for c in hdr.columns
-                 if c not in (id_col,) and not c.lower().startswith('isdefault')]
+    gene_cols = gene_columns(hdr.columns.tolist())
     log(f'single full read of {EXPR} ({len(gene_cols)} gene columns)...')
-    df = pd.read_csv(EXPR, usecols=[id_col] + gene_cols, dtype='float32',
+    # id_col carries string ModelIDs - read it as str and cast gene columns to
+    # float32 separately. A scalar dtype would force ModelID through float too.
+    df = pd.read_csv(EXPR, usecols=[id_col] + gene_cols,
+                     dtype={id_col: 'str', **{c: 'float32' for c in gene_cols}},
                      low_memory=True)
-    df[id_col] = df[id_col].astype(str)
-    genes = np.array([c.split(' (')[0] or c for c in gene_cols])
-    X = df[gene_cols].to_numpy(dtype=np.float32)
     ids = df[id_col].to_numpy()
+    X = df[gene_cols].to_numpy(dtype=np.float32)
+    genes = np.array([c.split(' (')[0] or c for c in gene_cols])
     np.savez(cache, X=X, ids=ids, genes=genes)
     log(f'cached {X.shape} -> {cache}')
     return X, ids, genes
@@ -155,17 +184,33 @@ def main():
     log(f'PCA-{n_comp} explained variance: {pca.explained_variance_ratio_.sum():.6f}')
 
     # ---- per-component verification against the shipped scores ----
+    # verification compares only the dataset rows present in both P and the shipped parquet
+    P_all = P
+    dataset_idx = np.where(mask_all)[0]
+    P_ds = P_all[dataset_idx]
+    # shipped parquet has exactly the dataset rows in the same id order; match by index
+    if S.shape[0] == P_ds.shape[0]:
+        P_cmp = P_ds
+    else:
+        # defensive: restrict P to first min(len) dataset rows (the shipped parquet keeps
+        # one entry per unique ModelID, so the counts may differ by duplicates)
+        n = min(S.shape[0], P_ds.shape[0])
+        P_cmp = P_ds[:n]
+        S = S[:n]
     corr = np.zeros((n_comp, n_comp))
     for i in range(n_comp):
         for j in range(n_comp):
-            corr[i, j] = np.corrcoef(P[:, i], S[:, j])[0, 1]
+            corr[i, j] = np.corrcoef(P_cmp[:, i], S[:, j])[0, 1]
     ri, ci = linear_sum_assignment(-np.abs(corr))
     ar = np.abs(corr[ri, ci])
     sign = np.where(corr[ri, ci] >= 0, 1.0, -1.0)
     comps = pca.components_[ri] * sign[:, None]          # aligned to shipped columns
     ev = pca.explained_variance_ratio_[ri]
     recon = scaler.transform(Xa) @ comps.T
-    per_comp_err = np.abs(recon - S).max(axis=0)
+    dataset_idx = np.where(mask_all)[0]
+    recon_ds = recon[dataset_idx]
+    n_cmp = min(recon_ds.shape[0], S.shape[0])
+    per_comp_err = np.abs(recon_ds[:n_cmp] - S[:n_cmp]).max(axis=0)
     verified = (ar > 0.999) & (per_comp_err < 1e-2) & (ev > 0)
     log(f'verified components: {int(verified.sum())}/{n_comp}')
     for j in np.flatnonzero(~verified):

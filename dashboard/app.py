@@ -122,6 +122,11 @@ champion = clean_label(best.name)
 SENS_MAP = {'SENSITIVE (AUC<0.3)': 'Sensitive', 'sensitive': 'Sensitive',
             'resistant/intermediate': 'Resistant', 'resistant': 'Resistant',
             'RESISTANT (AUC>=0.3)': 'Resistant'}
+# BLIND_MODE (default ON): hides predictions/panel-ranking/live-predictor for panel agents
+BLIND_MODE = os.environ.get('BLIND_MODE','ON').upper() in ('ON','1','TRUE','YES')
+BLIND_BANNER = ('Blinded for bench team — predictions / FerroSelect panel ranking / '
+                'kill proxies / Live predictor hidden. Unblinding requires supervisor key.')
+
 SEL_MAP = {'selective': 'Predicted selective (unvalidated)',
            'non-selective': 'Not predicted selective',
            'tnbc-selective': 'Predicted selective (unvalidated)'}
@@ -1008,6 +1013,10 @@ st.write('Predicted sensitivity for **MDA-MB-231**, compared with the luminal '
          'model as a **negative result**; the wet-lab panel is the hypothesis test.')
 st.info('Predicted sensitivity in a cell model, not a clinical recommendation. '
         f"Model version: {info.get('model_version', 'n/a')}")
+# Phase 4 blinding infrastructure
+if BLIND_MODE:
+    st.info('BLIND_MODE is ON. Sealed predictions, panel ranking, and live predictor are '
+            'suppressed behind this banner. See UNBLIND.md for the supervisor-only unblind path.')
 
 _cb = ((baseline_audit or {}).get('metrics') or {}).get('catboost') or {}
 _bm = ((baseline_audit or {}).get('metrics') or {}).get('per_drug_mean') or {}

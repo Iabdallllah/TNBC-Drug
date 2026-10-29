@@ -1,0 +1,86 @@
+DATA_FILENAME	COLUMN_HEADER	COLUMN_DESCRIPTION
+v21.data.auc_sensitivities.txt	experiment_id	serial number for experiment performed during CTRPv2 data collection
+v21.data.auc_sensitivities.txt	area_under_curve	integrated area under the sigmoid-fit concentration-response curve
+v21.data.auc_sensitivities.txt	master_cpd_id	master compound identifier for all CTRP versions
+v21.data.auc_sensitivities.txt	master_ccl_id	master cancer cell line identifier for all CTRP versions
+v21.data.cnv_avg_log2.txt	master_ccl_id	master cancer cell line identifier for all CTRP versions
+v21.data.cnv_avg_log2.txt	entrez_gene_id	NCBI Entrez Gene ID for the gene-expression or copy-number feature
+v21.data.cnv_avg_log2.txt	copy_number_var_avg_log2	average (relative) log2 copy-number variation
+v21.data.cnv_global_analysis.txt	cpd_name	name of compound (INN preferred; best available otherwise)
+v21.data.cnv_global_analysis.txt	master_cpd_id	master compound identifier for all CTRP versions
+v21.data.cnv_global_analysis.txt	context	lineage (primary site) context defining the set of cancer cell lines used for correlation
+v21.data.cnv_global_analysis.txt	number_of_cell_lines	number of cell lines participating in specific sensitivity correlation
+v21.data.cnv_global_analysis.txt	feature_dataset	"dataset from which cellular feature was obtained (i.e., CNV or GEX)"
+v21.data.cnv_global_analysis.txt	hugo_gene_symbol	HUGO gene symbol for gene involved in correlation with compound sensitivity
+v21.data.cnv_global_analysis.txt	correl_direction	"direction of correlation (i.e., positive or negative)"
+v21.data.cnv_global_analysis.txt	pearson_correlation	Pearson correlation coefficient
+v21.data.cnv_global_analysis.txt	correlation_zscore	z-score of pearson_correlation (using Fisher's Z-transformation for the tested number of cancer cell lines)
+v21.data.cnv_lineage_analysis.txt	cpd_name	name of compound (INN preferred; best available otherwise)
+v21.data.cnv_lineage_analysis.txt	master_cpd_id	master compound identifier for all CTRP versions
+v21.data.cnv_lineage_analysis.txt	context	lineage (primary site) context defining the set of cancer cell lines used for correlation
+v21.data.cnv_lineage_analysis.txt	number_of_cell_lines	number of cell lines participating in specific sensitivity correlation
+v21.data.cnv_lineage_analysis.txt	feature_dataset	"dataset from which cellular feature was obtained (i.e., CNV or GEX)"
+v21.data.cnv_lineage_analysis.txt	hugo_gene_symbol	HUGO gene symbol for gene involved in correlation with compound sensitivity
+v21.data.cnv_lineage_analysis.txt	correl_direction	"direction of correlation (i.e., positive or negative)"
+v21.data.cnv_lineage_analysis.txt	pearson_correlation	Pearson correlation coefficient
+v21.data.cnv_lineage_analysis.txt	correlation_zscore	z-score of pearson_correlation (using Fisher's Z-transformation for the tested number of cancer cell lines)
+v21.data.cnv_lineage_improve.txt	cpd_name	name of compound (INN preferred; best available otherwise)
+v21.data.cnv_lineage_improve.txt	master_cpd_id	master compound identifier for all CTRP versions
+v21.data.cnv_lineage_improve.txt	context	lineage (primary site) context defining the set of cancer cell lines used for correlation
+v21.data.cnv_lineage_improve.txt	number_of_cell_lines	number of cell lines participating in specific sensitivity correlation
+v21.data.cnv_lineage_improve.txt	feature_dataset	"dataset from which cellular feature was obtained (i.e., CNV or GEX)"
+v21.data.cnv_lineage_improve.txt	hugo_gene_symbol	HUGO gene symbol for gene involved in correlation with compound sensitivity
+v21.data.cnv_lineage_improve.txt	correl_direction	"direction of correlation (i.e., positive or negative)"
+v21.data.cnv_lineage_improve.txt	pearson_correlation	Pearson correlation coefficient
+v21.data.cnv_lineage_improve.txt	correlation_zscore	z-score of pearson_correlation (using Fisher's Z-transformation for the tested number of cancer cell lines)
+v21.data.gex_avg_log2.txt	idx_gene_feature	gene feature serial number specific to correlation analysis
+v21.data.gex_avg_log2.txt	master_ccl_id	master cancer cell line identifier for all CTRP versions
+v21.data.gex_avg_log2.txt	mrna_expression_avg_log2	average log2 gene expression
+v21.data.gex_global_analysis.txt	cpd_name	name of compound (INN preferred; best available otherwise)
+v21.data.gex_global_analysis.txt	master_cpd_id	master compound identifier for all CTRP versions
+v21.data.gex_global_analysis.txt	context	lineage (primary site) context defining the set of cancer cell lines used for correlation
+v21.data.gex_global_analysis.txt	number_of_cell_lines	number of cell lines participating in specific sensitivity correlation
+v21.data.gex_global_analysis.txt	feature_dataset	"dataset from which cellular feature was obtained (i.e., CNV or GEX)"
+v21.data.gex_global_analysis.txt	hugo_gene_symbol	HUGO gene symbol for gene involved in correlation with compound sensitivity
+v21.data.gex_global_analysis.txt	correl_direction	"direction of correlation (i.e., positive or negative)"
+v21.data.gex_global_analysis.txt	pearson_correlation	Pearson correlation coefficient
+v21.data.gex_global_analysis.txt	correlation_zscore	z-score of pearson_correlation (using Fisher's Z-transformation for the tested number of cancer cell lines)
+v21.data.gex_lineage_analysis.txt	cpd_name	name of compound (INN preferred; best available otherwise)
+v21.data.gex_lineage_analysis.txt	master_cpd_id	master compound identifier for all CTRP versions
+v21.data.gex_lineage_analysis.txt	context	lineage (primary site) context defining the set of cancer cell lines used for correlation
+v21.data.gex_lineage_analysis.txt	number_of_cell_lines	number of cell lines participating in specific sensitivity correlation
+v21.data.gex_lineage_analysis.txt	feature_dataset	"dataset from which cellular feature was obtained (i.e., CNV or GEX)"
+v21.data.gex_lineage_analysis.txt	hugo_gene_symbol	HUGO gene symbol for gene involved in correlation with compound sensitivity
+v21.data.gex_lineage_analysis.txt	correl_direction	"direction of correlation (i.e., positive or negative)"
+v21.data.gex_lineage_analysis.txt	pearson_correlation	Pearson correlation coefficient
+v21.data.gex_lineage_analysis.txt	correlation_zscore	z-score of pearson_correlation (using Fisher's Z-transformation for the tested number of cancer cell lines)
+v21.data.gex_lineage_improve.txt	cpd_name	name of compound (INN preferred; best available otherwise)
+v21.data.gex_lineage_improve.txt	master_cpd_id	master compound identifier for all CTRP versions
+v21.data.gex_lineage_improve.txt	context	lineage (primary site) context defining the set of cancer cell lines used for correlation
+v21.data.gex_lineage_improve.txt	number_of_cell_lines	number of cell lines participating in specific sensitivity correlation
+v21.data.gex_lineage_improve.txt	feature_dataset	"dataset from which cellular feature was obtained (i.e., CNV or GEX)"
+v21.data.gex_lineage_improve.txt	hugo_gene_symbol	HUGO gene symbol for gene involved in correlation with compound sensitivity
+v21.data.gex_lineage_improve.txt	correl_direction	"direction of correlation (i.e., positive or negative)"
+v21.data.gex_lineage_improve.txt	pearson_correlation	Pearson correlation coefficient
+v21.data.gex_lineage_improve.txt	correlation_zscore	z-score of pearson_correlation (using Fisher's Z-transformation for the tested number of cancer cell lines)
+v21.meta.cnv_features.txt	entrez_gene_id	NCBI Entrez Gene ID for the gene-expression or copy-number feature
+v21.meta.cnv_features.txt	gene_primary_name	primary gene name of feature (HUGO preferred; best available otherwise)
+v21.meta.cnv_features.txt	gene_symbol	indicator of whether gene_primary_name is a HUGO gene symbol
+v21.meta.gex_features.txt	idx_gene_feature	gene feature serial number specific to correlation analysis
+v21.meta.gex_features.txt	affy_probeset_id	Affymetrix probe set ID for gene-expression feature
+v21.meta.gex_features.txt	entrez_gene_id	NCBI Entrez Gene ID for the gene-expression or copy-number feature
+v21.meta.gex_features.txt	gene_primary_name	primary gene name of feature (HUGO preferred; best available otherwise)
+v21.meta.gex_features.txt	gene_symbol	indicator of whether gene_primary_name is a HUGO gene symbol
+v21.meta.per_cell_line.txt	master_ccl_id	master cancer cell line identifier for all CTRP versions
+v21.meta.per_cell_line.txt	ccl_name	primary name of cancer cell line
+v21.meta.per_cell_line.txt	ccle_primary_site	cell line tissue of origin (broadly defined) from CCLE
+v21.meta.per_cell_line.txt	ccle_primary_hist	cell line histology type (general) from CCLE
+v21.meta.per_cell_line.txt	ccle_hist_subtype_1	cell line histology type (specific) from CCLE
+v21.meta.per_compound.txt	master_cpd_id	master compound identifier for all CTRP versions
+v21.meta.per_compound.txt	cpd_name	name of compound (INN preferred; best available otherwise)
+v21.meta.per_compound.txt	broad_cpd_id	unique compound identifier in Broad Institute LIMS
+v21.meta.per_compound.txt	top_test_conc_umol	starting top concentration for 16-point 2-fold serial dilution of compound
+v21.meta.per_compound.txt	cpd_status	clinical status of small molecule
+v21.meta.per_compound.txt	gene_symbol_of_protein_target	HUGO gene symbol for gene encoding targeted protein
+v21.meta.per_compound.txt	target_or_activity_of_compound	protein or biological process that compound is reported to target (not exhaustive)
+v21.meta.per_compound.txt	cpd_smiles	SMILES representation of chemical structure

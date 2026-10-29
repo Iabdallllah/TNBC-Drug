@@ -1,0 +1,836 @@
+master_ccl_id	ccl_name	ccle_primary_site	ccle_primary_hist	ccle_hist_subtype_1
+1	697	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	acute_lymphoblastic_B_cell_leukaemia
+3	5637	urinary_tract	carcinoma	
+4	2313287	stomach	carcinoma	adenocarcinoma
+7	22RV1	prostate	carcinoma	
+8	253J	urinary_tract	carcinoma	transitional_cell_carcinoma
+9	253JBV	urinary_tract	carcinoma	transitional_cell_carcinoma
+10	42MGBA	central_nervous_system	glioma	astrocytoma_Grade_IV
+14	639V	urinary_tract	carcinoma	transitional_cell_carcinoma
+15	647V	urinary_tract	carcinoma	transitional_cell_carcinoma
+16	769P	kidney	carcinoma	clear_cell_renal_cell_carcinoma
+19	786O	kidney	carcinoma	clear_cell_renal_cell_carcinoma
+20	8305C	thyroid	carcinoma	anaplastic_carcinoma
+21	8505C	thyroid	carcinoma	anaplastic_carcinoma
+22	8MGBA	central_nervous_system	glioma	astrocytoma_Grade_IV
+23	A101D	skin	malignant_melanoma	
+25	A172	central_nervous_system	glioma	astrocytoma_Grade_IV
+26	A204	soft_tissue	rhabdoid_tumor	
+27	A2058	skin	malignant_melanoma	
+28	A253	salivary_gland	carcinoma	mucoepidermoid_carcinoma
+29	A2780	ovary	carcinoma	adenocarcinoma
+30	A375	skin	malignant_melanoma	
+31	A3KAW	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	diffuse_large_B_cell_lymphoma
+33	A498	kidney	carcinoma	renal_cell_carcinoma
+34	A4FUK	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	diffuse_large_B_cell_lymphoma
+35	A549	lung	carcinoma	non_small_cell_carcinoma
+37	A673	bone	Ewings_sarcoma_peripheral_primitive_neuroectodermal_tumor	
+41	ACCMESO1	pleura	mesothelioma	
+43	ACHN	kidney	carcinoma	renal_cell_carcinoma
+44	AGS	stomach	carcinoma	adenocarcinoma
+46	ALLSIL	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	acute_lymphoblastic_T_cell_leukaemia
+47	AM38	central_nervous_system	glioma	astrocytoma_Grade_IV
+48	AML193	haematopoietic_and_lymphoid_tissue	haematopoietic_neoplasm	acute_myeloid_leukaemia
+49	AMO1	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	plasma_cell_myeloma
+50	AN3CA	endometrium	carcinoma	adenocarcinoma
+52	ASPC1	pancreas	carcinoma	ductal_carcinoma
+53	AU565	breast	carcinoma	
+55	BC3C	urinary_tract	carcinoma	transitional_cell_carcinoma
+56	BCP1	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	B_cell_lymphoma
+57	BCPAP	thyroid	carcinoma	papillary_carcinoma
+58	BDCM	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	acute_lymphoblastic_B_cell_leukaemia
+59	BECKER	central_nervous_system	glioma	astrocytoma_Grade_IV
+60	BEN	lung	carcinoma	
+61	BFTC905	urinary_tract	carcinoma	transitional_cell_carcinoma
+62	BFTC909	kidney	carcinoma	
+64	BHT101	thyroid	carcinoma	anaplastic_carcinoma
+65	BHY	upper_aerodigestive_tract	carcinoma	squamous_cell_carcinoma
+66	BICR16	upper_aerodigestive_tract	carcinoma	squamous_cell_carcinoma
+67	BICR18	upper_aerodigestive_tract	carcinoma	squamous_cell_carcinoma
+68	BICR22	upper_aerodigestive_tract	carcinoma	squamous_cell_carcinoma
+69	BICR31	upper_aerodigestive_tract	carcinoma	squamous_cell_carcinoma
+70	BICR56	upper_aerodigestive_tract	carcinoma	squamous_cell_carcinoma
+71	BICR6	upper_aerodigestive_tract	carcinoma	squamous_cell_carcinoma
+74	BL41	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	Burkitt_lymphoma
+75	BL70	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	Burkitt_lymphoma
+90	BT20	breast	carcinoma	ductal_carcinoma
+97	BT474	breast	carcinoma	ductal_carcinoma
+99	BT549	breast	carcinoma	ductal_carcinoma
+100	BV173	haematopoietic_and_lymphoid_tissue	haematopoietic_neoplasm	blast_phase; chronic_myeloid_leukaemia
+101	BXPC3	pancreas	carcinoma	ductal_carcinoma
+102	C2BBE1	large_intestine	carcinoma	adenocarcinoma
+103	C32	skin	malignant_melanoma	
+106	CA46	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	Burkitt_lymphoma
+108	CADOES1	bone	Ewings_sarcoma_peripheral_primitive_neuroectodermal_tumor	
+109	CAKI1	kidney	carcinoma	clear_cell_renal_cell_carcinoma
+110	CAKI2	kidney	carcinoma	clear_cell_renal_cell_carcinoma
+111	CAL120	breast	carcinoma	
+112	CAL12T	lung	carcinoma	non_small_cell_carcinoma
+113	CAL148	breast	carcinoma	ductal_carcinoma
+114	CAL27	upper_aerodigestive_tract	carcinoma	squamous_cell_carcinoma
+115	CAL29	urinary_tract	carcinoma	transitional_cell_carcinoma
+116	CAL33	upper_aerodigestive_tract	carcinoma	squamous_cell_carcinoma
+117	CAL51	breast	carcinoma	
+118	CAL54	kidney	carcinoma	renal_cell_carcinoma
+119	CAL62	thyroid	carcinoma	anaplastic_carcinoma
+120	CAL78	bone	chondrosarcoma	dedifferentiated
+121	CAL851	breast	carcinoma	
+122	CALU1	lung	carcinoma	squamous_cell_carcinoma
+123	CALU3	lung	carcinoma	adenocarcinoma
+124	CALU6	lung	carcinoma	undifferentiated_carcinoma
+125	CAMA1	breast	carcinoma	
+126	CAOV3	ovary	carcinoma	adenocarcinoma
+128	CAPAN1	pancreas	carcinoma	ductal_carcinoma
+129	CAPAN2	pancreas	carcinoma	ductal_carcinoma
+130	CAS1	central_nervous_system	glioma	astrocytoma_Grade_IV
+131	CCFSTTG1	central_nervous_system	glioma	astrocytoma
+132	CCK81	large_intestine	carcinoma	adenocarcinoma
+138	CFPAC1	pancreas	carcinoma	ductal_carcinoma
+139	CGTHW1	thyroid	carcinoma	follicular_carcinoma
+141	CHAGOK1	lung	carcinoma	
+143	CHP126	autonomic_ganglia	neuroblastoma	
+144	CHP212	autonomic_ganglia	neuroblastoma	
+145	CI1	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	B_cell_lymphoma
+146	CJM	skin	malignant_melanoma	
+147	CL11	large_intestine	carcinoma	adenocarcinoma
+149	CL34	large_intestine	carcinoma	adenocarcinoma
+151	CMK	haematopoietic_and_lymphoid_tissue	haematopoietic_neoplasm	acute_myeloid_leukaemia
+154	CMLT1	haematopoietic_and_lymphoid_tissue	haematopoietic_neoplasm	blast_phase; chronic_myeloid_leukaemia
+155	COLO201	large_intestine	carcinoma	adenocarcinoma
+156	COLO205	large_intestine	carcinoma	adenocarcinoma
+157	COLO320	large_intestine	carcinoma	adenocarcinoma
+158	COLO668	lung	carcinoma	small_cell_carcinoma
+160	COLO678	large_intestine	carcinoma	adenocarcinoma
+162	COLO680N	oesophagus	carcinoma	squamous_cell_carcinoma
+163	COLO684	endometrium	carcinoma	adenocarcinoma
+166	COLO741	skin	malignant_melanoma	
+169	COLO792	skin	malignant_melanoma	
+170	COLO800	skin	malignant_melanoma	
+172	COLO829	skin	malignant_melanoma	
+174	CORL105	lung	carcinoma	adenocarcinoma
+178	CORL279	lung	carcinoma	small_cell_carcinoma
+180	CORL47	lung	carcinoma	small_cell_carcinoma
+181	CORL51	lung	carcinoma	small_cell_carcinoma
+182	CORL88	lung	carcinoma	small_cell_carcinoma
+183	CORL95	lung	carcinoma	small_cell_carcinoma
+185	COV362	ovary	carcinoma	
+186	COV434	ovary	sex_cord_stromal_tumor	granulosa_cell_tumor
+188	COV644	ovary	carcinoma	
+190	CW2	large_intestine	carcinoma	
+193	D283MED	central_nervous_system	primitive_neuroectodermal_tumor_medulloblastoma	
+201	DANG	pancreas	carcinoma	
+202	DAOY	central_nervous_system	primitive_neuroectodermal_tumor_medulloblastoma	
+203	DAUDI	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	Burkitt_lymphoma
+204	DB	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	diffuse_large_B_cell_lymphoma
+205	DBTRG05MG	central_nervous_system	glioma	astrocytoma_Grade_IV
+206	DEL	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	
+208	DETROIT562	upper_aerodigestive_tract	carcinoma	
+211	DKMG	central_nervous_system	glioma	astrocytoma_Grade_IV
+212	DLD1	large_intestine	carcinoma	adenocarcinoma
+215	DMS114	lung	carcinoma	small_cell_carcinoma
+217	DMS273	lung	carcinoma	small_cell_carcinoma
+218	DMS454	lung	carcinoma	small_cell_carcinoma
+219	DMS53	lung	carcinoma	small_cell_carcinoma
+220	DMS79	lung	carcinoma	small_cell_carcinoma
+221	DND41	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	acute_lymphoblastic_T_cell_leukaemia
+222	DOHH2	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	diffuse_large_B_cell_lymphoma
+223	DOV13			
+225	DU145	prostate	carcinoma	
+226	DU4475	breast	carcinoma	ductal_carcinoma
+227	DV90	lung	carcinoma	adenocarcinoma
+228	EB1	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	Burkitt_lymphoma
+230	EBC1	lung	carcinoma	squamous_cell_carcinoma
+231	ECC10	stomach	carcinoma	small_cell_adenocarcinoma
+232	ECC12	stomach	carcinoma	small_cell_adenocarcinoma
+233	ECGI10	oesophagus	carcinoma	
+234	EFE184	endometrium	carcinoma	
+236	EFM192A	breast	carcinoma	
+237	EFO21	ovary	carcinoma	serous_carcinoma
+238	EFO27	ovary	carcinoma	mucinous_carcinoma
+239	EHEB	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	chronic_lymphocytic_leukaemia; small_lymphocytic_lymphoma
+240	EJM	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	plasma_cell_myeloma
+241	EKVX			
+242	EM2	haematopoietic_and_lymphoid_tissue	haematopoietic_neoplasm	blast_phase; chronic_myeloid_leukaemia
+243	EN	endometrium	carcinoma	
+244	EOL1	haematopoietic_and_lymphoid_tissue	haematopoietic_neoplasm	acute_myeloid_leukaemia
+246	EPLC272H	lung	carcinoma	squamous_cell_carcinoma
+247	ES2	ovary	carcinoma	clear_cell_carcinoma
+248	ESS1	endometrium	carcinoma	carcinosarcoma; malignant_mesodermal_mixed_tumor
+253	F36P	haematopoietic_and_lymphoid_tissue	haematopoietic_neoplasm	acute_myeloid_leukaemia
+255	FADU	upper_aerodigestive_tract	carcinoma	squamous_cell_carcinoma
+257	FTC133	thyroid	carcinoma	follicular_carcinoma
+258	FTC238	thyroid	carcinoma	follicular_carcinoma
+259	FU97	stomach	carcinoma	diffuse_adenocarcinoma
+261	FUOV1	ovary	carcinoma	serous_carcinoma
+262	G292CLONEA141B1	bone	osteosarcoma	
+263	G361	skin	malignant_melanoma	
+264	G401	soft_tissue	rhabdoid_tumor	
+265	G402	soft_tissue	rhabdoid_tumor	
+266	GA10	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	Burkitt_lymphoma
+268	GAMG	central_nervous_system	glioma	
+269	GB1	central_nervous_system	glioma	astrocytoma_Grade_IV
+271	GCT	soft_tissue	malignant_fibrous_histiocytoma_pleomorphic_sarcoma	
+272	GDM1	haematopoietic_and_lymphoid_tissue	haematopoietic_neoplasm	acute_myeloid_leukaemia
+274	GI1	central_nervous_system	glioma	gliosarcoma
+280	GMS10	central_nervous_system	glioma	astrocytoma_Grade_IV
+281	GOS3	central_nervous_system	glioma	astrocytoma
+282	GP2D	large_intestine	carcinoma	adenocarcinoma
+283	GRANTA519	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	mantle_cell_lymphoma
+285	GSS	stomach	carcinoma	adenocarcinoma
+286	GSU	stomach	carcinoma	adenocarcinoma
+290	H292	lung	carcinoma	mucoepidermoid_carcinoma
+293	HARA	lung	carcinoma	squamous_cell_carcinoma
+295	HCC1143	breast	carcinoma	ductal_carcinoma
+296	HCC1171	lung	carcinoma	non_small_cell_carcinoma
+298	HCC1195	lung	carcinoma	mixed_adenosquamous_carcinoma
+300	HCC1395	breast	carcinoma	ductal_carcinoma
+301	HCC1419	breast	carcinoma	ductal_carcinoma
+302	HCC1428	breast	carcinoma	
+303	HCC1438	lung	carcinoma	large_cell_carcinoma
+304	HCC15	lung	carcinoma	squamous_cell_carcinoma
+305	HCC1500	breast	carcinoma	ductal_carcinoma
+306	HCC1569	breast	carcinoma	metaplastic_carcinoma
+307	HCC1588	lung	carcinoma	squamous_cell_carcinoma
+309	HCC1806	breast	carcinoma	ductal_carcinoma
+310	HCC1833	lung	carcinoma	adenocarcinoma
+313	HCC1937	breast	carcinoma	ductal_carcinoma
+314	HCC1954	breast	carcinoma	ductal_carcinoma
+315	HCC202	breast	carcinoma	ductal_carcinoma
+316	HCC2108	lung	carcinoma	adenocarcinoma
+318	HCC2218	breast	carcinoma	ductal_carcinoma
+319	HCC2279	lung	carcinoma	adenocarcinoma
+324	HCC2935	lung	carcinoma	non_small_cell_carcinoma
+326	HCC33	lung	carcinoma	small_cell_carcinoma
+328	HCC366	lung	carcinoma	mixed_adenosquamous_carcinoma
+330	HCC38	breast	carcinoma	ductal_carcinoma
+331	HCC4006	lung	carcinoma	adenocarcinoma
+332	HCC44	lung	carcinoma	adenocarcinoma
+337	HCC56	large_intestine	carcinoma	adenocarcinoma
+339	HCC78	lung	carcinoma	adenocarcinoma
+340	HCC827	lung	carcinoma	adenocarcinoma
+342	HCC95	lung	carcinoma	squamous_cell_carcinoma
+343	HCT116	large_intestine	carcinoma	
+345	HCT15	large_intestine	carcinoma	adenocarcinoma
+346	HCT8	large_intestine	carcinoma	adenocarcinoma
+347	HDLM2	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	Hodgkin_lymphoma
+348	HDMYZ	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	Hodgkin_lymphoma
+349	HDQP1	breast	carcinoma	ductal_carcinoma
+350	HEC108	endometrium	carcinoma	adenocarcinoma
+351	HEC151	endometrium	carcinoma	adenocarcinoma
+352	HEC1A	endometrium	carcinoma	adenocarcinoma
+353	HEC1B	endometrium	carcinoma	adenocarcinoma
+354	HEC251	endometrium	carcinoma	adenocarcinoma
+355	HEC265	endometrium	carcinoma	adenocarcinoma
+356	HEC50B	endometrium	carcinoma	adenocarcinoma
+357	HEC59	endometrium	carcinoma	adenocarcinoma
+358	HEC6	endometrium	carcinoma	adenocarcinoma
+362	HEL	haematopoietic_and_lymphoid_tissue	haematopoietic_neoplasm	acute_myeloid_leukaemia
+363	HEL9217	haematopoietic_and_lymphoid_tissue	haematopoietic_neoplasm	acute_myeloid_leukaemia
+365	HEP3B217	liver	carcinoma	hepatocellular_carcinoma
+366	HEPG2	liver	carcinoma	hepatocellular_carcinoma
+367	HEYA8	ovary	carcinoma	
+368	HGC27	stomach	carcinoma	undifferentiated_adenocarcinoma
+369	HH	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	adult_T_cell_lymphoma_leukaemia
+371	HL60	haematopoietic_and_lymphoid_tissue	haematopoietic_neoplasm	acute_myeloid_leukaemia
+374	HLF	liver	carcinoma	hepatocellular_carcinoma
+376	HMC18	breast	carcinoma	
+377	HMCB	skin	malignant_melanoma	
+381	HOP62			
+382	HOP92			
+383	HOS	bone	osteosarcoma	
+384	HPAC	pancreas	carcinoma	ductal_carcinoma
+385	HPAFII	pancreas	carcinoma	ductal_carcinoma
+386	HPBALL	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	acute_lymphoblastic_T_cell_leukaemia
+395	HS294T	skin	malignant_melanoma	
+400	HS578T	breast	carcinoma	ductal_carcinoma
+405	HS611T	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	Hodgkin_lymphoma
+409	HS683	central_nervous_system	glioma	
+410	HS688AT	skin	malignant_melanoma	
+414	HS729	soft_tissue	rhabdomyosarcoma	
+418	HS746T	stomach	carcinoma	
+421	HS766T	pancreas	carcinoma	ductal_carcinoma
+424	HS822T	bone	Ewings_sarcoma_peripheral_primitive_neuroectodermal_tumor	
+426	HS839T	skin	malignant_melanoma	
+428	HS852T	skin	malignant_melanoma	
+432	HS888T	bone	osteosarcoma	
+434	HS895T	skin	malignant_melanoma	
+436	HS934T	skin	malignant_melanoma	
+437	HS936T	skin	malignant_melanoma	
+439	HS940T	skin	malignant_melanoma	
+440	HS944T	skin	malignant_melanoma	
+441	HSC2	upper_aerodigestive_tract	carcinoma	squamous_cell_carcinoma
+442	HSC3	upper_aerodigestive_tract	carcinoma	squamous_cell_carcinoma
+443	HSC4	upper_aerodigestive_tract	carcinoma	squamous_cell_carcinoma
+445	HT	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	B_cell_lymphoma
+446	HT1080	soft_tissue	fibrosarcoma	
+447	HT115	large_intestine	carcinoma	
+448	HT1197	urinary_tract	carcinoma	
+449	HT1376	urinary_tract	carcinoma	transitional_cell_carcinoma
+450	HT144	skin	malignant_melanoma	
+451	HT29	large_intestine	carcinoma	adenocarcinoma
+452	HT55	large_intestine	carcinoma	adenocarcinoma
+455	HUCCT1	biliary_tract	carcinoma	
+456	HUG1N	stomach	carcinoma	
+457	HUH1	liver	carcinoma	hepatocellular_carcinoma
+458	HUH28	biliary_tract	carcinoma	
+459	HUH6	liver		hepatoblastoma
+461	HUNS1	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	plasma_cell_myeloma
+462	HUPT3	pancreas	carcinoma	
+463	HUPT4	pancreas	carcinoma	
+465	HUT78	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	Sezary_syndrome; mycosis_fungoides
+469	IALM	lung	carcinoma	large_cell_carcinoma
+470	IGR1	skin	malignant_melanoma	
+471	IGR37	skin	malignant_melanoma	
+472	IGR39	skin	malignant_melanoma	
+473	IGROV1	ovary	carcinoma	adenocarcinoma
+474	IM95	stomach	carcinoma	intestinal_adenocarcinoma
+475	IMR32	autonomic_ganglia	neuroblastoma	
+478	IPC298	skin	malignant_melanoma	
+479	ISHIKAWAHERAKLIO02ER	endometrium	carcinoma	adenocarcinoma
+480	ISTMES1	pleura	mesothelioma	
+482	J82	urinary_tract	carcinoma	transitional_cell_carcinoma
+484	JEKO1	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	mantle_cell_lymphoma
+486	JHH1	liver	carcinoma	hepatocellular_carcinoma
+487	JHH2	liver	carcinoma	hepatocellular_carcinoma
+488	JHH4	liver	carcinoma	hepatocellular_carcinoma
+489	JHH5	liver	carcinoma	hepatocellular_carcinoma
+490	JHH6	liver	carcinoma	hepatocellular_carcinoma
+492	JHOC5	ovary	carcinoma	clear_cell_carcinoma
+493	JHOM1	ovary	carcinoma	adenocarcinoma
+495	JHOS2	ovary	carcinoma	adenocarcinoma
+497	JHUEM1	endometrium	carcinoma	adenocarcinoma
+498	JHUEM2	endometrium	carcinoma	adenocarcinoma
+499	JHUEM3	endometrium	carcinoma	adenocarcinoma
+500	JHUEM7	endometrium	carcinoma	adenocarcinoma
+501	JIMT1	breast	carcinoma	ductal_carcinoma
+502	JJN3	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	plasma_cell_myeloma
+503	JK1	haematopoietic_and_lymphoid_tissue	haematopoietic_neoplasm	blast_phase; chronic_myeloid_leukaemia
+504	JL1	pleura	mesothelioma	
+505	JM1	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	B_cell_lymphoma
+506	JMSU1	urinary_tract	carcinoma	
+508	JURKAT	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	acute_lymphoblastic_T_cell_leukaemia
+509	JURLMK1	haematopoietic_and_lymphoid_tissue	haematopoietic_neoplasm	blast_phase; chronic_myeloid_leukaemia
+510	JVM2	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	chronic_lymphocytic_leukaemia; small_lymphocytic_lymphoma
+511	JVM3	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	chronic_lymphocytic_leukaemia; small_lymphocytic_lymphoma
+512	K029AX	skin	malignant_melanoma	
+513	K562	haematopoietic_and_lymphoid_tissue	haematopoietic_neoplasm	blast_phase; chronic_myeloid_leukaemia
+514	KALS1	central_nervous_system	glioma	
+515	KARPAS299	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	anaplastic_large_cell_lymphoma
+516	KARPAS422	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	diffuse_large_B_cell_lymphoma
+517	KARPAS620	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	plasma_cell_myeloma
+518	KASUMI1	haematopoietic_and_lymphoid_tissue	haematopoietic_neoplasm	acute_myeloid_leukaemia
+519	KASUMI2	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	acute_lymphoblastic_B_cell_leukaemia
+522	KATOIII	stomach	carcinoma	adenocarcinoma
+524	KCL22	haematopoietic_and_lymphoid_tissue	haematopoietic_neoplasm	blast_phase; chronic_myeloid_leukaemia
+525	KE37	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	acute_lymphoblastic_T_cell_leukaemia
+526	KE39	stomach	carcinoma	
+527	KE97	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	plasma_cell_myeloma
+528	KELLY	autonomic_ganglia	neuroblastoma	
+530	KG1C	central_nervous_system	glioma	astrocytoma_Grade_IV
+531	KHM1B	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	plasma_cell_myeloma
+532	KIJK	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	anaplastic_large_cell_lymphoma
+534	KLE	endometrium	carcinoma	adenocarcinoma
+536	KM12	large_intestine	carcinoma	adenocarcinoma
+537	KMBC2	urinary_tract	carcinoma	
+538	KMH2	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	Hodgkin_lymphoma
+539	KMM1	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	plasma_cell_myeloma
+540	KMRC1	kidney	carcinoma	clear_cell_renal_cell_carcinoma
+541	KMRC2	kidney	carcinoma	clear_cell_renal_cell_carcinoma
+542	KMRC20	kidney	carcinoma	renal_cell_carcinoma
+543	KMRC3	kidney	carcinoma	clear_cell_renal_cell_carcinoma
+545	KMS11	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	plasma_cell_myeloma
+546	KMS12BM	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	plasma_cell_myeloma
+548	KMS18	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	plasma_cell_myeloma
+549	KMS20	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	plasma_cell_myeloma
+550	KMS21BM	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	plasma_cell_myeloma
+551	KMS26	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	plasma_cell_myeloma
+552	KMS27	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	plasma_cell_myeloma
+553	KMS28BM	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	plasma_cell_myeloma
+555	KMS34	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	plasma_cell_myeloma
+556	KNS42	central_nervous_system	glioma	
+557	KNS60	central_nervous_system	glioma	astrocytoma_Grade_IV
+558	KNS62	lung	carcinoma	squamous_cell_carcinoma
+559	KNS81	central_nervous_system	glioma	astrocytoma_Grade_IV
+561	KO52	haematopoietic_and_lymphoid_tissue	haematopoietic_neoplasm	acute_myeloid_leukaemia
+566	KP2	pancreas	carcinoma	
+567	KP3	pancreas	carcinoma	ductal_carcinoma
+568	KP4	pancreas	carcinoma	ductal_carcinoma
+569	KPL1	breast	carcinoma	ductal_carcinoma
+571	KPNSI9S	autonomic_ganglia	neuroblastoma	
+572	KPNYN	autonomic_ganglia	neuroblastoma	
+575	KU1919	urinary_tract	carcinoma	transitional_cell_carcinoma
+576	KU812	haematopoietic_and_lymphoid_tissue	haematopoietic_neoplasm	chronic_myeloid_leukaemia
+577	KURAMOCHI	ovary	carcinoma	undifferentiated_carcinoma
+578	KYM1	soft_tissue	rhabdomyosarcoma	
+579	KYO1	haematopoietic_and_lymphoid_tissue	haematopoietic_neoplasm	blast_phase; chronic_myeloid_leukaemia
+580	KYSE140	oesophagus	carcinoma	squamous_cell_carcinoma
+581	KYSE150	oesophagus	carcinoma	squamous_cell_carcinoma
+582	KYSE180	oesophagus	carcinoma	squamous_cell_carcinoma
+584	KYSE30	oesophagus	carcinoma	squamous_cell_carcinoma
+585	KYSE410	oesophagus	carcinoma	squamous_cell_carcinoma
+586	KYSE450	oesophagus	carcinoma	squamous_cell_carcinoma
+587	KYSE510	oesophagus	carcinoma	squamous_cell_carcinoma
+588	KYSE520	oesophagus	carcinoma	squamous_cell_carcinoma
+589	KYSE70	oesophagus	carcinoma	squamous_cell_carcinoma
+590	L1236	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	Hodgkin_lymphoma
+591	L33	pancreas	carcinoma	
+592	L363	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	plasma_cell_myeloma
+593	L428	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	Hodgkin_lymphoma
+594	L540	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	Hodgkin_lymphoma
+595	LAMA84	haematopoietic_and_lymphoid_tissue	haematopoietic_neoplasm	blast_phase; chronic_myeloid_leukaemia
+597	LC1F	lung	carcinoma	squamous_cell_carcinoma
+598	LC1SQSF	lung	carcinoma	squamous_cell_carcinoma
+599	LCLC103H	lung	carcinoma	large_cell_carcinoma
+600	LCLC97TM1	lung	carcinoma	large_cell_carcinoma
+601	LI7	liver	carcinoma	hepatocellular_carcinoma
+602	LK2	lung	carcinoma	squamous_cell_carcinoma
+603	LMSU	stomach	carcinoma	adenocarcinoma
+604	LN18	central_nervous_system	glioma	astrocytoma_Grade_IV
+606	LN229	central_nervous_system	glioma	astrocytoma_Grade_IV
+618	LNCAPCLONEFGC	prostate	carcinoma	adenocarcinoma
+621	LOUNH91	lung	carcinoma	squamous_cell_carcinoma
+622	LOVO	large_intestine	carcinoma	adenocarcinoma
+623	LOXIMVI	skin	malignant_melanoma	
+624	LP1	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	plasma_cell_myeloma
+626	LS1034	large_intestine	carcinoma	adenocarcinoma
+627	LS123	large_intestine	carcinoma	adenocarcinoma
+630	LS180	large_intestine	carcinoma	adenocarcinoma
+631	LS411N	large_intestine	carcinoma	adenocarcinoma
+632	LS513	large_intestine	carcinoma	adenocarcinoma
+633	LU65	lung	carcinoma	non_small_cell_carcinoma
+634	LU99	lung	carcinoma	large_cell_carcinoma
+635	LUDLU1	lung	carcinoma	squamous_cell_carcinoma
+636	LXF289	lung	carcinoma	adenocarcinoma
+638	M059K	central_nervous_system	glioma	astrocytoma_Grade_IV
+639	M07E	haematopoietic_and_lymphoid_tissue	haematopoietic_neoplasm	acute_myeloid_leukaemia
+641	MALME3M	skin	malignant_melanoma	
+643	MC116	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	B_cell_lymphoma
+644	MCAS	ovary	carcinoma	adenocarcinoma
+646	MCF7	breast	carcinoma	
+648	MDAMB157	breast	carcinoma	ductal_carcinoma
+650	MDAMB231	breast	carcinoma	
+651	MDAMB361	breast	carcinoma	
+652	MDAMB415	breast	carcinoma	
+655	MDAMB435S	skin	malignant_melanoma	
+657	MDAMB453	breast	carcinoma	
+658	MDAMB468	breast	carcinoma	
+661	MDST8	large_intestine	carcinoma	adenocarcinoma
+662	ME1	haematopoietic_and_lymphoid_tissue	haematopoietic_neoplasm	acute_myeloid_leukaemia
+663	MEC1	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	chronic_lymphocytic_leukaemia; small_lymphocytic_lymphoma
+666	MELHO	skin	malignant_melanoma	
+667	MELJUSO	skin	malignant_melanoma	
+668	MESSA	soft_tissue	sarcoma	
+669	MEWO	skin	malignant_melanoma	
+671	MFE296	endometrium	carcinoma	adenocarcinoma
+672	MFE319	endometrium	carcinoma	adenocarcinoma
+673	MG63	bone	osteosarcoma	
+675	MHHCALL3	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	acute_lymphoblastic_B_cell_leukaemia
+676	MHHCALL4	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	acute_lymphoblastic_B_cell_leukaemia
+677	MHHES1	bone	Ewings_sarcoma_peripheral_primitive_neuroectodermal_tumor	
+678	MHHNB11	autonomic_ganglia	neuroblastoma	
+679	MIAPACA2	pancreas	carcinoma	ductal_carcinoma
+680	MINO	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	mantle_cell_lymphoma
+681	MJ	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	Sezary_syndrome; mycosis_fungoides
+682	MKN1	stomach	carcinoma	mixed_adenosquamous_carcinoma
+683	MKN45	stomach	carcinoma	diffuse_adenocarcinoma
+684	MKN7	stomach	carcinoma	tubular_adenocarcinoma
+685	MKN74	stomach	carcinoma	tubular_adenocarcinoma
+686	ML1	thyroid	carcinoma	follicular_carcinoma
+688	MM1S	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	plasma_cell_myeloma
+692	MOLM13	haematopoietic_and_lymphoid_tissue	haematopoietic_neoplasm	acute_myeloid_leukaemia
+693	MOLM16	haematopoietic_and_lymphoid_tissue	haematopoietic_neoplasm	acute_myeloid_leukaemia
+694	MOLM6	haematopoietic_and_lymphoid_tissue	haematopoietic_neoplasm	blast_phase; chronic_myeloid_leukaemia
+695	MOLP2	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	plasma_cell_myeloma
+696	MOLP8	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	plasma_cell_myeloma
+697	MOLT13	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	acute_lymphoblastic_T_cell_leukaemia
+698	MOLT16	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	acute_lymphoblastic_T_cell_leukaemia
+701	MONOMAC1	haematopoietic_and_lymphoid_tissue	haematopoietic_neoplasm	acute_myeloid_leukaemia
+702	MONOMAC6	haematopoietic_and_lymphoid_tissue	haematopoietic_neoplasm	acute_myeloid_leukaemia
+703	MORCPR	lung	carcinoma	adenocarcinoma
+704	MOTN1	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	T_cell_large_granular_lymphocytic_leukaemia
+705	MPP89	pleura	mesothelioma	
+706	MSTO211H	pleura	mesothelioma	
+710	MV411	haematopoietic_and_lymphoid_tissue	haematopoietic_neoplasm	acute_myeloid_leukaemia
+718	NALM6	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	acute_lymphoblastic_B_cell_leukaemia
+719	NAMALWA	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	Burkitt_lymphoma
+720	NB1	autonomic_ganglia	neuroblastoma	
+721	NB4	haematopoietic_and_lymphoid_tissue	haematopoietic_neoplasm	acute_myeloid_leukaemia
+723	NCCSTCK140	stomach	carcinoma	
+851	NCO2	haematopoietic_and_lymphoid_tissue	haematopoietic_neoplasm	chronic_myeloid_leukaemia
+852	NH6	autonomic_ganglia	neuroblastoma	
+855	NMCG1	central_nervous_system	glioma	
+858	NOMO1	haematopoietic_and_lymphoid_tissue	haematopoietic_neoplasm	acute_myeloid_leukaemia
+874	NUDHL1	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	diffuse_large_B_cell_lymphoma
+875	NUDUL1	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	B_cell_lymphoma
+877	NUGC3	stomach	carcinoma	
+878	NUGC4	stomach	carcinoma	signet_ring_adenocarcinoma
+879	OAW28	ovary	carcinoma	
+880	OAW42	ovary	carcinoma	
+881	OC314	ovary	carcinoma	serous_carcinoma
+884	OCIAML2	haematopoietic_and_lymphoid_tissue	haematopoietic_neoplasm	acute_myeloid_leukaemia
+885	OCIAML3	haematopoietic_and_lymphoid_tissue	haematopoietic_neoplasm	acute_myeloid_leukaemia
+886	OCIAML5	haematopoietic_and_lymphoid_tissue	haematopoietic_neoplasm	acute_myeloid_leukaemia
+887	OCILY10	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	diffuse_large_B_cell_lymphoma
+888	OCILY19	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	diffuse_large_B_cell_lymphoma
+889	OCILY3	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	diffuse_large_B_cell_lymphoma
+890	OCIM1	haematopoietic_and_lymphoid_tissue	haematopoietic_neoplasm	acute_myeloid_leukaemia
+893	OCUM1	stomach	carcinoma	diffuse_adenocarcinoma
+894	OE19	oesophagus	carcinoma	adenocarcinoma
+895	OE21	oesophagus	carcinoma	squamous_cell_carcinoma
+896	OE33	oesophagus		metaplasia
+898	ONCODG1	ovary	carcinoma	adenocarcinoma
+899	ONS76	central_nervous_system	primitive_neuroectodermal_tumor_medulloblastoma	
+901	OPM2	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	plasma_cell_myeloma
+902	OSRC2	kidney	carcinoma	renal_cell_carcinoma
+903	OUMS23	large_intestine	carcinoma	adenocarcinoma
+905	OV56	ovary	carcinoma	
+906	OV7	ovary	carcinoma	
+907	OV90	ovary	carcinoma	mixed_carcinoma
+908	OVCAR4	ovary	carcinoma	
+909	OVCAR5			
+910	OVCAR8	ovary	carcinoma	
+911	OVISE	ovary	carcinoma	clear_cell_carcinoma
+912	OVK18	ovary	carcinoma	endometrioid_carcinoma
+915	OVSAHO	ovary	carcinoma	adenocarcinoma
+916	OVTOKO	ovary	carcinoma	clear_cell_carcinoma
+917	P12ICHIKAWA	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	acute_lymphoblastic_T_cell_leukaemia
+918	P31FUJ	haematopoietic_and_lymphoid_tissue	haematopoietic_neoplasm	acute_myeloid_leukaemia
+919	P3HR1	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	Burkitt_lymphoma
+920	PANC0203	pancreas	carcinoma	
+922	PANC0327	pancreas	carcinoma	ductal_carcinoma
+923	PANC0403	pancreas	carcinoma	
+924	PANC0504	pancreas	carcinoma	
+925	PANC0813	pancreas	carcinoma	ductal_carcinoma
+926	PANC1	pancreas	carcinoma	ductal_carcinoma
+927	PANC1005	pancreas	carcinoma	ductal_carcinoma
+928	PATU8902	pancreas	carcinoma	ductal_carcinoma
+929	PATU8988S	pancreas	carcinoma	ductal_carcinoma
+930	PATU8988T	pancreas	carcinoma	ductal_carcinoma
+931	PC14	lung	carcinoma	non_small_cell_carcinoma
+932	PC3	prostate	carcinoma	adenocarcinoma
+935	PECAPJ15	upper_aerodigestive_tract	carcinoma	squamous_cell_carcinoma
+937	PECAPJ34CLONEC12	upper_aerodigestive_tract	carcinoma	squamous_cell_carcinoma
+939	PECAPJ41CLONED2	upper_aerodigestive_tract	carcinoma	squamous_cell_carcinoma
+940	PECAPJ49	upper_aerodigestive_tract	carcinoma	squamous_cell_carcinoma
+941	PEER	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	acute_lymphoblastic_T_cell_leukaemia
+942	PF382	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	acute_lymphoblastic_T_cell_leukaemia
+943	PFEIFFER	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	diffuse_large_B_cell_lymphoma
+944	PK1	pancreas	carcinoma	
+945	PK45H	pancreas	carcinoma	
+946	PK59	pancreas	carcinoma	
+947	PL21	haematopoietic_and_lymphoid_tissue	haematopoietic_neoplasm	acute_myeloid_leukaemia
+950	PLCPRF5	liver	carcinoma	hepatocellular_carcinoma
+952	PSN1	pancreas	carcinoma	ductal_carcinoma
+954	QGP1	pancreas	carcinoma	
+955	RAJI	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	Burkitt_lymphoma
+956	RCC10RGB	kidney	carcinoma	renal_cell_carcinoma
+958	RCHACV	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	acute_lymphoblastic_B_cell_leukaemia
+960	RCM1	large_intestine	carcinoma	adenocarcinoma
+961	RD	soft_tissue	rhabdomyosarcoma	embryonal
+963	RDES	bone	Ewings_sarcoma_peripheral_primitive_neuroectodermal_tumor	
+964	REC1	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	mantle_cell_lymphoma
+965	REH	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	acute_lymphoblastic_B_cell_leukaemia
+967	RERFLCAD1	lung	carcinoma	adenocarcinoma
+968	RERFLCAD2	lung	carcinoma	adenocarcinoma
+969	RERFLCAI	lung	carcinoma	squamous_cell_carcinoma
+971	RERFLCMS	lung	carcinoma	non_small_cell_carcinoma
+973	RH18	soft_tissue	rhabdomyosarcoma	alveolar
+975	RH30	soft_tissue	rhabdomyosarcoma	alveolar
+976	RH41	soft_tissue	rhabdomyosarcoma	alveolar
+977	RI1	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	B_cell_lymphoma
+978	RKN	soft_tissue	leiomyosarcoma	
+979	RKO	large_intestine	carcinoma	adenocarcinoma
+980	RL	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	B_cell_lymphoma
+981	RL952	endometrium	carcinoma	mixed_adenosquamous_carcinoma
+983	RMGI	ovary	carcinoma	clear_cell_carcinoma
+990	RPMI6666			
+991	RPMI7951	skin	malignant_melanoma	
+992	RPMI8226	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	plasma_cell_myeloma
+994	RPMI8402	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	acute_lymphoblastic_T_cell_leukaemia
+995	RS411	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	acute_lymphoblastic_B_cell_leukaemia
+997	RT112	urinary_tract	carcinoma	transitional_cell_carcinoma
+999	RT4	urinary_tract	carcinoma	transitional_cell_carcinoma
+1000	RVH421	skin	malignant_melanoma	
+1004	SAOS2	bone	osteosarcoma	
+1005	SBC5	lung	carcinoma	small_cell_carcinoma
+1006	SCABER	urinary_tract	carcinoma	transitional_cell_carcinoma
+1008	SCC25	upper_aerodigestive_tract	carcinoma	squamous_cell_carcinoma
+1009	SCC4	upper_aerodigestive_tract	carcinoma	squamous_cell_carcinoma
+1010	SCC9	upper_aerodigestive_tract	carcinoma	squamous_cell_carcinoma
+1011	SCLC21H	lung	carcinoma	small_cell_carcinoma
+1013	SEM	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	acute_lymphoblastic_B_cell_leukaemia
+1014	SET2	haematopoietic_and_lymphoid_tissue	haematopoietic_neoplasm	essential_thrombocythaemia
+1015	SF126	central_nervous_system	glioma	astrocytoma
+1017	SF268			
+1018	SF295	central_nervous_system	glioma	astrocytoma_Grade_IV
+1019	SF539			
+1024	SH10TC	stomach	carcinoma	
+1025	SH4	skin	malignant_melanoma	
+1026	SHP77	lung	carcinoma	small_cell_carcinoma
+1028	SIGM5	haematopoietic_and_lymphoid_tissue	haematopoietic_neoplasm	acute_myeloid_leukaemia
+1030	SIMA	autonomic_ganglia	neuroblastoma	
+1032	SJSA1	bone	osteosarcoma	
+1033	SKBR3	breast	carcinoma	
+1034	SKCO1	large_intestine	carcinoma	adenocarcinoma
+1035	SKES1	bone	Ewings_sarcoma_peripheral_primitive_neuroectodermal_tumor	
+1036	SKHEP1	liver	carcinoma	adenocarcinoma
+1037	SKLMS1	soft_tissue	sarcoma	
+1038	SKLU1	lung	carcinoma	adenocarcinoma
+1039	SKM1	haematopoietic_and_lymphoid_tissue	haematopoietic_neoplasm	acute_myeloid_leukaemia
+1040	SKMEL1	skin	malignant_melanoma	
+1041	SKMEL2	skin	malignant_melanoma	
+1042	SKMEL24	skin	malignant_melanoma	
+1043	SKMEL28	skin	malignant_melanoma	
+1044	SKMEL3	skin	malignant_melanoma	
+1045	SKMEL30	skin	malignant_melanoma	
+1046	SKMEL31	skin	malignant_melanoma	
+1047	SKMEL5	skin	malignant_melanoma	
+1048	SKMES1	lung	carcinoma	squamous_cell_carcinoma
+1050	SKMM2	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	plasma_cell_myeloma
+1051	SKNAS	autonomic_ganglia	neuroblastoma	
+1052	SKNBE2	autonomic_ganglia	neuroblastoma	
+1053	SKNDZ	autonomic_ganglia	neuroblastoma	
+1055	SKNFI	autonomic_ganglia	neuroblastoma	
+1056	SKNMC	bone	Ewings_sarcoma_peripheral_primitive_neuroectodermal_tumor	
+1058	SKNSH	autonomic_ganglia	neuroblastoma	
+1059	SKOV3	ovary	carcinoma	adenocarcinoma
+1063	SKUT1	soft_tissue	leiomyosarcoma	
+1073	SNB75			
+1074	SNGM	endometrium	carcinoma	adenocarcinoma
+1075	SNU1	stomach	carcinoma	undifferentiated_adenocarcinoma
+1076	SNU1033	large_intestine	carcinoma	
+1078	SNU1041	upper_aerodigestive_tract	carcinoma	
+1079	SNU1066	upper_aerodigestive_tract	carcinoma	squamous_cell_carcinoma
+1080	SNU1076	upper_aerodigestive_tract	carcinoma	squamous_cell_carcinoma
+1081	SNU1077	endometrium	carcinoma	carcinosarcoma; malignant_mesodermal_mixed_tumor
+1082	SNU1079	biliary_tract	carcinoma	
+1083	SNU1105	central_nervous_system	glioma	astrocytoma_Grade_IV
+1084	SNU119	ovary	carcinoma	adenocarcinoma
+1085	SNU1196	biliary_tract	carcinoma	
+1087	SNU1214	upper_aerodigestive_tract	carcinoma	squamous_cell_carcinoma
+1088	SNU1272	kidney	carcinoma	clear_cell_renal_cell_carcinoma
+1089	SNU16	stomach	carcinoma	undifferentiated_adenocarcinoma
+1090	SNU175	large_intestine	carcinoma	
+1091	SNU182	liver	carcinoma	hepatocellular_carcinoma
+1092	SNU201	central_nervous_system	glioma	astrocytoma_Grade_IV
+1093	SNU213	pancreas	carcinoma	
+1094	SNU216	stomach	carcinoma	
+1095	SNU245	biliary_tract	carcinoma	
+1097	SNU308	biliary_tract	carcinoma	
+1100	SNU387	liver	carcinoma	hepatocellular_carcinoma
+1101	SNU398	liver	carcinoma	hepatocellular_carcinoma
+1102	SNU407	large_intestine	carcinoma	
+1103	SNU410	pancreas	carcinoma	
+1104	SNU423	liver	carcinoma	hepatocellular_carcinoma
+1105	SNU449	liver	carcinoma	hepatocellular_carcinoma
+1106	SNU46	upper_aerodigestive_tract	carcinoma	squamous_cell_carcinoma
+1107	SNU466	central_nervous_system	glioma	astrocytoma_Grade_IV
+1108	SNU475	liver	carcinoma	hepatocellular_carcinoma
+1109	SNU478	biliary_tract	carcinoma	
+1110	SNU489	central_nervous_system	glioma	astrocytoma_Grade_IV
+1111	SNU5	stomach	carcinoma	undifferentiated_adenocarcinoma
+1112	SNU503	large_intestine	carcinoma	
+1114	SNU601	stomach	carcinoma	
+1115	SNU61	large_intestine	carcinoma	
+1116	SNU620	stomach	carcinoma	
+1117	SNU626	central_nervous_system	glioma	astrocytoma_Grade_IV
+1118	SNU668	stomach	carcinoma	signet_ring_adenocarcinoma
+1119	SNU685	endometrium	carcinoma	carcinosarcoma; malignant_mesodermal_mixed_tumor
+1120	SNU719	stomach	carcinoma	
+1121	SNU738	central_nervous_system	glioma	oligodendroglioma
+1122	SNU761	liver	carcinoma	hepatocellular_carcinoma
+1123	SNU8	ovary	carcinoma	adenocarcinoma
+1124	SNU81	large_intestine	carcinoma	
+1125	SNU840	ovary	carcinoma	Brenner_tumor
+1126	SNU869	biliary_tract	carcinoma	
+1127	SNU878	liver	carcinoma	hepatocellular_carcinoma
+1128	SNU886	liver	carcinoma	hepatocellular_carcinoma
+1129	SNU899	upper_aerodigestive_tract	carcinoma	squamous_cell_carcinoma
+1130	SNUC1	large_intestine	carcinoma	adenocarcinoma
+1131	SNUC2A	large_intestine	carcinoma	adenocarcinoma
+1133	SNUC4	large_intestine	carcinoma	adenocarcinoma
+1134	SNUC5	large_intestine	carcinoma	adenocarcinoma
+1135	SQ1	lung	carcinoma	squamous_cell_carcinoma
+1136	SR786	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	anaplastic_large_cell_lymphoma
+1137	ST486	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	Burkitt_lymphoma
+1138	SU8686	pancreas	carcinoma	ductal_carcinoma
+1139	SUDHL1	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	anaplastic_large_cell_lymphoma
+1140	SUDHL10	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	diffuse_large_B_cell_lymphoma
+1141	SUDHL4	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	diffuse_large_B_cell_lymphoma
+1143	SUDHL6	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	diffuse_large_B_cell_lymphoma
+1144	SUDHL8	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	diffuse_large_B_cell_lymphoma
+1145	SUIT2	pancreas	carcinoma	ductal_carcinoma
+1146	SUPB15	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	acute_lymphoblastic_B_cell_leukaemia
+1147	SUPHD1	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	Hodgkin_lymphoma
+1148	SUPM2	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	anaplastic_large_cell_lymphoma
+1149	SUPT1	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	acute_lymphoblastic_T_cell_leukaemia
+1150	SUPT11	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	peripheral_T_cell_lymphoma_unspecified
+1151	SW1088	central_nervous_system	glioma	
+1152	SW1116	large_intestine	carcinoma	adenocarcinoma
+1153	SW1271	lung	carcinoma	small_cell_carcinoma
+1154	SW1353	bone	chondrosarcoma	
+1155	SW1417	large_intestine	carcinoma	adenocarcinoma
+1156	SW1463	large_intestine	carcinoma	adenocarcinoma
+1157	SW1573	lung	carcinoma	squamous_cell_carcinoma
+1158	SW1710	urinary_tract	carcinoma	transitional_cell_carcinoma
+1159	SW1783	central_nervous_system	glioma	astrocytoma_Grade_III
+1160	SW1990	pancreas	carcinoma	ductal_carcinoma
+1162	SW48	large_intestine	carcinoma	adenocarcinoma
+1165	SW579	thyroid	carcinoma	anaplastic_carcinoma
+1166	SW620	large_intestine	carcinoma	adenocarcinoma
+1170	SW948	large_intestine	carcinoma	adenocarcinoma
+1172	T24	urinary_tract	carcinoma	transitional_cell_carcinoma
+1173	T3M10	lung	carcinoma	large_cell_carcinoma
+1175	T47D	breast	carcinoma	ductal_carcinoma
+1176	T84	large_intestine	carcinoma	adenocarcinoma
+1177	T98G	central_nervous_system	glioma	astrocytoma_Grade_IV
+1178	TALL1	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	acute_lymphoblastic_T_cell_leukaemia
+1180	TC71	bone	Ewings_sarcoma_peripheral_primitive_neuroectodermal_tumor	
+1182	TCCPAN2	pancreas	carcinoma	
+1183	TCCSUP	urinary_tract	carcinoma	transitional_cell_carcinoma
+1184	TE1	oesophagus	carcinoma	squamous_cell_carcinoma
+1185	TE10	oesophagus	carcinoma	squamous_cell_carcinoma
+1186	TE11	oesophagus	carcinoma	squamous_cell_carcinoma
+1188	TE14	oesophagus	carcinoma	squamous_cell_carcinoma
+1189	TE15	oesophagus	carcinoma	squamous_cell_carcinoma
+1191	TE4	oesophagus	carcinoma	squamous_cell_carcinoma
+1192	TE441T	soft_tissue	rhabdomyosarcoma	
+1193	TE5	oesophagus	carcinoma	squamous_cell_carcinoma
+1194	TE6	oesophagus	carcinoma	squamous_cell_carcinoma
+1195	TE617T	soft_tissue	rhabdomyosarcoma	
+1196	TE8	oesophagus	carcinoma	squamous_cell_carcinoma
+1197	TE9	oesophagus	carcinoma	squamous_cell_carcinoma
+1199	TF1	haematopoietic_and_lymphoid_tissue	haematopoietic_neoplasm	acute_myeloid_leukaemia
+1201	THP1	haematopoietic_and_lymphoid_tissue	haematopoietic_neoplasm	acute_myeloid_leukaemia
+1204	TM31	central_nervous_system	glioma	astrocytoma
+1206	TOLEDO	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	diffuse_large_B_cell_lymphoma
+1208	TOV112D	ovary	carcinoma	endometrioid_carcinoma
+1209	TOV21G	ovary	carcinoma	clear_cell_carcinoma
+1210	TT2609C02	thyroid	carcinoma	follicular_carcinoma
+1212	TTTHYROID	thyroid	carcinoma	medullary_carcinoma
+1213	TUHR10TKB	kidney	carcinoma	
+1214	TUHR14TKB	kidney	carcinoma	
+1216	TUHR4TKB	kidney	carcinoma	
+1217	TYKNU	ovary	carcinoma	undifferentiated_carcinoma
+1218	U118MG	central_nervous_system	glioma	astrocytoma
+1223	U251MG	central_nervous_system	glioma	astrocytoma
+1225	U266B1	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	plasma_cell_myeloma
+1226	U2OS	bone	osteosarcoma	
+1230	U87MG	central_nervous_system	glioma	astrocytoma
+1231	U937	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	diffuse_large_B_cell_lymphoma
+1232	UACC257	skin	malignant_melanoma	
+1233	UACC62	skin	malignant_melanoma	
+1234	UACC812	breast	carcinoma	ductal_carcinoma
+1236	UBLC1	urinary_tract	carcinoma	transitional_cell_carcinoma
+1243	UMUC1	urinary_tract	carcinoma	transitional_cell_carcinoma
+1244	UMUC3	urinary_tract	carcinoma	transitional_cell_carcinoma
+1245	UO31			
+1249	VCAP	prostate	carcinoma	adenocarcinoma
+1250	VMCUB1	urinary_tract	carcinoma	transitional_cell_carcinoma
+1251	VMRCLCD	lung	carcinoma	adenocarcinoma
+1253	VMRCRCW	kidney	carcinoma	
+1254	VMRCRCZ	kidney	carcinoma	renal_cell_carcinoma
+1255	WM115	skin	malignant_melanoma	
+1256	WM1799	skin	malignant_melanoma	
+1260	WM2664	skin	malignant_melanoma	
+1270	WM793	skin	malignant_melanoma	
+1271	WM88	skin	malignant_melanoma	
+1273	WM983B	skin	malignant_melanoma	
+1274	WSUDLCL2	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	diffuse_large_B_cell_lymphoma
+1277	YAPC	pancreas	carcinoma	
+1278	YD10B	upper_aerodigestive_tract	carcinoma	squamous_cell_carcinoma
+1279	YD15	salivary_gland	carcinoma	mucoepidermoid_carcinoma
+1280	YD38	upper_aerodigestive_tract	carcinoma	squamous_cell_carcinoma
+1281	YD8	upper_aerodigestive_tract	carcinoma	squamous_cell_carcinoma
+1282	YH13	central_nervous_system	glioma	astrocytoma_Grade_IV
+1283	YKG1	central_nervous_system	glioma	astrocytoma_Grade_IV
+1285	ZR751	breast	carcinoma	ductal_carcinoma
+1286	ZR7530	breast	carcinoma	ductal_carcinoma
+127978	NCIH1395	lung	carcinoma	adenocarcinoma
+127983	NCIH1666	lung	carcinoma	bronchioloalveolar_adenocarcinoma
+127984	NCIH1755	lung	carcinoma	adenocarcinoma
+127985	NCIH1975	lung	carcinoma	non_small_cell_carcinoma
+127988	NCIH2087	lung	carcinoma	adenocarcinoma
+127989	NCIH209	lung	carcinoma	small_cell_carcinoma
+127990	NCIH2122	lung	carcinoma	adenocarcinoma
+127991	NCIH23	lung	carcinoma	non_small_cell_carcinoma
+127997	NCIH358	lung	carcinoma	bronchioloalveolar_adenocarcinoma
+127999	NCIH441	lung	carcinoma	adenocarcinoma
+128000	NCIH446	lung	carcinoma	small_cell_carcinoma
+128001	NCIH460	lung	carcinoma	large_cell_carcinoma
+128003	NCIH508	large_intestine	carcinoma	adenocarcinoma
+128005	NCIH661	lung	carcinoma	large_cell_carcinoma
+128006	NCIH69	lung	carcinoma	small_cell_carcinoma
+128013	NCIH929	haematopoietic_and_lymphoid_tissue	lymphoid_neoplasm	plasma_cell_myeloma
+134841	NCIN87	stomach	carcinoma	
+155285	NCIH28	pleura	mesothelioma	
+155292	NCIH146	lung	carcinoma	small_cell_carcinoma
+155294	NCIH196	lung	carcinoma	small_cell_carcinoma
+155295	NCIH211	lung	carcinoma	small_cell_carcinoma
+155297	NCIH226	lung	carcinoma	squamous_cell_carcinoma
+155305	NCIH322	lung	carcinoma	adenocarcinoma
+155322	NCIH510	lung	carcinoma	small_cell_carcinoma
+155324	NCIH520	lung	carcinoma	squamous_cell_carcinoma
+155325	NCIH522	lung	carcinoma	non_small_cell_carcinoma
+155326	NCIH524	lung	carcinoma	small_cell_carcinoma
+155327	NCIH526	lung	carcinoma	small_cell_carcinoma
+155339	NCIH647	lung	carcinoma	mixed_adenosquamous_carcinoma
+155340	NCIH650	lung	carcinoma	bronchioloalveolar_adenocarcinoma
+155341	NCIH660	prostate	carcinoma	small_cell_carcinoma
+155348	NCIH716	large_intestine	carcinoma	adenocarcinoma
+155352	NCIH727	lung	carcinoid_endocrine_tumor	
+155356	NCIH747	large_intestine	carcinoma	adenocarcinoma
+155362	NCIH810	lung	carcinoma	large_cell_carcinoma
+155365	NCIH838	lung	carcinoma	non_small_cell_carcinoma
+155366	NCIH841	lung	carcinoma	small_cell_carcinoma
+155371	NCIH889	lung	carcinoma	small_cell_carcinoma
+155385	NCIH1092	lung	carcinoma	small_cell_carcinoma
+155387	NCIH1105	lung	carcinoma	small_cell_carcinoma
+155388	NCIH1155	lung	carcinoma	large_cell_carcinoma
+155390	NCIH1184	lung	carcinoma	small_cell_carcinoma
+155395	NCIH1299	lung	carcinoma	non_small_cell_carcinoma
+155399	NCIH1339	lung	carcinoma	small_cell_carcinoma
+155400	NCIH1341	lung	carcinoma	small_cell_carcinoma
+155401	NCIH1355	lung	carcinoma	adenocarcinoma
+155402	NCIH1373	lung	carcinoma	adenocarcinoma
+155404	NCIH1385	lung	carcinoma	squamous_cell_carcinoma
+155407	NCIH1435	lung	carcinoma	non_small_cell_carcinoma
+155421	NCIH1563	lung	carcinoma	adenocarcinoma
+155422	NCIH1568	lung	carcinoma	non_small_cell_carcinoma
+155424	NCIH1573	lung	carcinoma	adenocarcinoma
+155425	NCIH1581	lung	carcinoma	large_cell_carcinoma
+155431	NCIH1623	lung	carcinoma	adenocarcinoma
+155434	NCIH1650	lung	carcinoma	bronchioloalveolar_adenocarcinoma
+155435	NCIH1651	lung	carcinoma	adenocarcinoma
+155439	NCIH1693	lung	carcinoma	adenocarcinoma
+155440	NCIH1694	lung	carcinoma	small_cell_carcinoma
+155441	NCIH1703	lung	carcinoma	adenocarcinoma
+155445	NCIH1734	lung	carcinoma	adenocarcinoma
+155450	NCIH1792	lung	carcinoma	adenocarcinoma
+155451	NCIH1793	lung	carcinoma	non_small_cell_carcinoma
+155455	NCIH1838	lung	carcinoma	non_small_cell_carcinoma
+155456	NCIH1869	lung	carcinoma	squamous_cell_carcinoma
+155463	NCIH1915	lung	carcinoma	large_cell_carcinoma
+155467	NCIH1944	lung	carcinoma	non_small_cell_carcinoma
+155476	NCIH2009	lung	carcinoma	adenocarcinoma
+155477	NCIH2023	lung	carcinoma	adenocarcinoma
+155479	NCIH2029	lung	carcinoma	small_cell_carcinoma
+155480	NCIH2030	lung	carcinoma	non_small_cell_carcinoma
+155481	NCIH2052	pleura	mesothelioma	
+155487	NCIH2081	lung	carcinoma	small_cell_carcinoma
+155488	NCIH2085	lung	carcinoma	adenocarcinoma
+155491	NCIH2106	lung	carcinoma	non_small_cell_carcinoma
+155493	NCIH2110	lung	carcinoma	non_small_cell_carcinoma
+155494	NCIH2126	lung	carcinoma	adenocarcinoma
+155496	NCIH2141	lung	carcinoma	small_cell_carcinoma
+155498	NCIH2170	lung	carcinoma	squamous_cell_carcinoma
+155499	NCIH2171	lung	carcinoma	small_cell_carcinoma
+155500	NCIH2172	lung	carcinoma	non_small_cell_carcinoma
+155502	NCIH2196	lung	carcinoma	small_cell_carcinoma
+155505	NCIH2228	lung	carcinoma	adenocarcinoma
+155510	NCIH2286	lung	carcinoma	small_cell_carcinoma
+155511	NCIH2291	lung	carcinoma	adenocarcinoma
+155513	NCIH2342	lung	carcinoma	adenocarcinoma
+155518	NCIH2405	lung	carcinoma	adenocarcinoma
+155519	NCIH2444	lung	carcinoma	non_small_cell_carcinoma
+155520	NCIH2452	pleura	mesothelioma	
