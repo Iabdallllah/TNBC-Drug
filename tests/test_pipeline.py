@@ -11,6 +11,7 @@ import sys
 import numpy as np
 import pandas as pd
 import plotly.express as px
+import pytest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, 'outputs_local')
@@ -928,6 +929,24 @@ def test_diagnostic_label_post_hoc_everywhere():
     assert 'post-hoc, exploratory' in res
     csv = open(os.path.join(OUT,'diagnostic_results.csv')).read()
     assert 'post-hoc, exploratory' in csv or 'post-hoc' in csv.lower()
+    # The CSV must mirror the honest JSON numbers, not placeholders or zeros.
+    import json as _json
+    d = _json.load(open(os.path.join(OUT,'diagnostic_results.json')))
+    cd = pd.read_csv(os.path.join(OUT,'diagnostic_results.csv'))
+    meas = cd[cd['model'].isin(['M0', 'M1', 'M2'])]
+    assert len(meas) == 3, f'diagnostic CSV rows unexpected: {list(cd["model"])}'
+    m0 = meas[meas['model'] == 'M0'].iloc[0]
+    m2 = meas[meas['model'] == 'M2'].iloc[0]
+    m1 = meas[meas['model'] == 'M1'].iloc[0]
+    m0_pl = float(pd.to_numeric(pd.Series([m0['perline_spearman_mean']]), errors='coerce').iloc[0])
+    m2_pl = float(pd.to_numeric(pd.Series([m2['perline_spearman_mean']]), errors='coerce').iloc[0])
+    m1_pl = float(pd.to_numeric(pd.Series([m1['perline_spearman_mean']]), errors='coerce').iloc[0])
+    assert m2_pl > 0, 'diagnostic CSV lost the real per-line numbers'
+    assert m0_pl == pytest.approx(float(d['m0_perline_spearman_mean']))
+    assert m2_pl == pytest.approx(float(d['m2_perline_spearman_mean']))
+    assert float(pd.to_numeric(pd.Series([m0['pooled_r2']]), errors='coerce').iloc[0]) == pytest.approx(float(d['pooled_r2_m0_vs_m2']))
+    assert float(pd.to_numeric(pd.Series([m0['mae']]), errors='coerce').iloc[0]) == pytest.approx(float(d['mae_m0_vs_m2']))
+    assert m1_pl == m0_pl
 
 
 if __name__ == '__main__':

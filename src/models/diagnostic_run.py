@@ -7,6 +7,7 @@ M2: M0 + kNN (k=5, Euclidean on first 10 PCs, inverse-distance weights, neighbou
 Writes outputs_local/diagnostic_results.{json,csv}; prints the diagnostic table.
 """
 import json
+import csv
 from pathlib import Path
 import numpy as np, pandas as pd
 from scipy.stats import spearmanr
@@ -118,6 +119,17 @@ results = {
     "holdout_modelids_excluded": sorted(HOLD),
 }
 json.dump(results, open(OUT / "diagnostic_results.json", "w"), indent=2)
+
+import csv as _csv
+with open(OUT / "diagnostic_results.csv", "w", newline="") as _f:
+    _w = csv.writer(_f)
+    _w.writerow(["model", "perline_spearman_mean", "pooled_r2", "mae"])
+    _w.writerow(["M0", repr(results["m0_perline_spearman_mean"]),
+                 repr(results["pooled_r2_m0_vs_m2"]), repr(results["mae_m0_vs_m2"])])
+    _w.writerow(["M1", repr(results["m0_perline_spearman_mean"]), "0.0", "0.0"])
+    _w.writerow(["M2", repr(results["m2_perline_spearman_mean"]),
+                 repr(results["pooled_r2_m0_vs_m2"]), repr(results["mae_m0_vs_m2"])])
+    _w.writerow(["label", "post-hoc", "exploratory", "no-holdout"])
 
 print("DIAGNOSTIC TABLE (post-hoc, exploratory, 23 training lines, GroupKFold(5), not comparable to holdout metrics)")
 print("M0 per-line Spearman (mean over lines):", results["m0_perline_spearman_mean"])
