@@ -17,7 +17,8 @@ luminal control **MCF7** — first computationally, then in the wet lab.
 > CatBoost reaches per-line Spearman 0.630 / R² 0.567; a per-drug training-mean
 > baseline reaches 0.830 / 0.825. Predicted selectivity is uncorrelated with measured
 > selectivity (Spearman 0.027, n = 1,322; restricted n = 66, 0.029). The four v1.0
-**v1.2-defense** (962028f) superseded by **v1.2.1-defense** (5d398fe) — fix-forward only, no sealed artifact change.
+**v1.2-defense** (962028f) superseded by **v1.2.1-defense** (56296f3) — fix-forward only, no sealed artifact change. (The tag was amended once from 5d398fe; the amend touched only this note.)
+**v1.2.2-defense** — final gap closure: BLIND_MODE suppression enforced in the dashboard and exported report, diagnostic panel added, 36/36 tests; sealed artifact unchanged.
 
 > “selective” calls are relabelled **“Predicted selective (unvalidated)”**. The
 > defensible contributions are the leakage/audit machinery, the external CTRPv2 RSL3
@@ -338,8 +339,16 @@ at least one candidate — **awaiting lab data**).
 - `tests/test_pipeline.py` re-verifies leakage guards, schema, artifacts, API
   parity, the quarantine markers and the PRD gates on every run. Run
   `python -m pytest tests/test_pipeline.py -q`; `tests/conftest.py` writes
-  `outputs_local/validation_status.json` (currently **32 passed**), which the
+  `outputs_local/validation_status.json` (currently **36 passed**), which the
   dashboard and `defense_report.py` read instead of a hand-typed count.
+- Raw PCA regeneration is one command: `python src/models/pca_loadings.py --pool phantom`.
+  It writes `pca_loadings.parquet` + `pca_loadings_top.csv` and caches the gene-only
+  expression matrix at `outputs_local/cache/expr79.npz` (git-ignored; no `/tmp`
+  dependency). Current verification: 61/62 components, min |r| 0.9999999968, max
+  reconstruction error 9.68e-4; `pca_61` stays flagged as the zero-variance residual.
+  The one caveat: reproducing the shipped basis requires the historical phantom draw
+  (`--pool phantom`, the default); `--pool clean` reproduces the post-bugfix basis,
+  not the shipped one.
 - Regenerate the post-hoc audit with `python src/models/baseline_audit.py`
   (`baseline_audit.json`, `baseline_audit.csv`, `expression_line_audit.json`).
 - Regenerate the printable report with

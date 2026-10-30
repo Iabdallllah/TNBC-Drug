@@ -18,6 +18,28 @@ import os
 import numpy as np
 import pandas as pd
 
+# Phase 4a: the exported report honours BLIND_MODE. Default ON means sealed panel
+# predictions and top-ranked kill proxies are replaced by a visible banner.
+BLIND_MODE = os.environ.get('BLIND_MODE', 'ON').upper() in ('ON', '1', 'TRUE', 'YES')
+
+
+def _env_blind():
+    return os.environ.get('BLIND_MODE', 'ON').upper() in ('ON', '1', 'TRUE', 'YES')
+
+
+_BLIND_BANNER = (
+    '<div class="callout"><b>Blinded for bench team — unblinding requires '
+    'supervisor key.</b><br>Panel predictions, the FerroSelect panel ranking and '
+    'kill proxies are suppressed in this export. Unblinding requires a supervisor '
+    'authorization and a timestamped entry in '
+    '<code>dashboard_access_log.template.json</code> (see UNBLIND.md).</div>'
+)
+
+
+def _maybe_blind(fragment):
+    """Return the banner instead of a prediction fragment when BLIND_MODE is ON."""
+    return _BLIND_BANNER if BLIND_MODE else fragment
+
 PANEL = [
     (1, 'ERASTIN + SIMVASTATIN', 'Combo'),
     (2, 'SULFASALAZINE + SIMVASTATIN', 'Combo (sealed nomination)'),
@@ -137,8 +159,14 @@ def _bliss_rows(preds):
     return pd.DataFrame(rows)
 
 
-def build_defense_report(out_dir):
-    """Render the complete v1.1 executive report and return it as an HTML string."""
+def build_defense_report(out_dir, blind=None):
+    """Render the complete v1.1 executive report and return it as an HTML string.
+
+    blind=None honours BLIND_MODE (default ON); pass blind=False only for
+    supervisor-authorized exports/tests of the complete panel.
+    """
+    global BLIND_MODE
+    BLIND_MODE = _env_blind() if blind is None else bool(blind)
     out = out_dir
     leaderboard = _csv(out, 'leaderboard.csv')
     baseline_csv = _csv(out, 'baseline_audit.csv')
@@ -474,7 +502,7 @@ additivity arithmetic: Bliss guarantees a pair out-ranks its components when com
 from their kill proxies, so a combo rank is not a discovery.</p>
 
 <h2>4. The eight-member wet-lab panel (pre-registered mechanism hypothesis)</h2>
-{_table(panel, nd=3)}
+{_maybe_blind(_table(panel, nd=3))}
 <p class="muted">Rank 1 = strongest expected killing proxy by the frozen model. The panel was
 selected on mechanism (GPX4, system xc⁻, iron) and agreed with the lab before any plate;
 the model outputs are a frozen, falsifiable record, not the justification. RSL3 lanes are
@@ -482,13 +510,13 @@ lab-only by design: PRISM never profiled RSL3, so no model AUC is fabricated for
 Selectivity and panel ordering are hypotheses for the plate.</p>
 
 <h2>5. Top-ranked killers, model resolution and the plateau</h2>
-{_bars(top_rank, 'drug_name', 'pred_AUC_MDA231', n=10) if top_rank is not None else '<p class="muted">Ranking unavailable.</p>'}
+{_maybe_blind(_bars(top_rank, 'drug_name', 'pred_AUC_MDA231', n=10) if top_rank is not None else '<p class="muted">Ranking unavailable.</p>')}
 <p class="muted">{html.escape(top_note)}</p>
 
 <h2>6. Bliss combination expectations (additivity arithmetic — test on the plate)</h2>
-{_table(bliss_rows)}
-{_table(combos.head(5) if combos is not None else None,
-        ['drugA_name', 'drugB_name', 'E_AB_MDA231', 'E_AB_MCF7', 'selectivity_gap'])}
+{_maybe_blind(_table(bliss_rows))}
+{_maybe_blind(_table(combos.head(5) if combos is not None else None,
+        ['drugA_name', 'drugB_name', 'E_AB_MDA231', 'E_AB_MCF7', 'selectivity_gap']))}
 <p class="muted">These are additivity expectations, not synergy predictions. The 4×4
 checkerboard is the test.</p>
 

@@ -281,10 +281,11 @@ def test_live_predictor_matches_sealed_rankings():
             'baseline': round(baseline, 6)}
 
 
-def test_panel_ranking_covers_the_eight_members_in_order():
+def test_panel_ranking_covers_the_eight_members_in_order(monkeypatch):
     """The FerroSelect view must show all 8 wet-lab members ranked 1-8 with the
     lab-only lanes explicitly marked, so nobody reads an RSL3 number that is not there."""
     from streamlit.testing.v1 import AppTest
+    monkeypatch.setenv('BLIND_MODE', 'OFF')  # this test inspects the unblinded panel
     at = AppTest.from_file(os.path.join(ROOT, 'dashboard', 'app.py'), default_timeout=300)
     at.run()
     at.radio[0].set_value('FerroSelect inducer panel')
@@ -342,9 +343,10 @@ def test_ctpv2_external_ground_truth_and_v2_model():
             gp.loc[gp.ModelID == 'ACH-000019', 'oof_auc_norm_0_1'].iloc[0]
 
 
-def test_ctpv2_block_visible_in_ferroselect_view():
+def test_ctpv2_block_visible_in_ferroselect_view(monkeypatch):
     """The measured CTRPv2 RSL-3 AUCs must show in the app (truth, not sealth)."""
     from streamlit.testing.v1 import AppTest
+    monkeypatch.setenv('BLIND_MODE', 'OFF')  # measured-ground-truth check is unblinded
     at = AppTest.from_file(os.path.join(ROOT, 'dashboard', 'app.py'),
                            default_timeout=300)
     at.run()
@@ -443,8 +445,15 @@ def test_defence_report_is_self_contained_and_complete():
     sys.path.insert(0, os.path.join(ROOT, 'dashboard'))
     import defense_report
 
-    h = defense_report.build_defense_report(OUT)
+    h = defense_report.build_defense_report(OUT, blind=False)
     assert h.startswith('<!DOCTYPE html>') and h.rstrip().endswith('</html>')
+    # Default export (BLIND_MODE ON) must not leak the sealed panel/top ranking.
+    h_blind = defense_report.build_defense_report(OUT)
+    assert h_blind.count('Blinded for bench team') >= 3
+    for marker in ['Predicted AUC (MDA-MB-231)', 'Sealed single-agent prediction',
+                   'Bliss additivity arithmetic', 'Expected AUC', 'class="bars"']:
+        assert marker not in h_blind, f'{marker!r} leaked into the blinded export'
+    assert 'Predicted AUC (MDA-MB-231)' in h and 'Expected AUC' in h
     assert '@page' in h and 'Print' not in h.split('</style>')[0]  # printable CSS
     assert '<script' not in h.lower(), 'the report must stay JavaScript-free'
     for marker in ['1. Dataset, leakage controls', '2. Model vs a one-line baseline',
@@ -582,9 +591,10 @@ def test_outputs_local_artifacts_parse():
     assert not bad, bad
 
 
-def test_dashboard_ci_and_defence_export_are_visible():
+def test_dashboard_ci_and_defence_export_are_visible(monkeypatch):
     """The new UI must actually expose the CI column and the report download."""
     from streamlit.testing.v1 import AppTest
+    monkeypatch.setenv('BLIND_MODE', 'OFF')  # full UI assertions, not the blinded view
     at = AppTest.from_file(os.path.join(ROOT, 'dashboard', 'app.py'), default_timeout=300)
     at.run()
     assert not at.exception, [e.value for e in at.exception]
@@ -823,39 +833,94 @@ def test_blind_mode_app_and_unblind():
     """BLIND_MODE ON hides panel/kill-predictors; OFF shows them; UNBLIND documented."""
     from streamlit.testing.v1 import AppTest
     import os, json
-    BANNER = ('Blinded for bench team')
-    def run(mode):
+
+    def run(mode, view=None, demo=False):
         old = os.environ.get('BLIND_MODE')
         os.environ['BLIND_MODE'] = mode
         try:
-            at = AppTest.from_file(os.path.join(ROOT, 'dashboard', 'app.py'), default_timeout=300)
+            at = AppTest.from_file(os.path.join(ROOT, 'dashboard', 'app.py'),
+                                   default_timeout=300)
             at.run()
-            return at, old
+            changed = False
+            if view is not None:
+                at.radio[0].set_value(view)
+                changed = True
+            if demo:
+                for t in at.toggle:
+                    if t.label.startswith('Load an illustrative'):
+                        t.set_value(True)
+                        changed = True
+            if changed:
+                at.run()
+            return at
         finally:
             if old is None:
                 os.environ.pop('BLIND_MODE', None)
             else:
                 os.environ['BLIND_MODE'] = old
 
-    at_on, _ = run('ON')
+    def subs(at):
+        return ' | '.join(str(s.value) for s in at.subheader)
+
+    def infos(at):
+        return ' | '.join(str(i.value) for i in at.info)
+
+    def toggles(at):
+        return [str(t.label) for t in at.toggle]
+
+    def cols(at):
+        return {str(c) for d in at.dataframe for c in d.value.columns}
+
+    def metrics(at):
+        return [str(m.label) for m in at.metric]
+
+    at_on = run('ON')
     assert not at_on.exception, [e.value for e in at_on.exception]
-    banner_txt = ' '.join(str(getattr(e, 'value', '')) for e in at_on.info) + ' ' + \
-                 ' '.join(str(getattr(e, 'value', '')) for e in at_on.warning)
-    assert 'BLIND_MODE is ON' in banner_txt, banner_txt
-    assert 'suppressed behind this banner' in banner_txt, banner_txt
+    assert 'BLIND_MODE is ON' in infos(at_on), infos(at_on)
+    assert 'Blinded for bench team' in infos(at_on), infos(at_on)
+    assert 'pred_AUC_MDA231' not in cols(at_on), 'ranking leaked while blinded'
+    assert 'Panel ranking 1-8' not in subs(at_on)
+    assert 'Load the live model' not in toggles(at_on)
+
+    at_on_panel = run('ON', view='FerroSelect inducer panel', demo=True)
+    assert not at_on_panel.exception, [e.value for e in at_on_panel.exception]
+    assert 'The wet-lab panel (8 members)' in subs(at_on_panel)
+    assert 'Panel ranking 1-8' not in subs(at_on_panel), 'panel ranking leaked'
+    assert 'Predicted AUC (MDA-MB-231)' not in cols(at_on_panel), 'panel table leaked'
+    assert 'pred_auc' not in cols(at_on_panel), 'panel predictions table leaked'
+    assert 'Blinded for bench team' in infos(at_on_panel)
+    assert not any(lbl.startswith('Model AUC:') for lbl in metrics(at_on_panel))
+
+    at_on_top = run('ON', view='Top-20 killers')
+    assert not at_on_top.exception, [e.value for e in at_on_top.exception]
+    assert 'pred_AUC_MDA231' not in cols(at_on_top), 'kill-proxy ranking leaked'
+    assert 'Blinded for bench team' in infos(at_on_top)
+
+    at_off = run('OFF')
+    assert not at_off.exception, [e.value for e in at_off.exception]
+    assert 'BLIND_MODE is ON' not in infos(at_off), infos(at_off)
+    assert 'Blinded for bench team' not in infos(at_off)
+    assert 'pred_AUC_MDA231' in cols(at_off)
+    assert 'Load the live model' in toggles(at_off)
+
+    at_off_panel = run('OFF', view='FerroSelect inducer panel', demo=True)
+    assert not at_off_panel.exception, [e.value for e in at_off_panel.exception]
+    assert 'Panel ranking 1-8' in subs(at_off_panel)
+    assert 'Predicted AUC (MDA-MB-231)' in cols(at_off_panel)
+    assert 'pred_auc' in cols(at_off_panel)
+    assert any(lbl.startswith('Model AUC:') for lbl in metrics(at_off_panel))
+
+    at_off_top = run('OFF', view='Top-20 killers')
+    assert not at_off_top.exception, [e.value for e in at_off_top.exception]
+    assert 'pred_AUC_MDA231' in cols(at_off_top)
+
     unblind_doc = open(os.path.join(ROOT, 'UNBLIND.md')).read()
     assert 'timestamped' in unblind_doc.lower() and 'supervisor key' in unblind_doc.lower()
-
-    at_off, _ = run('OFF')
-    assert not at_off.exception, [e.value for e in at_off.exception]
-    banner_txt_off = ' '.join(str(getattr(e, 'value', '')) for e in at_off.info) + ' ' + \
-                     ' '.join(str(getattr(e, 'value', '')) for e in at_off.warning)
-    assert 'BLIND_MODE is ON' not in banner_txt_off, banner_txt_off
-    print('blinding app modes verified: ON(banner) / OFF(no banner)')
 
     access = json.load(open(os.path.join(OUT, 'dashboard_access_log.template.json')))
     assert access.get('entries') == [], access
     assert access.get('fields_per_entry', {}).get('blind_status_at_time') is not None
+    print('blinding app modes verified: ON(hidden) / OFF(visible)')
 
 
 def test_diagnostic_label_post_hoc_everywhere():

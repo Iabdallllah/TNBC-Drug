@@ -101,6 +101,8 @@ baseline_audit = (load_json('baseline_audit.json')
 expression_audit = (load_json('expression_line_audit.json')
                     if os.path.exists(os.path.join(DATA, 'expression_line_audit.json'))
                     else None)
+diagnostic = (load_json('diagnostic_results.json')
+              if os.path.exists(os.path.join(DATA, 'diagnostic_results.json')) else None)
 info = load_json('model_info.json')
 intervals = (load_json('prediction_intervals.json')
              if os.path.exists(os.path.join(DATA, 'prediction_intervals.json')) else None)
@@ -593,6 +595,9 @@ def load_live():
 
 def live_tab():
     st.subheader('Live predictor: any profiled line × any screened drug')
+    if BLIND_MODE:
+        st.info(BLIND_BANNER)
+        return
     st.write('Predicts on demand with the trained CatBoost model, for questions beyond '
              'the precomputed lines (for example BT-549). Values for MDA-MB-231 and '
              'MCF7 match the rankings tab.')
@@ -703,7 +708,7 @@ def synergy_tab():
                'measured data — by construction its Bliss excess is zero. Replace the cells '
                'with plate readings; the scores update on every edit.')
 
-    preds = _panel_predictions()
+    preds = None if BLIND_MODE else _panel_predictions()
     c1, c2, c3 = st.columns([2, 1, 1])
     pair = c1.selectbox('Drug pair', list(SYNERGY_PAIRS), key='syn_pair')
     line_name = c2.selectbox('Cell line', list(LINE_IDS), key='syn_line')
@@ -839,7 +844,9 @@ def synergy_tab():
                'CI > 1.1. A checkerboard measures one plate — replicate before claiming synergy.')
 
     st.subheader('Model expectation versus the plate')
-    if ref is None:
+    if BLIND_MODE:
+        st.info(BLIND_BANNER)
+    elif ref is None:
         st.info(f'The sealed model has no PRISM AUC for {drug_a} on {line_name}, so a Bliss '
                 'expectation cannot be computed. The plate result stands on its own; RSL3 is '
                 'a lab-only lane by design.')
@@ -1121,7 +1128,9 @@ with tab_rank:
                                 'FerroSelect inducer panel'],
                     horizontal=True, label_visibility='collapsed')
 
-    if view == 'Wet-lab shortlist':
+    if view == 'Wet-lab shortlist' and BLIND_MODE:
+        st.info(BLIND_BANNER)
+    elif view == 'Wet-lab shortlist':
         sl = shortlist.copy()
         roles = []
         for i, name in enumerate(sl['drug_name']):
@@ -1186,7 +1195,9 @@ with tab_rank:
                    'only the members PRISM has AUC data for; the RSL3 rows are tracked '
                    'through the GSE247883 single-paper signature instead.')
 
-        if os.path.exists(os.path.join(DATA, 'ferroselect_panel_predictions.csv')):
+        if BLIND_MODE:
+            st.info(BLIND_BANNER)
+        elif os.path.exists(os.path.join(DATA, 'ferroselect_panel_predictions.csv')):
             preds = load('ferroselect_panel_predictions.csv')
             preds = preds[preds['drug'] != 'LOVASTATIN']  # panel uses SIMVASTATIN only
             st.subheader('Panel ranking 1-8 on MDA-MB-231 (the eight wet-lab members)')
@@ -1353,6 +1364,8 @@ with tab_rank:
             st.plotly_chart(array_priority_bar(core), use_container_width=True,
                             config={'displaylogo': False})
 
+    elif BLIND_MODE:
+        st.info(BLIND_BANNER)
     else:
         df = rank_full if view == 'Full ranking' else top20
         k, search = st.columns([1, 2])
@@ -1382,28 +1395,33 @@ with tab_sel:
              f'more than the control. The dotted lines mark the sensitivity cut-off '
              f'(AUC {SENSITIVE_AUC}). Hover for values; drag to zoom. These are model '
              'predictions; measured selectivity requires the SI from the plate.')
-    n_top = st.slider('Label the top N drugs', 0, 10, 5)
-    st.plotly_chart(selectivity_chart(rank_full, n_top), use_container_width=True,
-                    config={'displaylogo': False})
+    if BLIND_MODE:
+        st.info(BLIND_BANNER)
+    else:
+        n_top = st.slider('Label the top N drugs', 0, 10, 5)
+        st.plotly_chart(selectivity_chart(rank_full, n_top), use_container_width=True,
+                        config={'displaylogo': False})
 
-    st.subheader('Two-drug combinations (Bliss independence)')
-    st.write('Ranked by selectivity gap: expected efficacy on MDA-MB-231 minus expected '
-             'efficacy on MCF7. This assumes additivity, so a synergy verdict needs the '
-             '4×4 checkerboard validation.')
-    cb = combos.copy()
-    for c in ['E_AB_MDA231', 'E_AB_MCF7', 'selectivity_gap']:
-        cb[c] = cb[c].astype(float).round(3)
-    for c in ['pathwayA', 'pathwayB', 'pathway_check']:
-        cb[c] = cb[c].astype(str).replace({'?': PENDING, 'PENDING-Bioinfo': PENDING})
-    cb = cb.rename(columns={'pathwayA': 'Pathway A', 'pathwayB': 'Pathway B',
-                            'pathway_check': 'Pathway check', 'E_AB_MDA231': 'E_AB MDA-MB-231',
-                            'E_AB_MCF7': 'E_AB MCF7'})
-    cb_styled = badge_styler(cb, ['Pathway A', 'Pathway B', 'Pathway check'], PENDING_PALETTE)
-    st.dataframe(cb_styled, hide_index=True, use_container_width=True,
-                 column_config={'Pathway A': st.column_config.TextColumn('Pathway A'),
-                                'Pathway B': st.column_config.TextColumn('Pathway B'),
-                                'Pathway check': st.column_config.TextColumn('Pathway check',
-                                                                             width='medium')})
+        st.subheader('Two-drug combinations (Bliss independence)')
+        st.write('Ranked by selectivity gap: expected efficacy on MDA-MB-231 minus expected '
+                 'efficacy on MCF7. This assumes additivity, so a synergy verdict needs the '
+                 '4×4 checkerboard validation.')
+        cb = combos.copy()
+        for c in ['E_AB_MDA231', 'E_AB_MCF7', 'selectivity_gap']:
+            cb[c] = cb[c].astype(float).round(3)
+        for c in ['pathwayA', 'pathwayB', 'pathway_check']:
+            cb[c] = cb[c].astype(str).replace({'?': PENDING, 'PENDING-Bioinfo': PENDING})
+        cb = cb.rename(columns={'pathwayA': 'Pathway A', 'pathwayB': 'Pathway B',
+                                'pathway_check': 'Pathway check',
+                                'E_AB_MDA231': 'E_AB MDA-MB-231',
+                                'E_AB_MCF7': 'E_AB MCF7'})
+        cb_styled = badge_styler(cb, ['Pathway A', 'Pathway B', 'Pathway check'],
+                                 PENDING_PALETTE)
+        st.dataframe(cb_styled, hide_index=True, use_container_width=True,
+                     column_config={'Pathway A': st.column_config.TextColumn('Pathway A'),
+                                    'Pathway B': st.column_config.TextColumn('Pathway B'),
+                                    'Pathway check': st.column_config.TextColumn(
+                                        'Pathway check', width='medium')})
 
 # ---------------- 3. synergy checkerboard ----------------
 with tab_syn:
@@ -1624,6 +1642,27 @@ with tab_model:
     st.write('Ferrostatin-1 rescues → the death was ferroptosis. Deferoxamine rescues → it '
              'needed iron. NAC rescues Type I inducers but not RSL3. Z-VAD-FMK must NOT '
              'rescue — if it does, the death was apoptosis.')
+
+    st.subheader('Pre-registered diagnostic (post-hoc, exploratory)')
+    st.caption('Post-hoc, exploratory, 23 training lines, GroupKFold(5), no holdout use; '
+               'not comparable to holdout metrics.')
+    if diagnostic:
+        pb = diagnostic.get('paired_bootstrap_lines_2000') or {}
+        ci = pb.get('ci_95') or [float('nan'), float('nan')]
+        d1, d2, d3 = st.columns(3)
+        d1.metric('M0 per-line Spearman',
+                  f"{diagnostic.get('m0_perline_spearman_mean', float('nan')):.3f}")
+        d2.metric('M2 per-line Spearman',
+                  f"{diagnostic.get('m2_perline_spearman_mean', float('nan')):.3f}")
+        d3.metric('M2 − M0 95% CI', f"[{ci[0]:.3f}, {ci[1]:.3f}]",
+                  help='CI spans zero → no evidence of expression signal.')
+        st.caption(f"k={diagnostic.get('k')} · "
+                   f"PCs={len(diagnostic.get('pcs_used', []))} · "
+                   f"pooled R²={diagnostic.get('pooled_r2_m0_vs_m2', float('nan')):.3f} · "
+                   f"MAE={diagnostic.get('mae_m0_vs_m2', float('nan')):.3f} · "
+                   f"M3 skipped ({diagnostic.get('m3', {}).get('reason', 'n/a')}).")
+    else:
+        st.info('`diagnostic_results.json` is not in this deployment.')
 
 # ---------------- 6. defence report ----------------
 with tab_report:

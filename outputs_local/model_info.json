@@ -63,6 +63,8 @@
   "baseline_audit.json",
   "baseline_audit.csv",
   "expression_line_audit.json",
+  "diagnostic_results.json",
+  "diagnostic_results.csv",
   "validation_status.json",
   "sealed_prediction_manifest.json"
  ],
