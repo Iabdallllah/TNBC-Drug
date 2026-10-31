@@ -20,19 +20,19 @@
     "pca_9"
   ],
   "training_lines": 23,
-  "m0_perline_spearman_mean": 0.9627972927548727,
-  "m2_perline_spearman_mean": 0.9627972927548727,
-  "pooled_r2_m0_vs_m2": -0.08451907447184714,
-  "mae_m0_vs_m2": 0.10030502483865418,
+  "m0_perline_spearman_mean": 0.8433993149438708,
+  "m2_perline_spearman_mean": 0.8116417709204437,
+  "pooled_r2_m0_vs_m2": 0.7973000680620002,
+  "mae_m0_vs_m2": 0.044563882883712935,
   "ndcg10_m0_vs_m2": "not computed for any claim",
   "recall10_m0_vs_m2": "not computed for any claim (AUC<0.3 only)",
   "paired_bootstrap_lines_2000": {
     "n_resamples": 2000,
     "alpha": 0.05,
-    "diff_m2_minus_m0_mean": 0.9628921119601891,
+    "diff_m2_minus_m0_mean": -0.031664625983682346,
     "ci_95": [
-      0.9529570687192496,
-      0.9721806266259941
+      -0.039786834379252525,
+      -0.024280134992048823
     ]
   },
   "m1_equals_m0_perline_spearman": true,
@@ -41,7 +41,7 @@
     "status": "skipped",
     "reason": "runtime budget exceeded for CatBoost-800 on the same folds"
   },
-  "honest_note": "computed over the 23 training lines only; no holdout lines used; labelled post-hoc, exploratory; not comparable to holdout metrics",
+  "honest_note": "computed over the 23 training lines only; no holdout lines used; labelled post-hoc, exploratory; not comparable to holdout metrics; DEVIATION: statistic implementation bug found post-run, metrics now computed against measured AUC only, criterion unchanged",
   "holdout_modelids_excluded": [
     "ACH-000019",
     "ACH-000097",

@@ -949,6 +949,22 @@ def test_diagnostic_label_post_hoc_everywhere():
     assert m1_pl == m0_pl
 
 
+def test_diagnostic_statistic_vs_measured_truth():
+    """Post-fix invariant: diagnostic stats are measured-AUC based; the archived pre-correction
+    M0-vs-M2 agreement must be distinct from the corrected M0-vs-truth Spearman; M0 must beat
+    the global-mean model on MAE against measured AUC."""
+    import json as _json
+    d = _json.load(open(os.path.join(OUT, 'diagnostic_results.json')))
+    arch = _json.load(open(os.path.join(OUT, 'archive', 'diagnostic_results_BUGGY.json')))
+    m0_pl = float(d['m0_perline_spearman_mean'])
+    m2_pl = float(d['m2_perline_spearman_mean'])
+    buggy_pl = float(arch['m0_perline_spearman_mean'])
+    assert m0_pl > 0, 'M0 per-line Spearman vs measured AUC must be positive'
+    assert m0_pl != buggy_pl, 'M0 per-line Spearman vs truth must not equal the archived M0-vs-M2 agreement'
+    assert m2_pl > 0, 'M2 per-line Spearman vs measured AUC must be positive'
+    assert float(d['mae_m0_vs_m2']) < 0.1067, 'M0 must beat the global-mean model on MAE vs measured AUC'
+
+
 if __name__ == '__main__':
     fns = [(k, v) for k, v in sorted(globals().items())
            if k.startswith('test_') and callable(v)]

@@ -18,7 +18,7 @@ luminal control **MCF7** — first computationally, then in the wet lab.
 > baseline reaches 0.830 / 0.825. Predicted selectivity is uncorrelated with measured
 > selectivity (Spearman 0.027, n = 1,322; restricted n = 66, 0.029). The four v1.0
 **v1.2-defense** (962028f) superseded by **v1.2.1-defense** (56296f3) — fix-forward only, no sealed artifact change. (The tag was amended once from 5d398fe; the amend touched only this note.)
-**v1.2.2-defense** — final gap closure: BLIND_MODE suppression enforced in the dashboard and exported report, diagnostic panel added, 36/36 tests; sealed artifact unchanged.
+**v1.2.2-defense** — final gap closure: BLIND_MODE suppression enforced in the dashboard and exported report, diagnostic panel added, 37/37 tests; sealed artifact unchanged.
 
 > “selective” calls are relabelled **“Predicted selective (unvalidated)”**. The
 > defensible contributions are the leakage/audit machinery, the external CTRPv2 RSL3
@@ -320,7 +320,7 @@ against predictions (Spearman) with per-drug Selectivity Indexes.
 
 | Stream | Status |
 |---|---|
-| ML / Data / API / UI | **Done with a negative model result**: pipeline, leakage audit, rankings, combos, API, **36/36 tests** (read live from `outputs_local/validation_status.json`), seven-tab dashboard, zero-JS v1.1 report |
+| ML / Data / API / UI | **Done with a negative model result**: pipeline, leakage audit, rankings, combos, API, **37/37 tests** (read live from `outputs_local/validation_status.json`), seven-tab dashboard, zero-JS v1.1 report |
 | Baseline / selectivity audit | **Done (post-hoc, exploratory)**: per-drug mean beats CatBoost; selectivity null incl. restricted check; 76-line correction |
 | Bioinformatics | Pending: confirm distinct targets/pathways for shortlisted pairs |
 | Wet-lab | Pending: MTT results (`raw_absorbance.csv`) for the panel + 2 pairs |
@@ -339,7 +339,7 @@ at least one candidate — **awaiting lab data**).
 - `tests/test_pipeline.py` re-verifies leakage guards, schema, artifacts, API
   parity, the quarantine markers and the PRD gates on every run. Run
   `python -m pytest tests/test_pipeline.py -q`; `tests/conftest.py` writes
-  `outputs_local/validation_status.json` (currently **36 passed**), which the
+  `outputs_local/validation_status.json` (currently **37 passed**), which the
   dashboard and `defense_report.py` read instead of a hand-typed count.
 - Raw PCA regeneration is one command: `python src/models/pca_loadings.py --pool phantom`.
   It writes `pca_loadings.parquet` + `pca_loadings_top.csv` and caches the gene-only

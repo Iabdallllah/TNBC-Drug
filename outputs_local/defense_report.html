@@ -52,7 +52,7 @@
              color: #868e96; font-size: 9.5px; }
     </style></head><body>
 <h1>FerroSelect — TNBC Drug-Response Predictor</h1>
-<div class="sub">Defence executive report · <b>v1.1 dated addendum</b> · generated 2026-10-30 11:15 UTC ·
+<div class="sub">Defence executive report · <b>v1.1 dated addendum</b> · generated 2026-10-31 13:51 UTC ·
 model version <b>catboost-v1.0</b></div>
 <div class="callout"><b>Document status.</b> v1.1 (2026-10-29) supersedes the v1.0
 briefing as a dated addendum; it does not rewrite v1.0. The v1.0 artifacts are preserved
@@ -61,7 +61,7 @@ selectivity analyses below are <b>post-hoc, exploratory</b>: the holdout was alr
 The champion is reported as a <b>negative result</b>.</div>
 <div class="callout"><b>Scope:</b> predicted sensitivity in cell models — never a
 clinical treatment recommendation. Wet-lab confirmation is the decision layer.</div>
-<div class="kpis"><div class="kpi"><div class="kpi-v">0.630</div><div class="kpi-l">CatBoost per-line Spearman</div></div><div class="kpi"><div class="kpi-v">0.829</div><div class="kpi-l">Per-drug baseline</div></div><div class="kpi"><div class="kpi-v">0.567</div><div class="kpi-l">CatBoost R²</div></div><div class="kpi"><div class="kpi-v">0.825</div><div class="kpi-l">Baseline R²</div></div><div class="kpi"><div class="kpi-v">0.027</div><div class="kpi-l">Selectivity Spearman</div></div><div class="kpi"><div class="kpi-v">36/36</div><div class="kpi-l">Tests</div></div></div>
+<div class="kpis"><div class="kpi"><div class="kpi-v">0.630</div><div class="kpi-l">CatBoost per-line Spearman</div></div><div class="kpi"><div class="kpi-v">0.829</div><div class="kpi-l">Per-drug baseline</div></div><div class="kpi"><div class="kpi-v">0.567</div><div class="kpi-l">CatBoost R²</div></div><div class="kpi"><div class="kpi-v">0.825</div><div class="kpi-l">Baseline R²</div></div><div class="kpi"><div class="kpi-v">0.027</div><div class="kpi-l">Selectivity Spearman</div></div><div class="kpi"><div class="kpi-v">37/37</div><div class="kpi-l">Tests</div></div></div>
 
 <h2>1. Dataset, leakage controls and the 76-line correction</h2>
 <p>The DepMap metadata covers <b>96</b> breast lines,
@@ -559,7 +559,7 @@ pre-registered hypothesis — the plate decides.</p>
 
 <h2>9. Validation gates, provenance quarantine and test status</h2>
 <table class="data"><tr><th>Gate</th><th>Value</th><th>Target</th><th>Status</th></tr>
-<tr><td>R² &gt; 0.25 (CatBoost)</td><td>0.567</td><td>0.250</td><td class="ok">PASS</td></tr><tr><td>Per-line Spearman &gt; 0.40 (CatBoost)</td><td>0.630</td><td>0.400</td><td class="ok">PASS</td></tr><tr><td>Post-hoc baseline beats CatBoost (per-line Spearman)</td><td>0.829</td><td>—</td><td class="warn">REPORTED</td></tr><tr><td>Selectivity predicted-vs-measured correlation</td><td>0.027</td><td>—</td><td class="bad">NULL</td></tr><tr><td>Selectivity rule (relabelled)</td><td colspan="3">pred_AUC_MDA231 &lt; 0.4 AND selectivity_delta &gt; 0.0 (26 positive-Δ drugs of 1,482); the old fixed cut-off Δ &gt; 0.05 was unreachable (max Δ = 0.039)</td></tr><tr><td>PCA gene annotation</td><td colspan="3">PUBLISHED - verified against the shipped scores — 61 of 62 components verified</td></tr><tr><td>Automated test suite</td><td>36/36</td><td>all pass</td><td class="ok">PASS</td></tr></table><p><b>Provenance quarantine.</b> The legacy L1000 matcher resolved the
+<tr><td>R² &gt; 0.25 (CatBoost)</td><td>0.567</td><td>0.250</td><td class="ok">PASS</td></tr><tr><td>Per-line Spearman &gt; 0.40 (CatBoost)</td><td>0.630</td><td>0.400</td><td class="ok">PASS</td></tr><tr><td>Post-hoc baseline beats CatBoost (per-line Spearman)</td><td>0.829</td><td>—</td><td class="warn">REPORTED</td></tr><tr><td>Selectivity predicted-vs-measured correlation</td><td>0.027</td><td>—</td><td class="bad">NULL</td></tr><tr><td>Selectivity rule (relabelled)</td><td colspan="3">pred_AUC_MDA231 &lt; 0.4 AND selectivity_delta &gt; 0.0 (26 positive-Δ drugs of 1,482); the old fixed cut-off Δ &gt; 0.05 was unreachable (max Δ = 0.039)</td></tr><tr><td>PCA gene annotation</td><td colspan="3">PUBLISHED - verified against the shipped scores — 61 of 62 components verified</td></tr><tr><td>Automated test suite</td><td>37/37</td><td>all pass</td><td class="ok">PASS</td></tr></table><p><b>Provenance quarantine.</b> The legacy L1000 matcher resolved the
 abbreviation “NAC” inside “Solife<b>NAC</b>in-Succinate”, so the archived NAC rows are a
 different molecule. The data layer now carries a <b>quarantined</b> column in
 <code>offtarget_panel_map.csv</code>, <code>offtarget_rescue_reversal.csv</code>,

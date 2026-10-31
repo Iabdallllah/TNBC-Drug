@@ -1646,6 +1646,10 @@ with tab_model:
     st.subheader('Pre-registered diagnostic (post-hoc, exploratory)')
     st.caption('Post-hoc, exploratory, 23 training lines, GroupKFold(5), no holdout use; '
                'not comparable to holdout metrics.')
+    st.caption('**WITHDRAWN pending correction.** The pre-correction diagnostic statistic was '
+               'wired as an M0-vs-M2 ranking agreement with a bootstrap of that agreement; metrics '
+               'are now recomputed against measured AUC only (statistic-implementation deviation, '
+               'criterion unchanged).')
     if diagnostic:
         pb = diagnostic.get('paired_bootstrap_lines_2000') or {}
         ci = pb.get('ci_95') or [float('nan'), float('nan')]
