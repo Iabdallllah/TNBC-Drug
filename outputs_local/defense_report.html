@@ -52,7 +52,7 @@
              color: #868e96; font-size: 9.5px; }
     </style></head><body>
 <h1>FerroSelect — TNBC Drug-Response Predictor</h1>
-<div class="sub">Defence executive report · <b>v1.1 dated addendum</b> · generated 2026-10-31 13:51 UTC ·
+<div class="sub">Defence executive report · <b>v1.1 dated addendum</b> · generated 2026-10-31 16:13 UTC ·
 model version <b>catboost-v1.0</b></div>
 <div class="callout"><b>Document status.</b> v1.1 (2026-10-29) supersedes the v1.0
 briefing as a dated addendum; it does not rewrite v1.0. The v1.0 artifacts are preserved
@@ -61,7 +61,7 @@ selectivity analyses below are <b>post-hoc, exploratory</b>: the holdout was alr
 The champion is reported as a <b>negative result</b>.</div>
 <div class="callout"><b>Scope:</b> predicted sensitivity in cell models — never a
 clinical treatment recommendation. Wet-lab confirmation is the decision layer.</div>
-<div class="kpis"><div class="kpi"><div class="kpi-v">0.630</div><div class="kpi-l">CatBoost per-line Spearman</div></div><div class="kpi"><div class="kpi-v">0.829</div><div class="kpi-l">Per-drug baseline</div></div><div class="kpi"><div class="kpi-v">0.567</div><div class="kpi-l">CatBoost R²</div></div><div class="kpi"><div class="kpi-v">0.825</div><div class="kpi-l">Baseline R²</div></div><div class="kpi"><div class="kpi-v">0.027</div><div class="kpi-l">Selectivity Spearman</div></div><div class="kpi"><div class="kpi-v">37/37</div><div class="kpi-l">Tests</div></div></div>
+<div class="kpis"><div class="kpi"><div class="kpi-v">0.630</div><div class="kpi-l">CatBoost per-line Spearman</div></div><div class="kpi"><div class="kpi-v">0.829</div><div class="kpi-l">Per-drug baseline</div></div><div class="kpi"><div class="kpi-v">0.567</div><div class="kpi-l">CatBoost R²</div></div><div class="kpi"><div class="kpi-v">0.825</div><div class="kpi-l">Baseline R²</div></div><div class="kpi"><div class="kpi-v">0.027</div><div class="kpi-l">Selectivity Spearman</div></div><div class="kpi"><div class="kpi-v">41/41</div><div class="kpi-l">Tests</div></div></div>
 
 <h2>1. Dataset, leakage controls and the 76-line correction</h2>
 <p>The DepMap metadata covers <b>96</b> breast lines,
@@ -557,9 +557,67 @@ calibrated on the same seven lines, so they are not independent validation.</p>
 0.427. This is an honestly low,
 pre-registered hypothesis — the plate decides.</p>
 
-<h2>9. Validation gates, provenance quarantine and test status</h2>
+<h2>9. Pre-registered diagnostic (post-hoc, exploratory)</h2>
+<p>The diagnostic uses only the <b>23 training lines</b> (holdout excluded) with strict
+<b>GroupKFold(5)</b>: per-drug means, PCA scaling, the RidgeCV line-offset fit and the M2
+neighbour pool all use fold-training lines only. It is exploratory and is not comparable to
+holdout metrics. Pre-registered settings: k=5, first 10 PCs, bootstrap seed 42 with 2,000
+resamples.</p>
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>Model</th>
+      <th>Per-line Spearman</th>
+      <th>Pooled R² vs measured AUC</th>
+      <th>MAE vs measured AUC</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>M0: Fold-training per-drug mean</td>
+      <td>0.8199</td>
+      <td>0.7756</td>
+      <td>0.0471</td>
+    </tr>
+    <tr>
+      <td>M1: M0 + fitted RidgeCV line offset</td>
+      <td>0.8199</td>
+      <td>0.7768</td>
+      <td>0.0477</td>
+    </tr>
+    <tr>
+      <td>M2: M0 + kNN M0-residual adjustment</td>
+      <td>0.7928</td>
+      <td>0.7550</td>
+      <td>0.0491</td>
+    </tr>
+  </tbody>
+</table>
+<p>M1’s per-line Spearman equals M0 by construction because its fitted RidgeCV offset is
+constant within a held-out line, while its pooled R²/MAE are fitted values, not copies of M0.
+The paired M1−M0 difference is <b>0.0000</b>
+(95% CI 0.0000 to 0.0000). The paired M2−M0 difference is
+<b>-0.0270</b>
+(95% CI -0.0373 to -0.0176): <b>M2 does not beat M0</b>, so
+the pre-registered success criterion (95% CI above zero) is not met. This is no evidence of
+expression signal, not proof of absence. M3 was skipped for runtime.</p>
+<div class="note"><b>v1.2.5 construction fix (transparent changelog).</b> The v1.2.4
+diagnostic had four construction defects found in audit: a line-rank value was used as a row
+index into the drug-line matrix (3/23 mappings correct, zero-distance duplicates); M2
+borrowed a within-line-centred AUC instead of the M0 residual; there was no GroupKFold
+isolation; and M1 was never fitted. v1.2.5 corrects the construction without changing
+pre-registered settings (k=5, first 10 PCs, GroupKFold(5), bootstrap seed 42 with 2,000
+resamples, same criterion). Audit: 23/
+23 unique line rows,
+0 zero-distance distinct-line pairs,
+0 same-fold neighbours, target line absent
+from every M0 source, and zero-weight M2 = M0 exactly (max|Δ| =
+0.000000). Superseded v1.2.4 outputs are archived
+at <code>outputs_local/archive/diagnostic_results_v1.2.4_MISCONSTRUCTED.*</code>.</div>
+
+<h2>10. Validation gates, provenance quarantine and test status</h2>
 <table class="data"><tr><th>Gate</th><th>Value</th><th>Target</th><th>Status</th></tr>
-<tr><td>R² &gt; 0.25 (CatBoost)</td><td>0.567</td><td>0.250</td><td class="ok">PASS</td></tr><tr><td>Per-line Spearman &gt; 0.40 (CatBoost)</td><td>0.630</td><td>0.400</td><td class="ok">PASS</td></tr><tr><td>Post-hoc baseline beats CatBoost (per-line Spearman)</td><td>0.829</td><td>—</td><td class="warn">REPORTED</td></tr><tr><td>Selectivity predicted-vs-measured correlation</td><td>0.027</td><td>—</td><td class="bad">NULL</td></tr><tr><td>Selectivity rule (relabelled)</td><td colspan="3">pred_AUC_MDA231 &lt; 0.4 AND selectivity_delta &gt; 0.0 (26 positive-Δ drugs of 1,482); the old fixed cut-off Δ &gt; 0.05 was unreachable (max Δ = 0.039)</td></tr><tr><td>PCA gene annotation</td><td colspan="3">PUBLISHED - verified against the shipped scores — 61 of 62 components verified</td></tr><tr><td>Automated test suite</td><td>37/37</td><td>all pass</td><td class="ok">PASS</td></tr></table><p><b>Provenance quarantine.</b> The legacy L1000 matcher resolved the
+<tr><td>R² &gt; 0.25 (CatBoost)</td><td>0.567</td><td>0.250</td><td class="ok">PASS</td></tr><tr><td>Per-line Spearman &gt; 0.40 (CatBoost)</td><td>0.630</td><td>0.400</td><td class="ok">PASS</td></tr><tr><td>Post-hoc baseline beats CatBoost (per-line Spearman)</td><td>0.829</td><td>—</td><td class="warn">REPORTED</td></tr><tr><td>Selectivity predicted-vs-measured correlation</td><td>0.027</td><td>—</td><td class="bad">NULL</td></tr><tr><td>Selectivity rule (relabelled)</td><td colspan="3">pred_AUC_MDA231 &lt; 0.4 AND selectivity_delta &gt; 0.0 (26 positive-Δ drugs of 1,482); the old fixed cut-off Δ &gt; 0.05 was unreachable (max Δ = 0.039)</td></tr><tr><td>PCA gene annotation</td><td colspan="3">PUBLISHED - verified against the shipped scores — 61 of 62 components verified</td></tr><tr><td>Automated test suite</td><td>41/41</td><td>all pass</td><td class="ok">PASS</td></tr></table><p><b>Provenance quarantine.</b> The legacy L1000 matcher resolved the
 abbreviation “NAC” inside “Solife<b>NAC</b>in-Succinate”, so the archived NAC rows are a
 different molecule. The data layer now carries a <b>quarantined</b> column in
 <code>offtarget_panel_map.csv</code>, <code>offtarget_rescue_reversal.csv</code>,
@@ -569,7 +627,7 @@ the tests assert the marker. Deferoxamine is the validated rescue arm; Erastin�
 latent substring collision with Cloperastine is blocked by exact-match-first resolution
 and a regression test. The wet-lab NAC molecule is unaffected.</p>
 
-<h2>10. Sign-off (print, sign, lodge with the sealed prediction)</h2>
+<h2>11. Sign-off (print, sign, lodge with the sealed prediction)</h2>
 <div class="sign"><table>
 <tr><td class="label">Computational lead</td><td class="label">Supervisor</td></tr>
 <tr><td></td><td></td></tr>
@@ -593,7 +651,11 @@ ModelIDs explained</td><td>§1, <code>audit_summary.json</code>,
 <tr><td><code>quarantined</code> column added to the four legacy NAC CSVs; Erastin /
 Cloperastine regression test</td><td>Data layer, tests</td></tr>
 <tr><td>Four API tests added; suite count reported from
-<code>validation_status.json</code></td><td>§9, tests</td></tr>
+<code>validation_status.json</code></td><td>§10, tests</td></tr>
+<tr><td>v1.2.5 fold-honest diagnostic construction fix: strict GroupKFold(5), line-keyed
+PCA, fitted RidgeCV M1, M0-residual M2; M2 still does not beat M0 (paired 95% CI
+[−0.0373, −0.0176])</td><td>§9, dashboard diagnostic panel,
+<code>diagnostic_results.*</code></td></tr>
 </table>
 
 <h2>Appendix B. Short defence Q&amp;A</h2>

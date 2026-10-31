@@ -186,6 +186,7 @@ def build_defense_report(out_dir, blind=None):
     intervals = _json(out, 'prediction_intervals.json') or {}
     gates = _json(out, 'selectivity_rule.json') or {}
     pca_status = _json(out, 'pca_loadings_status.json') or {}
+    diagnostic = _json(out, 'diagnostic_results.json') or {}
 
     now = _dt.datetime.now(_dt.timezone.utc).strftime('%Y-%m-%d %H:%M UTC')
 
@@ -257,6 +258,29 @@ def build_defense_report(out_dir, blind=None):
                           'RMSE': s.get('rmse'), '±80% CI': s.get('abs_q80'),
                           '±95% CI': s.get('abs_q95')})
     line_ci = pd.DataFrame(line_rows) if line_rows else None
+
+    diag_metrics = diagnostic.get('metrics') or {}
+    diag_rows = []
+    for key, desc in [('M0', 'Fold-training per-drug mean'),
+                      ('M1', 'M0 + fitted RidgeCV line offset'),
+                      ('M2', 'M0 + kNN M0-residual adjustment')]:
+        dm = diag_metrics.get(key) or {}
+        diag_rows.append({
+            'Model': f'{key}: {desc}',
+            'Per-line Spearman': dm.get('perline_spearman_mean'),
+            'Pooled R² vs measured AUC': dm.get('pooled_r2_vs_truth'),
+            'MAE vs measured AUC': dm.get('mae_vs_truth'),
+        })
+    diag_df = pd.DataFrame(diag_rows) if diag_metrics else None
+    diag_pb = diagnostic.get('paired_bootstrap_lines_2000') or {}
+    diag_m1pb = diag_pb.get('m1_minus_m0') or {}
+    diag_m2pb = diag_pb.get('m2_minus_m0') or {}
+    diag_m1_ci = diag_m1pb.get('ci_95') or [None, None]
+    diag_m2_ci = diag_m2pb.get('ci_95') or [None, None]
+    diag_audit = diagnostic.get('construction_audit') or {}
+    diag_pca = diag_audit.get('pca_line_matrix') or {}
+    diag_iso = diag_audit.get('fold_isolation') or {}
+    diag_zw = diag_audit.get('zero_weight_sanity') or {}
 
     v2_best = (rsl_report.get('models') or {}).get(rsl_report.get('winner', ''), {})
     fbest = (fres.get('per_model_oof') or {}).get(fres.get('frozen_model', ''), {})
@@ -544,7 +568,36 @@ calibrated on the same seven lines, so they are not independent validation.</p>
 {_fmt((fbest.get('bootstrap_spearman') or {}).get('hi95'))}. This is an honestly low,
 pre-registered hypothesis — the plate decides.</p>
 
-<h2>9. Validation gates, provenance quarantine and test status</h2>
+<h2>9. Pre-registered diagnostic (post-hoc, exploratory)</h2>
+<p>The diagnostic uses only the <b>23 training lines</b> (holdout excluded) with strict
+<b>GroupKFold(5)</b>: per-drug means, PCA scaling, the RidgeCV line-offset fit and the M2
+neighbour pool all use fold-training lines only. It is exploratory and is not comparable to
+holdout metrics. Pre-registered settings: k=5, first 10 PCs, bootstrap seed 42 with 2,000
+resamples.</p>
+{_table(diag_df, nd=4)}
+<p>M1’s per-line Spearman equals M0 by construction because its fitted RidgeCV offset is
+constant within a held-out line, while its pooled R²/MAE are fitted values, not copies of M0.
+The paired M1−M0 difference is <b>{_fmt(diag_m1pb.get('mean'), 4)}</b>
+(95% CI {_fmt(diag_m1_ci[0], 4)} to {_fmt(diag_m1_ci[1], 4)}). The paired M2−M0 difference is
+<b>{_fmt(diag_m2pb.get('mean'), 4)}</b>
+(95% CI {_fmt(diag_m2_ci[0], 4)} to {_fmt(diag_m2_ci[1], 4)}): <b>M2 does not beat M0</b>, so
+the pre-registered success criterion (95% CI above zero) is not met. This is no evidence of
+expression signal, not proof of absence. M3 was skipped for runtime.</p>
+<div class="note"><b>v1.2.5 construction fix (transparent changelog).</b> The v1.2.4
+diagnostic had four construction defects found in audit: a line-rank value was used as a row
+index into the drug-line matrix (3/23 mappings correct, zero-distance duplicates); M2
+borrowed a within-line-centred AUC instead of the M0 residual; there was no GroupKFold
+isolation; and M1 was never fitted. v1.2.5 corrects the construction without changing
+pre-registered settings (k=5, first 10 PCs, GroupKFold(5), bootstrap seed 42 with 2,000
+resamples, same criterion). Audit: {_fmt(diag_pca.get('n_unique_feature_rows'))}/
+{_fmt(diag_pca.get('n_lines'))} unique line rows,
+{_fmt(diag_pca.get('zero_distance_pairs'))} zero-distance distinct-line pairs,
+{_fmt(diag_iso.get('same_fold_neighbour_count'))} same-fold neighbours, target line absent
+from every M0 source, and zero-weight M2 = M0 exactly (max|Δ| =
+{_fmt(diag_zw.get('max_abs_diff_vs_m0'), 6)}). Superseded v1.2.4 outputs are archived
+at <code>outputs_local/archive/diagnostic_results_v1.2.4_MISCONSTRUCTED.*</code>.</div>
+
+<h2>10. Validation gates, provenance quarantine and test status</h2>
 <table class="data"><tr><th>Gate</th><th>Value</th><th>Target</th><th>Status</th></tr>
 """]
 
@@ -583,7 +636,7 @@ the tests assert the marker. Deferoxamine is the validated rescue arm; Erastin�
 latent substring collision with Cloperastine is blocked by exact-match-first resolution
 and a regression test. The wet-lab NAC molecule is unaffected.</p>
 
-<h2>10. Sign-off (print, sign, lodge with the sealed prediction)</h2>
+<h2>11. Sign-off (print, sign, lodge with the sealed prediction)</h2>
 <div class="sign"><table>
 <tr><td class="label">Computational lead</td><td class="label">Supervisor</td></tr>
 <tr><td></td><td></td></tr>
@@ -607,7 +660,11 @@ ModelIDs explained</td><td>§1, <code>audit_summary.json</code>,
 <tr><td><code>quarantined</code> column added to the four legacy NAC CSVs; Erastin /
 Cloperastine regression test</td><td>Data layer, tests</td></tr>
 <tr><td>Four API tests added; suite count reported from
-<code>validation_status.json</code></td><td>§9, tests</td></tr>
+<code>validation_status.json</code></td><td>§10, tests</td></tr>
+<tr><td>v1.2.5 fold-honest diagnostic construction fix: strict GroupKFold(5), line-keyed
+PCA, fitted RidgeCV M1, M0-residual M2; M2 still does not beat M0 (paired 95% CI
+[−0.0373, −0.0176])</td><td>§9, dashboard diagnostic panel,
+<code>diagnostic_results.*</code></td></tr>
 </table>
 
 <h2>Appendix B. Short defence Q&amp;A</h2>

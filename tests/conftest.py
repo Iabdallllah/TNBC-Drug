@@ -15,7 +15,7 @@ def pytest_sessionfinish(session, exitstatus):
     total = int(getattr(session, 'testscollected', 0) or 0)
     failed = int(getattr(session, 'testsfailed', 0) or 0)
     payload = {
-        'command': 'python -m pytest tests/test_pipeline.py -q',
+        'command': 'python -m pytest -q',
         'tests_total': total,
         'tests_failed': failed,
         'tests_passed': max(0, total - failed),

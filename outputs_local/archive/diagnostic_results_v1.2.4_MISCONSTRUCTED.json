@@ -1,0 +1,54 @@
+{
+  "label": "post-hoc, exploratory, 23 training lines, GroupKFold(5)",
+  "models": {
+    "M0": "per-drug mean (global-mean fallback) over training lines",
+    "M1": "M0 + per-line offset from 62 PCA features (RidgeCV); equals M0 in per-line Spearman by construction",
+    "M2": "M0 + kNN (k=5, Euclidean on first 10 PCs, inverse-distance weights, neighbour drug-wise residuals)",
+    "M3": "skipped (runtime budget)"
+  },
+  "k": 5,
+  "pcs_used": [
+    "pca_0",
+    "pca_1",
+    "pca_2",
+    "pca_3",
+    "pca_4",
+    "pca_5",
+    "pca_6",
+    "pca_7",
+    "pca_8",
+    "pca_9"
+  ],
+  "training_lines": 23,
+  "m0_perline_spearman_mean": 0.8433993149438708,
+  "m2_perline_spearman_mean": 0.8116417709204437,
+  "pooled_r2_m0_vs_m2": 0.7973000680620002,
+  "mae_m0_vs_m2": 0.044563882883712935,
+  "ndcg10_m0_vs_m2": "not computed for any claim",
+  "recall10_m0_vs_m2": "not computed for any claim (AUC<0.3 only)",
+  "paired_bootstrap_lines_2000": {
+    "n_resamples": 2000,
+    "alpha": 0.05,
+    "diff_m2_minus_m0_mean": -0.031664625983682346,
+    "ci_95": [
+      -0.039786834379252525,
+      -0.024280134992048823
+    ]
+  },
+  "m1_equals_m0_perline_spearman": true,
+  "m2_success_criteria_met": false,
+  "m3": {
+    "status": "skipped",
+    "reason": "runtime budget exceeded for CatBoost-800 on the same folds"
+  },
+  "honest_note": "computed over the 23 training lines only; no holdout lines used; labelled post-hoc, exploratory; not comparable to holdout metrics; DEVIATION: statistic implementation bug found post-run, metrics now computed against measured AUC only, criterion unchanged",
+  "holdout_modelids_excluded": [
+    "ACH-000019",
+    "ACH-000097",
+    "ACH-000212",
+    "ACH-000248",
+    "ACH-000643",
+    "ACH-000768",
+    "ACH-000934"
+  ]
+}

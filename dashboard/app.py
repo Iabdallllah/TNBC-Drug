@@ -1644,27 +1644,42 @@ with tab_model:
              'rescue — if it does, the death was apoptosis.')
 
     st.subheader('Pre-registered diagnostic (post-hoc, exploratory)')
-    st.caption('Post-hoc, exploratory, 23 training lines, GroupKFold(5), no holdout use; '
-               'not comparable to holdout metrics.')
-    st.caption('**WITHDRAWN pending correction.** The pre-correction diagnostic statistic was '
-               'wired as an M0-vs-M2 ranking agreement with a bootstrap of that agreement; metrics '
-               'are now recomputed against measured AUC only (statistic-implementation deviation, '
-               'criterion unchanged).')
+    st.caption('v1.2.5 fold-honest construction: strict GroupKFold(5); M0 means, PCA scaling, '
+               'M1 fitting and M2 neighbours use training folds only. Post-hoc, exploratory, '
+               '23 training lines, no holdout use; not comparable to holdout metrics.')
     if diagnostic:
+        metrics = diagnostic.get('metrics') or {}
+        def _dm(model, key, default=float('nan')):
+            return float(metrics.get(model, {}).get(key, diagnostic.get(f'{model.lower()}_{key}', default)))
         pb = diagnostic.get('paired_bootstrap_lines_2000') or {}
-        ci = pb.get('ci_95') or [float('nan'), float('nan')]
-        d1, d2, d3 = st.columns(3)
-        d1.metric('M0 per-line Spearman',
-                  f"{diagnostic.get('m0_perline_spearman_mean', float('nan')):.3f}")
-        d2.metric('M2 per-line Spearman',
-                  f"{diagnostic.get('m2_perline_spearman_mean', float('nan')):.3f}")
-        d3.metric('M2 − M0 95% CI', f"[{ci[0]:.3f}, {ci[1]:.3f}]",
+        m2pb = pb.get('m2_minus_m0') or {}
+        ci = m2pb.get('ci_95') or pb.get('ci_95') or [float('nan'), float('nan')]
+        m1pb = pb.get('m1_minus_m0') or {}
+        m1ci = m1pb.get('ci_95') or [float('nan'), float('nan')]
+        d1, d2, d3, d4 = st.columns(4)
+        d1.metric('M0 per-line Spearman', f"{_dm('M0', 'perline_spearman_mean'):.3f}")
+        d2.metric('M1 per-line Spearman', f"{_dm('M1', 'perline_spearman_mean'):.3f}")
+        d3.metric('M2 per-line Spearman', f"{_dm('M2', 'perline_spearman_mean'):.3f}")
+        d4.metric('M2 − M0 95% CI', f"[{ci[0]:.3f}, {ci[1]:.3f}]",
                   help='CI spans zero → no evidence of expression signal.')
-        st.caption(f"k={diagnostic.get('k')} · "
-                   f"PCs={len(diagnostic.get('pcs_used', []))} · "
-                   f"pooled R²={diagnostic.get('pooled_r2_m0_vs_m2', float('nan')):.3f} · "
-                   f"MAE={diagnostic.get('mae_m0_vs_m2', float('nan')):.3f} · "
-                   f"M3 skipped ({diagnostic.get('m3', {}).get('reason', 'n/a')}).")
+        st.caption(
+            f"M0 R²={_dm('M0', 'pooled_r2_vs_truth'):.3f}, MAE={_dm('M0', 'mae_vs_truth'):.3f} · "
+            f"M1 R²={_dm('M1', 'pooled_r2_vs_truth'):.3f}, MAE={_dm('M1', 'mae_vs_truth'):.3f} · "
+            f"M2 R²={_dm('M2', 'pooled_r2_vs_truth'):.3f}, MAE={_dm('M2', 'mae_vs_truth'):.3f}. "
+            f"M1 per-line Spearman == M0 (empirical): {diagnostic.get('m1_equals_m0_perline_spearman')} "
+            f"(M1−M0 95% CI [{m1ci[0]:.3f}, {m1ci[1]:.3f}]).")
+        audit = diagnostic.get('construction_audit') or {}
+        pca = audit.get('pca_line_matrix') or {}
+        iso = audit.get('fold_isolation') or {}
+        zw = audit.get('zero_weight_sanity') or {}
+        st.caption(
+            f"Construction audit: {pca.get('n_unique_feature_rows', '—')}/"
+            f"{pca.get('n_lines', '—')} unique line rows · "
+            f"zero-distance pairs={pca.get('zero_distance_pairs', '—')} · "
+            f"same-fold neighbours={iso.get('same_fold_neighbour_count', '—')} · "
+            f"zero-weight max|Δ|={zw.get('max_abs_diff_vs_m0', '—')}. "
+            f"k={diagnostic.get('k')} · PCs={len(diagnostic.get('pcs_used', []))} · "
+            f"M3 skipped ({diagnostic.get('m3', {}).get('reason', 'n/a')}).")
     else:
         st.info('`diagnostic_results.json` is not in this deployment.')
 

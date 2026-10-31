@@ -1,9 +1,11 @@
 {
+  "version": "v1.2.5",
   "label": "post-hoc, exploratory, 23 training lines, GroupKFold(5)",
+  "construction": "fold-honest GroupKFold(5); one-row-per-line PCA keyed by ModelID; M0 means fitted on fold-training lines; M1 RidgeCV fitted; M2 kNN on training-only neighbours using M0 residuals",
   "models": {
-    "M0": "per-drug mean (global-mean fallback) over training lines",
-    "M1": "M0 + per-line offset from 62 PCA features (RidgeCV); equals M0 in per-line Spearman by construction",
-    "M2": "M0 + kNN (k=5, Euclidean on first 10 PCs, inverse-distance weights, neighbour drug-wise residuals)",
+    "M0": "per-drug mean fitted on fold-training lines (global-mean fallback)",
+    "M1": "M0 + per-line RidgeCV offset fitted on fold-training line residuals; constant per held-out line",
+    "M2": "M0 + kNN (k=5, Euclidean on first 10 PCs, inverse-distance weights) over fold-training neighbours, borrowing M0 residuals",
     "M3": "skipped (runtime budget)"
   },
   "k": 5,
@@ -20,19 +22,919 @@
     "pca_9"
   ],
   "training_lines": 23,
-  "m0_perline_spearman_mean": 0.8433993149438708,
-  "m2_perline_spearman_mean": 0.8116417709204437,
-  "pooled_r2_m0_vs_m2": 0.7973000680620002,
-  "mae_m0_vs_m2": 0.044563882883712935,
-  "ndcg10_m0_vs_m2": "not computed for any claim",
-  "recall10_m0_vs_m2": "not computed for any claim (AUC<0.3 only)",
+  "folds": [
+    {
+      "fold": 0,
+      "train_lines": [
+        "ACH-000117",
+        "ACH-000147",
+        "ACH-000223",
+        "ACH-000258",
+        "ACH-000277",
+        "ACH-000288",
+        "ACH-000330",
+        "ACH-000352",
+        "ACH-000573",
+        "ACH-000624",
+        "ACH-000699",
+        "ACH-000711",
+        "ACH-000759",
+        "ACH-000783",
+        "ACH-000849",
+        "ACH-000856",
+        "ACH-000902",
+        "ACH-000910"
+      ],
+      "held_out_lines": [
+        "ACH-000276",
+        "ACH-000374",
+        "ACH-000721",
+        "ACH-000859",
+        "ACH-000927"
+      ],
+      "m0_source_lines": [
+        "ACH-000117",
+        "ACH-000147",
+        "ACH-000223",
+        "ACH-000258",
+        "ACH-000277",
+        "ACH-000288",
+        "ACH-000330",
+        "ACH-000352",
+        "ACH-000573",
+        "ACH-000624",
+        "ACH-000699",
+        "ACH-000711",
+        "ACH-000759",
+        "ACH-000783",
+        "ACH-000849",
+        "ACH-000856",
+        "ACH-000902",
+        "ACH-000910"
+      ],
+      "m0_global_mean_fallback": 0.8830461857831019,
+      "m0_n_fallback_drugs": 0,
+      "m1_fit": {
+        "ridge_fitted": true,
+        "estimator": "sklearn.linear_model.RidgeCV",
+        "alpha_grid": [
+          0.1,
+          1.0,
+          10.0
+        ],
+        "alpha": 10.0,
+        "intercept": -0.0050472799230495274,
+        "coef_abs_sum": 0.03147270703741955,
+        "train_r2": 0.5164378919231818,
+        "r_train_range": [
+          -0.05603425996729473,
+          0.03989700266077008
+        ],
+        "r_hat_range": [
+          -0.034540639020321506,
+          0.006109394623050027
+        ]
+      },
+      "neighbours": {
+        "ACH-000276": [
+          "ACH-000699",
+          "ACH-000147",
+          "ACH-000352",
+          "ACH-000330",
+          "ACH-000902"
+        ],
+        "ACH-000374": [
+          "ACH-000147",
+          "ACH-000849",
+          "ACH-000223",
+          "ACH-000699",
+          "ACH-000330"
+        ],
+        "ACH-000721": [
+          "ACH-000910",
+          "ACH-000573",
+          "ACH-000277",
+          "ACH-000624",
+          "ACH-000117"
+        ],
+        "ACH-000859": [
+          "ACH-000849",
+          "ACH-000223",
+          "ACH-000117",
+          "ACH-000910",
+          "ACH-000624"
+        ],
+        "ACH-000927": [
+          "ACH-000910",
+          "ACH-000277",
+          "ACH-000783",
+          "ACH-000117",
+          "ACH-000147"
+        ]
+      },
+      "neighbour_distances": {
+        "ACH-000276": [
+          3.922159525081583,
+          4.058934757106485,
+          4.326880194539274,
+          4.578427903743543,
+          4.757764901988376
+        ],
+        "ACH-000374": [
+          3.267239677462792,
+          3.292860031786157,
+          3.315464680567643,
+          3.3415639804314754,
+          3.7165146324872853
+        ],
+        "ACH-000721": [
+          4.782640207495493,
+          4.802265236564253,
+          5.340578762200302,
+          5.378636973006249,
+          5.4369690576568015
+        ],
+        "ACH-000859": [
+          2.4512455604846823,
+          2.961460970915422,
+          3.0963147200727827,
+          3.701265433858746,
+          3.7770756732163906
+        ],
+        "ACH-000927": [
+          1.7698285782932937,
+          1.8215062558036332,
+          1.9555104022766674,
+          2.1519614463304118,
+          2.4412286046635736
+        ]
+      }
+    },
+    {
+      "fold": 1,
+      "train_lines": [
+        "ACH-000117",
+        "ACH-000147",
+        "ACH-000223",
+        "ACH-000258",
+        "ACH-000276",
+        "ACH-000288",
+        "ACH-000330",
+        "ACH-000352",
+        "ACH-000374",
+        "ACH-000699",
+        "ACH-000711",
+        "ACH-000721",
+        "ACH-000783",
+        "ACH-000849",
+        "ACH-000856",
+        "ACH-000859",
+        "ACH-000910",
+        "ACH-000927"
+      ],
+      "held_out_lines": [
+        "ACH-000277",
+        "ACH-000573",
+        "ACH-000624",
+        "ACH-000759",
+        "ACH-000902"
+      ],
+      "m0_source_lines": [
+        "ACH-000117",
+        "ACH-000147",
+        "ACH-000223",
+        "ACH-000258",
+        "ACH-000276",
+        "ACH-000288",
+        "ACH-000330",
+        "ACH-000352",
+        "ACH-000374",
+        "ACH-000699",
+        "ACH-000711",
+        "ACH-000721",
+        "ACH-000783",
+        "ACH-000849",
+        "ACH-000856",
+        "ACH-000859",
+        "ACH-000910",
+        "ACH-000927"
+      ],
+      "m0_global_mean_fallback": 0.8812925785578176,
+      "m0_n_fallback_drugs": 0,
+      "m1_fit": {
+        "ridge_fitted": true,
+        "estimator": "sklearn.linear_model.RidgeCV",
+        "alpha_grid": [
+          0.1,
+          1.0,
+          10.0
+        ],
+        "alpha": 10.0,
+        "intercept": -0.0055695367229866895,
+        "coef_abs_sum": 0.027484478629655047,
+        "train_r2": 0.47205910331851797,
+        "r_train_range": [
+          -0.053060417047500315,
+          0.04084555988340095
+        ],
+        "r_hat_range": [
+          -0.015045965790882073,
+          0.008687810866769676
+        ]
+      },
+      "neighbours": {
+        "ACH-000277": [
+          "ACH-000927",
+          "ACH-000117",
+          "ACH-000910",
+          "ACH-000147",
+          "ACH-000783"
+        ],
+        "ACH-000573": [
+          "ACH-000288",
+          "ACH-000699",
+          "ACH-000856",
+          "ACH-000927",
+          "ACH-000374"
+        ],
+        "ACH-000624": [
+          "ACH-000117",
+          "ACH-000859",
+          "ACH-000223",
+          "ACH-000374",
+          "ACH-000330"
+        ],
+        "ACH-000759": [
+          "ACH-000117",
+          "ACH-000330",
+          "ACH-000856",
+          "ACH-000147",
+          "ACH-000223"
+        ],
+        "ACH-000902": [
+          "ACH-000910",
+          "ACH-000927",
+          "ACH-000117",
+          "ACH-000783",
+          "ACH-000147"
+        ]
+      },
+      "neighbour_distances": {
+        "ACH-000277": [
+          1.8326488504414113,
+          2.241343633329618,
+          2.532682091193225,
+          3.2167924503864933,
+          3.437707462759476
+        ],
+        "ACH-000573": [
+          1.632814527777465,
+          2.0723399193682077,
+          3.3747405102515238,
+          3.454803013478628,
+          3.618733303001379
+        ],
+        "ACH-000624": [
+          3.200184576495374,
+          3.7891374326218528,
+          3.8747967342400895,
+          4.185992328065726,
+          4.246727357480298
+        ],
+        "ACH-000759": [
+          2.626367535991257,
+          3.015695068040136,
+          3.250098280762317,
+          3.437518826690565,
+          3.6344731262297048
+        ],
+        "ACH-000902": [
+          2.1436377987461097,
+          2.298272332437864,
+          2.7139926847695355,
+          2.9558722834260864,
+          3.292684919250243
+        ]
+      }
+    },
+    {
+      "fold": 2,
+      "train_lines": [
+        "ACH-000223",
+        "ACH-000258",
+        "ACH-000276",
+        "ACH-000277",
+        "ACH-000330",
+        "ACH-000352",
+        "ACH-000374",
+        "ACH-000573",
+        "ACH-000624",
+        "ACH-000699",
+        "ACH-000711",
+        "ACH-000721",
+        "ACH-000759",
+        "ACH-000849",
+        "ACH-000856",
+        "ACH-000859",
+        "ACH-000902",
+        "ACH-000927"
+      ],
+      "held_out_lines": [
+        "ACH-000117",
+        "ACH-000147",
+        "ACH-000288",
+        "ACH-000783",
+        "ACH-000910"
+      ],
+      "m0_source_lines": [
+        "ACH-000223",
+        "ACH-000258",
+        "ACH-000276",
+        "ACH-000277",
+        "ACH-000330",
+        "ACH-000352",
+        "ACH-000374",
+        "ACH-000573",
+        "ACH-000624",
+        "ACH-000699",
+        "ACH-000711",
+        "ACH-000721",
+        "ACH-000759",
+        "ACH-000849",
+        "ACH-000856",
+        "ACH-000859",
+        "ACH-000902",
+        "ACH-000927"
+      ],
+      "m0_global_mean_fallback": 0.8814671194920993,
+      "m0_n_fallback_drugs": 0,
+      "m1_fit": {
+        "ridge_fitted": true,
+        "estimator": "sklearn.linear_model.RidgeCV",
+        "alpha_grid": [
+          0.1,
+          1.0,
+          10.0
+        ],
+        "alpha": 10.0,
+        "intercept": -0.0031856939447928606,
+        "coef_abs_sum": 0.02589958548856172,
+        "train_r2": 0.5882496198670135,
+        "r_train_range": [
+          -0.04634145465522471,
+          0.03104108189187509
+        ],
+        "r_hat_range": [
+          -0.0057320384009187896,
+          0.014036836088746051
+        ]
+      },
+      "neighbours": {
+        "ACH-000117": [
+          "ACH-000927",
+          "ACH-000277",
+          "ACH-000759",
+          "ACH-000330",
+          "ACH-000902"
+        ],
+        "ACH-000147": [
+          "ACH-000330",
+          "ACH-000352",
+          "ACH-000927",
+          "ACH-000277",
+          "ACH-000374"
+        ],
+        "ACH-000288": [
+          "ACH-000573",
+          "ACH-000699",
+          "ACH-000856",
+          "ACH-000927",
+          "ACH-000277"
+        ],
+        "ACH-000783": [
+          "ACH-000352",
+          "ACH-000927",
+          "ACH-000902",
+          "ACH-000330",
+          "ACH-000277"
+        ],
+        "ACH-000910": [
+          "ACH-000927",
+          "ACH-000902",
+          "ACH-000277",
+          "ACH-000859",
+          "ACH-000352"
+        ]
+      },
+      "neighbour_distances": {
+        "ACH-000117": [
+          2.05242432245227,
+          2.1891106350582095,
+          2.4893372859074816,
+          2.57934535668308,
+          2.642746039819669
+        ],
+        "ACH-000147": [
+          1.4501627481048889,
+          1.8296247792571314,
+          2.309909595397807,
+          3.082313086722397,
+          3.13890799840609
+        ],
+        "ACH-000288": [
+          1.631343294578127,
+          2.037172092240302,
+          3.3768567318534717,
+          4.0055326928482575,
+          4.16583539556138
+        ],
+        "ACH-000783": [
+          1.4938203984553788,
+          1.8702106442279376,
+          2.8587361516890106,
+          2.902628653294925,
+          3.273351402555517
+        ],
+        "ACH-000910": [
+          1.5577679537666207,
+          2.0700019098656797,
+          2.3982185955829114,
+          3.295969816826221,
+          3.39917105942117
+        ]
+      }
+    },
+    {
+      "fold": 3,
+      "train_lines": [
+        "ACH-000117",
+        "ACH-000147",
+        "ACH-000258",
+        "ACH-000276",
+        "ACH-000277",
+        "ACH-000288",
+        "ACH-000352",
+        "ACH-000374",
+        "ACH-000573",
+        "ACH-000624",
+        "ACH-000711",
+        "ACH-000721",
+        "ACH-000759",
+        "ACH-000783",
+        "ACH-000856",
+        "ACH-000859",
+        "ACH-000902",
+        "ACH-000910",
+        "ACH-000927"
+      ],
+      "held_out_lines": [
+        "ACH-000223",
+        "ACH-000330",
+        "ACH-000699",
+        "ACH-000849"
+      ],
+      "m0_source_lines": [
+        "ACH-000117",
+        "ACH-000147",
+        "ACH-000258",
+        "ACH-000276",
+        "ACH-000277",
+        "ACH-000288",
+        "ACH-000352",
+        "ACH-000374",
+        "ACH-000573",
+        "ACH-000624",
+        "ACH-000711",
+        "ACH-000721",
+        "ACH-000759",
+        "ACH-000783",
+        "ACH-000856",
+        "ACH-000859",
+        "ACH-000902",
+        "ACH-000910",
+        "ACH-000927"
+      ],
+      "m0_global_mean_fallback": 0.8836582142971856,
+      "m0_n_fallback_drugs": 0,
+      "m1_fit": {
+        "ridge_fitted": true,
+        "estimator": "sklearn.linear_model.RidgeCV",
+        "alpha_grid": [
+          0.1,
+          1.0,
+          10.0
+        ],
+        "alpha": 10.0,
+        "intercept": -0.006395295863501137,
+        "coef_abs_sum": 0.0341135210352804,
+        "train_r2": 0.5100683171193059,
+        "r_train_range": [
+          -0.05009872562126535,
+          0.03910716238743672
+        ],
+        "r_hat_range": [
+          -0.019626833869957713,
+          0.010577401813956187
+        ]
+      },
+      "neighbours": {
+        "ACH-000223": [
+          "ACH-000711",
+          "ACH-000859",
+          "ACH-000374",
+          "ACH-000759",
+          "ACH-000624"
+        ],
+        "ACH-000330": [
+          "ACH-000147",
+          "ACH-000352",
+          "ACH-000117",
+          "ACH-000783",
+          "ACH-000759"
+        ],
+        "ACH-000699": [
+          "ACH-000573",
+          "ACH-000288",
+          "ACH-000374",
+          "ACH-000147",
+          "ACH-000927"
+        ],
+        "ACH-000849": [
+          "ACH-000859",
+          "ACH-000374",
+          "ACH-000711",
+          "ACH-000117",
+          "ACH-000902"
+        ]
+      },
+      "neighbour_distances": {
+        "ACH-000223": [
+          2.270155265426288,
+          2.8976261472779856,
+          3.0333759732319834,
+          3.491283073533841,
+          3.5991114201050847
+        ],
+        "ACH-000330": [
+          1.4360591012931705,
+          2.334108167208418,
+          2.6280164421196877,
+          2.8999287571327876,
+          2.945910445769334
+        ],
+        "ACH-000699": [
+          1.9756911558600272,
+          2.0268459350392476,
+          3.0020013040479347,
+          3.245811367041289,
+          3.300974343995201
+        ],
+        "ACH-000849": [
+          2.2756376468527977,
+          3.186329877289138,
+          3.2657967568631094,
+          3.7274231464331424,
+          3.799216479164255
+        ]
+      }
+    },
+    {
+      "fold": 4,
+      "train_lines": [
+        "ACH-000117",
+        "ACH-000147",
+        "ACH-000223",
+        "ACH-000276",
+        "ACH-000277",
+        "ACH-000288",
+        "ACH-000330",
+        "ACH-000374",
+        "ACH-000573",
+        "ACH-000624",
+        "ACH-000699",
+        "ACH-000721",
+        "ACH-000759",
+        "ACH-000783",
+        "ACH-000849",
+        "ACH-000859",
+        "ACH-000902",
+        "ACH-000910",
+        "ACH-000927"
+      ],
+      "held_out_lines": [
+        "ACH-000258",
+        "ACH-000352",
+        "ACH-000711",
+        "ACH-000856"
+      ],
+      "m0_source_lines": [
+        "ACH-000117",
+        "ACH-000147",
+        "ACH-000223",
+        "ACH-000276",
+        "ACH-000277",
+        "ACH-000288",
+        "ACH-000330",
+        "ACH-000374",
+        "ACH-000573",
+        "ACH-000624",
+        "ACH-000699",
+        "ACH-000721",
+        "ACH-000759",
+        "ACH-000783",
+        "ACH-000849",
+        "ACH-000859",
+        "ACH-000902",
+        "ACH-000910",
+        "ACH-000927"
+      ],
+      "m0_global_mean_fallback": 0.8851786652714725,
+      "m0_n_fallback_drugs": 4,
+      "m1_fit": {
+        "ridge_fitted": true,
+        "estimator": "sklearn.linear_model.RidgeCV",
+        "alpha_grid": [
+          0.1,
+          1.0,
+          10.0
+        ],
+        "alpha": 10.0,
+        "intercept": -0.003929023640568888,
+        "coef_abs_sum": 0.02470470101225999,
+        "train_r2": 0.3827823342848957,
+        "r_train_range": [
+          -0.054884319344542784,
+          0.037604455914394104
+        ],
+        "r_hat_range": [
+          -0.008189853369581437,
+          0.009277469136728386
+        ]
+      },
+      "neighbours": {
+        "ACH-000258": [
+          "ACH-000374",
+          "ACH-000902",
+          "ACH-000759",
+          "ACH-000573",
+          "ACH-000910"
+        ],
+        "ACH-000352": [
+          "ACH-000783",
+          "ACH-000147",
+          "ACH-000330",
+          "ACH-000927",
+          "ACH-000910"
+        ],
+        "ACH-000711": [
+          "ACH-000223",
+          "ACH-000849",
+          "ACH-000573",
+          "ACH-000330",
+          "ACH-000859"
+        ],
+        "ACH-000856": [
+          "ACH-000759",
+          "ACH-000573",
+          "ACH-000288",
+          "ACH-000277",
+          "ACH-000117"
+        ]
+      },
+      "neighbour_distances": {
+        "ACH-000258": [
+          9.6841370270474,
+          9.905406601449712,
+          9.918927517151683,
+          10.059961980341969,
+          10.234409226563713
+        ],
+        "ACH-000352": [
+          1.8496165992501707,
+          2.430312688880777,
+          2.875065475096537,
+          3.1962720068413133,
+          4.174170720453933
+        ],
+        "ACH-000711": [
+          2.4890877049909386,
+          3.561274850846136,
+          4.2735955224842375,
+          4.344041061226476,
+          4.623139182290766
+        ],
+        "ACH-000856": [
+          3.591130932301506,
+          4.170817098278426,
+          4.500392582358014,
+          4.618602577275925,
+          4.907003104071292
+        ]
+      }
+    }
+  ],
+  "fold_metrics": [
+    {
+      "fold": 0,
+      "n_lines": 5,
+      "held_out_lines": [
+        "ACH-000276",
+        "ACH-000374",
+        "ACH-000721",
+        "ACH-000859",
+        "ACH-000927"
+      ],
+      "M0": {
+        "perline_spearman_mean": 0.8303295367815728,
+        "pooled_r2_vs_truth": 0.7856374938718322,
+        "mae_vs_truth": 0.046953315361327706
+      },
+      "M1": {
+        "perline_spearman_mean": 0.8303295367815728,
+        "pooled_r2_vs_truth": 0.7885644605578073,
+        "mae_vs_truth": 0.047764550375264274
+      },
+      "M2": {
+        "perline_spearman_mean": 0.8012278007227838,
+        "pooled_r2_vs_truth": 0.7636806065106994,
+        "mae_vs_truth": 0.049037445389853815
+      }
+    },
+    {
+      "fold": 1,
+      "n_lines": 5,
+      "held_out_lines": [
+        "ACH-000277",
+        "ACH-000573",
+        "ACH-000624",
+        "ACH-000759",
+        "ACH-000902"
+      ],
+      "M0": {
+        "perline_spearman_mean": 0.7959528808259603,
+        "pooled_r2_vs_truth": 0.7578845792561923,
+        "mae_vs_truth": 0.0477956126193157
+      },
+      "M1": {
+        "perline_spearman_mean": 0.7959528808259603,
+        "pooled_r2_vs_truth": 0.754640455409099,
+        "mae_vs_truth": 0.049006144676670256
+      },
+      "M2": {
+        "perline_spearman_mean": 0.7679159194492383,
+        "pooled_r2_vs_truth": 0.7358979997717621,
+        "mae_vs_truth": 0.04988431786561307
+      }
+    },
+    {
+      "fold": 2,
+      "n_lines": 5,
+      "held_out_lines": [
+        "ACH-000117",
+        "ACH-000147",
+        "ACH-000288",
+        "ACH-000783",
+        "ACH-000910"
+      ],
+      "M0": {
+        "perline_spearman_mean": 0.8229005001557812,
+        "pooled_r2_vs_truth": 0.7557849399044217,
+        "mae_vs_truth": 0.04902913567675687
+      },
+      "M1": {
+        "perline_spearman_mean": 0.8229005001557812,
+        "pooled_r2_vs_truth": 0.7590580785792717,
+        "mae_vs_truth": 0.048524488688404685
+      },
+      "M2": {
+        "perline_spearman_mean": 0.7785099621155045,
+        "pooled_r2_vs_truth": 0.7352876857877417,
+        "mae_vs_truth": 0.05114327148246209
+      }
+    },
+    {
+      "fold": 3,
+      "n_lines": 4,
+      "held_out_lines": [
+        "ACH-000223",
+        "ACH-000330",
+        "ACH-000699",
+        "ACH-000849"
+      ],
+      "M0": {
+        "perline_spearman_mean": 0.8431386682777768,
+        "pooled_r2_vs_truth": 0.8261274329066737,
+        "mae_vs_truth": 0.04241313034228586
+      },
+      "M1": {
+        "perline_spearman_mean": 0.8431386682777768,
+        "pooled_r2_vs_truth": 0.8247921213935901,
+        "mae_vs_truth": 0.044860546377047374
+      },
+      "M2": {
+        "perline_spearman_mean": 0.8269416497615626,
+        "pooled_r2_vs_truth": 0.7895556137348808,
+        "mae_vs_truth": 0.04509635655572114
+      }
+    },
+    {
+      "fold": 4,
+      "n_lines": 4,
+      "held_out_lines": [
+        "ACH-000258",
+        "ACH-000352",
+        "ACH-000711",
+        "ACH-000856"
+      ],
+      "M0": {
+        "perline_spearman_mean": 0.8097146992907628,
+        "pooled_r2_vs_truth": 0.7747450398765781,
+        "mae_vs_truth": 0.047144247062301955
+      },
+      "M1": {
+        "perline_spearman_mean": 0.8097146992907628,
+        "pooled_r2_vs_truth": 0.778477785027743,
+        "mae_vs_truth": 0.04703966077813569
+      },
+      "M2": {
+        "perline_spearman_mean": 0.7970460632318719,
+        "pooled_r2_vs_truth": 0.7686737146911553,
+        "mae_vs_truth": 0.04822848028784414
+      }
+    }
+  ],
+  "metrics": {
+    "M0": {
+      "perline_spearman_mean": 0.8198838286561186,
+      "pooled_r2_vs_truth": 0.7756192307733124,
+      "mae_vs_truth": 0.04708116358745526
+    },
+    "M1": {
+      "perline_spearman_mean": 0.8198838286561186,
+      "pooled_r2_vs_truth": 0.7767898451125328,
+      "mae_vs_truth": 0.04773626445313294
+    },
+    "M2": {
+      "perline_spearman_mean": 0.792792141887451,
+      "pooled_r2_vs_truth": 0.7549827859618564,
+      "mae_vs_truth": 0.04908331798711706
+    }
+  },
+  "m0_perline_spearman_mean": 0.8198838286561186,
+  "m1_perline_spearman_mean": 0.8198838286561186,
+  "m2_perline_spearman_mean": 0.792792141887451,
+  "pooled_r2_m0_vs_truth": 0.7756192307733124,
+  "mae_m0_vs_truth": 0.04708116358745526,
+  "pooled_r2_m1_vs_truth": 0.7767898451125328,
+  "mae_m1_vs_truth": 0.04773626445313294,
+  "pooled_r2_m2_vs_truth": 0.7549827859618564,
+  "mae_m2_vs_truth": 0.04908331798711706,
+  "pooled_r2_vs_truth": {
+    "M0": 0.7756192307733124,
+    "M1": 0.7767898451125328,
+    "M2": 0.7549827859618564
+  },
+  "mae_vs_truth": {
+    "M0": 0.04708116358745526,
+    "M1": 0.04773626445313294,
+    "M2": 0.04908331798711706
+  },
   "paired_bootstrap_lines_2000": {
     "n_resamples": 2000,
     "alpha": 0.05,
-    "diff_m2_minus_m0_mean": -0.031664625983682346,
+    "seed": 42,
+    "m1_minus_m0": {
+      "mean": 0.0,
+      "ci_95": [
+        0.0,
+        0.0
+      ]
+    },
+    "m2_minus_m0": {
+      "mean": -0.02703146140919929,
+      "ci_95": [
+        -0.037275389617886484,
+        -0.017625505472379465
+      ]
+    },
+    "diff_m2_minus_m0_mean": -0.02703146140919929,
     "ci_95": [
-      -0.039786834379252525,
-      -0.024280134992048823
+      -0.037275389617886484,
+      -0.017625505472379465
+    ]
+  },
+  "paired_bootstrap_m1_minus_m0": {
+    "mean": 0.0,
+    "ci_95": [
+      0.0,
+      0.0
+    ]
+  },
+  "paired_bootstrap_m2_minus_m0": {
+    "mean": -0.02703146140919929,
+    "ci_95": [
+      -0.037275389617886484,
+      -0.017625505472379465
     ]
   },
   "m1_equals_m0_perline_spearman": true,
@@ -41,7 +943,7 @@
     "status": "skipped",
     "reason": "runtime budget exceeded for CatBoost-800 on the same folds"
   },
-  "honest_note": "computed over the 23 training lines only; no holdout lines used; labelled post-hoc, exploratory; not comparable to holdout metrics; DEVIATION: statistic implementation bug found post-run, metrics now computed against measured AUC only, criterion unchanged",
+  "honest_note": "computed over the 23 training lines only; no holdout lines used; labelled post-hoc, exploratory; not comparable to holdout metrics. DEVIATION (v1.2.5): construction defects found post-run (line-rank used as row index, within-line-centred M2 residual, no GroupKFold isolation, M1 not fitted) were corrected; pre-registered k=5, first 10 PCs, GroupKFold(5), bootstrap seed 42/2,000 resamples and the success criterion are unchanged.",
   "holdout_modelids_excluded": [
     "ACH-000019",
     "ACH-000097",
@@ -50,5 +952,268 @@
     "ACH-000643",
     "ACH-000768",
     "ACH-000934"
-  ]
+  ],
+  "construction_audit": {
+    "pca_line_matrix": {
+      "n_lines": 23,
+      "n_unique_feature_rows": 23,
+      "zero_distance_pairs": 0,
+      "min_pairwise_distance": 1.499444022794994,
+      "max_pairwise_distance": 8.148687961931493
+    },
+    "fold_isolation": {
+      "n_folds": 5,
+      "same_fold_neighbour_count": 0,
+      "target_line_in_m0_source": false,
+      "m0_sources_are_training_lines_only": true,
+      "neighbour_pool_sizes": {
+        "0": {
+          "ACH-000276": 5,
+          "ACH-000374": 5,
+          "ACH-000721": 5,
+          "ACH-000859": 5,
+          "ACH-000927": 5
+        },
+        "1": {
+          "ACH-000277": 5,
+          "ACH-000573": 5,
+          "ACH-000624": 5,
+          "ACH-000759": 5,
+          "ACH-000902": 5
+        },
+        "2": {
+          "ACH-000117": 5,
+          "ACH-000147": 5,
+          "ACH-000288": 5,
+          "ACH-000783": 5,
+          "ACH-000910": 5
+        },
+        "3": {
+          "ACH-000223": 5,
+          "ACH-000330": 5,
+          "ACH-000699": 5,
+          "ACH-000849": 5
+        },
+        "4": {
+          "ACH-000258": 5,
+          "ACH-000352": 5,
+          "ACH-000711": 5,
+          "ACH-000856": 5
+        }
+      }
+    },
+    "m1_fit": {
+      "ridge_fitted": true,
+      "alpha_grid": [
+        0.1,
+        1.0,
+        10.0
+      ],
+      "per_fold_alpha": [
+        10.0,
+        10.0,
+        10.0,
+        10.0,
+        10.0
+      ],
+      "perline_spearman_equals_m0": true,
+      "max_abs_perline_spearman_diff_vs_m0": 0.0,
+      "pooled_r2_minus_m0": 0.0011706143392203883,
+      "mae_minus_m0": 0.0006551008656776811
+    },
+    "zero_weight_sanity": {
+      "rows_checked": 23658,
+      "max_abs_diff_vs_m0": 0.0,
+      "exact_equal": true
+    }
+  },
+  "per_line": {
+    "ACH-000117": {
+      "n_drugs": 1339,
+      "m0_spearman": 0.771533956910545,
+      "m1_spearman": 0.771533956910545,
+      "m2_spearman": 0.739575711877635,
+      "m1_minus_m0": 0.0,
+      "m2_minus_m0": -0.031958245032910004
+    },
+    "ACH-000147": {
+      "n_drugs": 1425,
+      "m0_spearman": 0.854323406746975,
+      "m1_spearman": 0.854323406746975,
+      "m2_spearman": 0.8230887067247984,
+      "m1_minus_m0": 0.0,
+      "m2_minus_m0": -0.031234700022176654
+    },
+    "ACH-000223": {
+      "n_drugs": 1358,
+      "m0_spearman": 0.8485862991791668,
+      "m1_spearman": 0.8485862991791668,
+      "m2_spearman": 0.8306443588595473,
+      "m1_minus_m0": 0.0,
+      "m2_minus_m0": -0.017941940319619487
+    },
+    "ACH-000258": {
+      "n_drugs": 187,
+      "m0_spearman": 0.7324909167709941,
+      "m1_spearman": 0.7324909167709941,
+      "m2_spearman": 0.744414525711439,
+      "m1_minus_m0": 0.0,
+      "m2_minus_m0": 0.011923608940444863
+    },
+    "ACH-000276": {
+      "n_drugs": 1380,
+      "m0_spearman": 0.8210721629343378,
+      "m1_spearman": 0.8210721629343378,
+      "m2_spearman": 0.7425454507828271,
+      "m1_minus_m0": 0.0,
+      "m2_minus_m0": -0.07852671215151075
+    },
+    "ACH-000277": {
+      "n_drugs": 1415,
+      "m0_spearman": 0.8329234581544604,
+      "m1_spearman": 0.8329234581544604,
+      "m2_spearman": 0.7971172461969284,
+      "m1_minus_m0": 0.0,
+      "m2_minus_m0": -0.035806211957532086
+    },
+    "ACH-000288": {
+      "n_drugs": 1390,
+      "m0_spearman": 0.8570036771595975,
+      "m1_spearman": 0.8570036771595975,
+      "m2_spearman": 0.8398776510401789,
+      "m1_minus_m0": 0.0,
+      "m2_minus_m0": -0.017126026119418603
+    },
+    "ACH-000330": {
+      "n_drugs": 190,
+      "m0_spearman": 0.8505540360481603,
+      "m1_spearman": 0.8505540360481603,
+      "m2_spearman": 0.8485833115063053,
+      "m1_minus_m0": 0.0,
+      "m2_minus_m0": -0.0019707245418549846
+    },
+    "ACH-000352": {
+      "n_drugs": 1407,
+      "m0_spearman": 0.7801284675653573,
+      "m1_spearman": 0.7801284675653573,
+      "m2_spearman": 0.7530858498720043,
+      "m1_minus_m0": 0.0,
+      "m2_minus_m0": -0.02704261769335292
+    },
+    "ACH-000374": {
+      "n_drugs": 1414,
+      "m0_spearman": 0.8565052789494296,
+      "m1_spearman": 0.8565052789494296,
+      "m2_spearman": 0.8320702002676366,
+      "m1_minus_m0": 0.0,
+      "m2_minus_m0": -0.024435078681793065
+    },
+    "ACH-000573": {
+      "n_drugs": 1426,
+      "m0_spearman": 0.821543878059675,
+      "m1_spearman": 0.821543878059675,
+      "m2_spearman": 0.7990522522985961,
+      "m1_minus_m0": 0.0,
+      "m2_minus_m0": -0.02249162576107888
+    },
+    "ACH-000624": {
+      "n_drugs": 1413,
+      "m0_spearman": 0.83551526866748,
+      "m1_spearman": 0.83551526866748,
+      "m2_spearman": 0.8035308816399751,
+      "m1_minus_m0": 0.0,
+      "m2_minus_m0": -0.031984387027504946
+    },
+    "ACH-000699": {
+      "n_drugs": 191,
+      "m0_spearman": 0.8007769909456804,
+      "m1_spearman": 0.8007769909456804,
+      "m2_spearman": 0.8039485589491118,
+      "m1_minus_m0": 0.0,
+      "m2_minus_m0": 0.0031715680034313243
+    },
+    "ACH-000711": {
+      "n_drugs": 1075,
+      "m0_spearman": 0.8793281463667793,
+      "m1_spearman": 0.8793281463667793,
+      "m2_spearman": 0.8645258046854379,
+      "m1_minus_m0": 0.0,
+      "m2_minus_m0": -0.014802341681341313
+    },
+    "ACH-000721": {
+      "n_drugs": 770,
+      "m0_spearman": 0.8576276226593021,
+      "m1_spearman": 0.8576276226593021,
+      "m2_spearman": 0.8304442074401664,
+      "m1_minus_m0": 0.0,
+      "m2_minus_m0": -0.027183415219135698
+    },
+    "ACH-000759": {
+      "n_drugs": 1292,
+      "m0_spearman": 0.7521378135576778,
+      "m1_spearman": 0.7521378135576778,
+      "m2_spearman": 0.7453932946214826,
+      "m1_minus_m0": 0.0,
+      "m2_minus_m0": -0.00674451893619521
+    },
+    "ACH-000783": {
+      "n_drugs": 1328,
+      "m0_spearman": 0.7324481680064847,
+      "m1_spearman": 0.7324481680064847,
+      "m2_spearman": 0.6904753596275173,
+      "m1_minus_m0": 0.0,
+      "m2_minus_m0": -0.04197280837896744
+    },
+    "ACH-000849": {
+      "n_drugs": 1422,
+      "m0_spearman": 0.8726373469380998,
+      "m1_spearman": 0.8726373469380998,
+      "m2_spearman": 0.8245903697312859,
+      "m1_minus_m0": 0.0,
+      "m2_minus_m0": -0.048046977206813946
+    },
+    "ACH-000856": {
+      "n_drugs": 1361,
+      "m0_spearman": 0.8469112664599208,
+      "m1_spearman": 0.8469112664599208,
+      "m2_spearman": 0.8261580726586061,
+      "m1_minus_m0": 0.0,
+      "m2_minus_m0": -0.020753193801314684
+    },
+    "ACH-000859": {
+      "n_drugs": 190,
+      "m0_spearman": 0.8502423217056746,
+      "m1_spearman": 0.8502423217056746,
+      "m2_spearman": 0.8409576003439558,
+      "m1_minus_m0": 0.0,
+      "m2_minus_m0": -0.009284721361718762
+    },
+    "ACH-000902": {
+      "n_drugs": 189,
+      "m0_spearman": 0.7376439856905082,
+      "m1_spearman": 0.7376439856905082,
+      "m2_spearman": 0.6944859224892092,
+      "m1_minus_m0": 0.0,
+      "m2_minus_m0": -0.043158063201299
+    },
+    "ACH-000910": {
+      "n_drugs": 191,
+      "m0_spearman": 0.8991932919553035,
+      "m1_spearman": 0.8991932919553035,
+      "m2_spearman": 0.7995323813073933,
+      "m1_minus_m0": 0.0,
+      "m2_minus_m0": -0.09966091064791016
+    },
+    "ACH-000927": {
+      "n_drugs": 1305,
+      "m0_spearman": 0.7662002976591203,
+      "m1_spearman": 0.7662002976591203,
+      "m2_spearman": 0.7601215447793327,
+      "m1_minus_m0": 0.0,
+      "m2_minus_m0": -0.006078752879787652
+    }
+  },
+  "pooled_r2_m0_vs_m2": 0.7756192307733124,
+  "mae_m0_vs_m2": 0.04708116358745526,
+  "deprecated_keys_note": "pooled_r2_m0_vs_m2 and mae_m0_vs_m2 are retired names retained as aliases for pooled_r2_m0_vs_truth and mae_m0_vs_truth; they never compare M0 with M2."
 }

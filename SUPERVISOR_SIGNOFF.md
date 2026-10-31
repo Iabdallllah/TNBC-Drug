@@ -11,7 +11,7 @@ Status: NOT SIGNED (fields blank per rules — do not invent names/signatures/da
 - No edit to catboost_tnbc_v1.cbm, leaderboard.csv, v1.0 rankings.
 
 ## What is claimed and NOT claimed
-- CLAIMED (post-hoc, exploratory): baseline comparison; null selectivity; 76-line correction; zero-JS report; 37/37 tests.
+- CLAIMED (post-hoc, exploratory): baseline comparison; null selectivity; 76-line correction; zero-JS report; 41/41 tests.
 - NOT CLAIMED: validated predictor; validated selective drugs; expression contribution proven; blind design fully validated; any panel kill percentage as an absolute rate.
 
 ## Blinding scope (Phase 4.1 fix-forward)

@@ -461,7 +461,8 @@ def test_defence_report_is_self_contained_and_complete():
                    '3. Selectivity null', '4. The eight-member wet-lab panel',
                    '5. Top-ranked killers', '6. Bliss combination expectations',
                    '7. CTRPv2.1 measured ground truth', '8. Prediction uncertainty',
-                   '9. Validation gates', '10. Sign-off']:
+                   '9. Pre-registered diagnostic', '10. Validation gates',
+                   '11. Sign-off']:
         assert marker in h, marker
     for _, member, _ in defense_report.PANEL:
         assert member in h, f'{member} missing from the defence report'
@@ -944,8 +945,8 @@ def test_diagnostic_label_post_hoc_everywhere():
     assert m2_pl > 0, 'diagnostic CSV lost the real per-line numbers'
     assert m0_pl == pytest.approx(float(d['m0_perline_spearman_mean']))
     assert m2_pl == pytest.approx(float(d['m2_perline_spearman_mean']))
-    assert float(pd.to_numeric(pd.Series([m0['pooled_r2']]), errors='coerce').iloc[0]) == pytest.approx(float(d['pooled_r2_m0_vs_m2']))
-    assert float(pd.to_numeric(pd.Series([m0['mae']]), errors='coerce').iloc[0]) == pytest.approx(float(d['mae_m0_vs_m2']))
+    assert float(pd.to_numeric(pd.Series([m0['pooled_r2']]), errors='coerce').iloc[0]) == pytest.approx(float(d['pooled_r2_m0_vs_truth']))
+    assert float(pd.to_numeric(pd.Series([m0['mae']]), errors='coerce').iloc[0]) == pytest.approx(float(d['mae_m0_vs_truth']))
     assert m1_pl == m0_pl
 
 
@@ -962,7 +963,108 @@ def test_diagnostic_statistic_vs_measured_truth():
     assert m0_pl > 0, 'M0 per-line Spearman vs measured AUC must be positive'
     assert m0_pl != buggy_pl, 'M0 per-line Spearman vs truth must not equal the archived M0-vs-M2 agreement'
     assert m2_pl > 0, 'M2 per-line Spearman vs measured AUC must be positive'
-    assert float(d['mae_m0_vs_m2']) < 0.1067, 'M0 must beat the global-mean model on MAE vs measured AUC'
+    assert float(d['mae_m0_vs_truth']) < 0.1067, 'M0 must beat the global-mean model on MAE vs measured AUC'
+
+
+# ---------- v1.2.5 fold-honest diagnostic construction regression guards ----------
+_DIAG_CACHE = {}
+
+
+def _diag_result():
+    """Run the fold-honest diagnostic without writing artifacts (cached)."""
+    if 'result' not in _DIAG_CACHE:
+        if ROOT not in sys.path:
+            sys.path.insert(0, ROOT)
+        from src.models.diagnostic_run import run_diagnostic
+        _DIAG_CACHE['result'] = run_diagnostic(OUT, write=False)
+    return _DIAG_CACHE['result']
+
+
+def test_diagnostic_pca_line_matrix_unique():
+    """One row per ModelID; no line-rank-as-row-index; no zero-distance distinct lines."""
+    if ROOT not in sys.path:
+        sys.path.insert(0, ROOT)
+    from src.models.diagnostic_run import build_line_matrix, load_dataset
+
+    data = load_dataset(OUT)
+    X, _ = build_line_matrix(data['df'], data['lines'], data['lines'], data['pca_cols'])
+    assert len(X) == 23 and X.index.is_unique
+    assert X.index.tolist() == data['lines']
+    D = np.linalg.norm(X.to_numpy(float)[:, None, :] - X.to_numpy(float)[None, :, :], axis=2)
+    off = D[~np.eye(len(X), dtype=bool)]
+    assert (off > 0).all(), 'distinct lines must have positive PCA distance'
+
+    audit = _diag_result()['construction_audit']['pca_line_matrix']
+    assert audit['n_lines'] == 23
+    assert audit['n_unique_feature_rows'] == 23
+    assert audit['zero_distance_pairs'] == 0
+    assert audit['min_pairwise_distance'] > 0
+
+
+def test_diagnostic_fold_isolation():
+    """No target or same-fold held-out line may enter M0 or the M2 neighbour pool."""
+    res = _diag_result()
+    seen = set()
+    for fold in res['folds']:
+        train = set(fold['train_lines'])
+        held = set(fold['held_out_lines'])
+        assert train.isdisjoint(held)
+        assert set(fold['m0_source_lines']) == train
+        for L, nbrs in fold['neighbours'].items():
+            assert L in held
+            assert len(nbrs) == 5
+            assert set(nbrs).issubset(train)
+            assert set(nbrs).isdisjoint(held)
+        seen |= held
+    assert len(seen) == 23
+    audit = res['construction_audit']['fold_isolation']
+    assert audit['n_folds'] == 5
+    assert audit['same_fold_neighbour_count'] == 0
+    assert audit['target_line_in_m0_source'] is False
+    assert audit['m0_sources_are_training_lines_only'] is True
+
+
+def test_diagnostic_m1_fitted_not_copy():
+    """M1 must be a real RidgeCV fit: same per-line ranking as M0, different R2/MAE."""
+    res = _diag_result()
+    m0 = res['metrics']['M0']
+    m1 = res['metrics']['M1']
+    fit = res['construction_audit']['m1_fit']
+    assert fit['ridge_fitted'] is True
+    assert len(fit['per_fold_alpha']) == 5
+    assert all(np.isfinite(fit['per_fold_alpha']))
+    assert m1['perline_spearman_mean'] == pytest.approx(
+        m0['perline_spearman_mean'], abs=1e-12)
+    assert abs(m1['pooled_r2_vs_truth'] - m0['pooled_r2_vs_truth']) > 1e-9
+    assert abs(m1['mae_vs_truth'] - m0['mae_vs_truth']) > 1e-9
+
+    cd = pd.read_csv(os.path.join(OUT, 'diagnostic_results.csv'))
+    m0r = cd[cd['model'] == 'M0'].iloc[0]
+    m1r = cd[cd['model'] == 'M1'].iloc[0]
+    assert float(m1r['pooled_r2']) != pytest.approx(float(m0r['pooled_r2']))
+    assert float(m1r['mae']) != pytest.approx(float(m0r['mae']))
+
+
+def test_diagnostic_zero_weight_sanity():
+    """Forcing every neighbour weight to zero must return M0 exactly."""
+    res = _diag_result()
+    zs = res['construction_audit']['zero_weight_sanity']
+    assert zs['rows_checked'] > 0
+    assert zs['max_abs_diff_vs_m0'] == 0.0
+    assert zs['exact_equal'] is True
+
+    if ROOT not in sys.path:
+        sys.path.insert(0, ROOT)
+    from src.models.diagnostic_run import build_line_matrix, fold_m0, load_dataset, m2_predict
+
+    data = load_dataset(OUT)
+    fold = res['folds'][0]
+    X, _ = build_line_matrix(data['df'], data['lines'], fold['train_lines'], data['pca_cols'])
+    m0, _, _ = fold_m0(data['auc'], data['drugs'], fold['train_lines'])
+    L = fold['held_out_lines'][0]
+    z, _ = m2_predict(L, fold['train_lines'], X, data['auc'], m0, data['drugs'],
+                      zero_weights=True)
+    assert z and all(z[d] == m0[d] for d in z)
 
 
 if __name__ == '__main__':
