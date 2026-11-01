@@ -52,7 +52,7 @@
              color: #868e96; font-size: 9.5px; }
     </style></head><body>
 <h1>FerroSelect — TNBC Drug-Response Predictor</h1>
-<div class="sub">Defence executive report · <b>v1.1 dated addendum</b> · generated 2026-10-31 16:13 UTC ·
+<div class="sub">Defence executive report · <b>v1.1 dated addendum</b> · generated 2026-11-01 11:47 UTC ·
 model version <b>catboost-v1.0</b></div>
 <div class="callout"><b>Document status.</b> v1.1 (2026-10-29) supersedes the v1.0
 briefing as a dated addendum; it does not rewrite v1.0. The v1.0 artifacts are preserved
@@ -561,8 +561,8 @@ pre-registered hypothesis — the plate decides.</p>
 <p>The diagnostic uses only the <b>23 training lines</b> (holdout excluded) with strict
 <b>GroupKFold(5)</b>: per-drug means, PCA scaling, the RidgeCV line-offset fit and the M2
 neighbour pool all use fold-training lines only. It is exploratory and is not comparable to
-holdout metrics. Pre-registered settings: k=5, first 10 PCs, bootstrap seed 42 with 2,000
-resamples.</p>
+holdout metrics. Pre-registered settings: k=5, M1 uses 62 PCA features, M2 uses the first
+10 PCs, bootstrap seed 42 with 2,000 resamples.</p>
 <table class="dataframe data">
   <thead>
     <tr style="text-align: right;">
@@ -580,13 +580,13 @@ resamples.</p>
       <td>0.0471</td>
     </tr>
     <tr>
-      <td>M1: M0 + fitted RidgeCV line offset</td>
+      <td>M1: M0 + fitted RidgeCV line offset (62 PCs)</td>
       <td>0.8199</td>
-      <td>0.7768</td>
-      <td>0.0477</td>
+      <td>0.7763</td>
+      <td>0.0480</td>
     </tr>
     <tr>
-      <td>M2: M0 + kNN M0-residual adjustment</td>
+      <td>M2: M0 + kNN M0-residual adjustment (first 10 PCs)</td>
       <td>0.7928</td>
       <td>0.7550</td>
       <td>0.0491</td>
@@ -601,13 +601,14 @@ The paired M1−M0 difference is <b>0.0000</b>
 (95% CI -0.0373 to -0.0176): <b>M2 does not beat M0</b>, so
 the pre-registered success criterion (95% CI above zero) is not met. This is no evidence of
 expression signal, not proof of absence. M3 was skipped for runtime.</p>
-<div class="note"><b>v1.2.5 construction fix (transparent changelog).</b> The v1.2.4
+<div class="note"><b>v1.2.5 construction fix and v1.2.6 preregistration alignment (transparent changelog).</b> The v1.2.4
 diagnostic had four construction defects found in audit: a line-rank value was used as a row
 index into the drug-line matrix (3/23 mappings correct, zero-distance duplicates); M2
 borrowed a within-line-centred AUC instead of the M0 residual; there was no GroupKFold
-isolation; and M1 was never fitted. v1.2.5 corrects the construction without changing
-pre-registered settings (k=5, first 10 PCs, GroupKFold(5), bootstrap seed 42 with 2,000
-resamples, same criterion). Audit: 23/
+isolation; and M1 was never fitted. v1.2.5 corrects the construction. v1.2.6 restores M1's
+pre-registered 62 PCA features while M2 keeps the pre-registered first 10 PCs. k=5,
+GroupKFold(5), bootstrap seed 42 with 2,000 resamples and the success criterion are
+unchanged. Audit: 23/
 23 unique line rows,
 0 zero-distance distinct-line pairs,
 0 same-fold neighbours, target line absent
@@ -650,10 +651,12 @@ ModelIDs explained</td><td>§1, <code>audit_summary.json</code>,
 <code>expression_line_audit.json</code></td></tr>
 <tr><td><code>quarantined</code> column added to the four legacy NAC CSVs; Erastin /
 Cloperastine regression test</td><td>Data layer, tests</td></tr>
-<tr><td>Four API tests added; suite count reported from
+<tr><td>Four API tests brought the suite from 33 to 37; four diagnostic construction
+tests brought it from 37 to 41; count reported from
 <code>validation_status.json</code></td><td>§10, tests</td></tr>
-<tr><td>v1.2.5 fold-honest diagnostic construction fix: strict GroupKFold(5), line-keyed
-PCA, fitted RidgeCV M1, M0-residual M2; M2 still does not beat M0 (paired 95% CI
+<tr><td>v1.2.5 fold-honest diagnostic construction fix; v1.2.6 restores M1's
+pre-registered 62 PCA features (M2 remains first 10), strict GroupKFold(5), fitted
+RidgeCV M1, M0-residual M2; M2 still does not beat M0 (paired 95% CI
 [−0.0373, −0.0176])</td><td>§9, dashboard diagnostic panel,
 <code>diagnostic_results.*</code></td></tr>
 </table>

@@ -1,10 +1,10 @@
 {
-  "version": "v1.2.5",
+  "version": "v1.2.6",
   "label": "post-hoc, exploratory, 23 training lines, GroupKFold(5)",
-  "construction": "fold-honest GroupKFold(5); one-row-per-line PCA keyed by ModelID; M0 means fitted on fold-training lines; M1 RidgeCV fitted; M2 kNN on training-only neighbours using M0 residuals",
+  "construction": "fold-honest GroupKFold(5); one-row-per-line PCA keyed by ModelID; M0 means fitted on fold-training lines; M1 RidgeCV fitted on all 62 pre-registered PCs; M2 kNN on the first 10 PCs using training-only neighbours and M0 residuals",
   "models": {
     "M0": "per-drug mean fitted on fold-training lines (global-mean fallback)",
-    "M1": "M0 + per-line RidgeCV offset fitted on fold-training line residuals; constant per held-out line",
+    "M1": "M0 + per-line RidgeCV offset fitted on fold-training line residuals using 62 PCs; constant per held-out line",
     "M2": "M0 + kNN (k=5, Euclidean on first 10 PCs, inverse-distance weights) over fold-training neighbours, borrowing M0 residuals",
     "M3": "skipped (runtime budget)"
   },
@@ -21,6 +21,7 @@
     "pca_8",
     "pca_9"
   ],
+  "m1_n_pcs": 62,
   "training_lines": 23,
   "folds": [
     {
@@ -77,22 +78,23 @@
       "m1_fit": {
         "ridge_fitted": true,
         "estimator": "sklearn.linear_model.RidgeCV",
+        "n_features": 62,
         "alpha_grid": [
           0.1,
           1.0,
           10.0
         ],
-        "alpha": 10.0,
+        "alpha": 1.0,
         "intercept": -0.0050472799230495274,
-        "coef_abs_sum": 0.03147270703741955,
-        "train_r2": 0.5164378919231818,
+        "coef_abs_sum": 0.07753062634482519,
+        "train_r2": 0.9997778303894252,
         "r_train_range": [
           -0.05603425996729473,
           0.03989700266077008
         ],
         "r_hat_range": [
-          -0.034540639020321506,
-          0.006109394623050027
+          -0.013150587417169849,
+          0.0018715367853750272
         ]
       },
       "neighbours": {
@@ -224,22 +226,23 @@
       "m1_fit": {
         "ridge_fitted": true,
         "estimator": "sklearn.linear_model.RidgeCV",
+        "n_features": 62,
         "alpha_grid": [
           0.1,
           1.0,
           10.0
         ],
-        "alpha": 10.0,
+        "alpha": 0.1,
         "intercept": -0.0055695367229866895,
-        "coef_abs_sum": 0.027484478629655047,
-        "train_r2": 0.47205910331851797,
+        "coef_abs_sum": 0.08289949927931052,
+        "train_r2": 0.9999979970178083,
         "r_train_range": [
           -0.053060417047500315,
           0.04084555988340095
         ],
         "r_hat_range": [
-          -0.015045965790882073,
-          0.008687810866769676
+          -0.013383803450697609,
+          -0.00035636378741913093
         ]
       },
       "neighbours": {
@@ -371,22 +374,23 @@
       "m1_fit": {
         "ridge_fitted": true,
         "estimator": "sklearn.linear_model.RidgeCV",
+        "n_features": 62,
         "alpha_grid": [
           0.1,
           1.0,
           10.0
         ],
         "alpha": 10.0,
-        "intercept": -0.0031856939447928606,
-        "coef_abs_sum": 0.02589958548856172,
-        "train_r2": 0.5882496198670135,
+        "intercept": -0.003185693944792861,
+        "coef_abs_sum": 0.0555027851645411,
+        "train_r2": 0.9769734065668384,
         "r_train_range": [
           -0.04634145465522471,
           0.03104108189187509
         ],
         "r_hat_range": [
-          -0.0057320384009187896,
-          0.014036836088746051
+          -0.006501703716440974,
+          0.006458867492904199
         ]
       },
       "neighbours": {
@@ -519,22 +523,23 @@
       "m1_fit": {
         "ridge_fitted": true,
         "estimator": "sklearn.linear_model.RidgeCV",
+        "n_features": 62,
         "alpha_grid": [
           0.1,
           1.0,
           10.0
         ],
-        "alpha": 10.0,
+        "alpha": 0.1,
         "intercept": -0.006395295863501137,
-        "coef_abs_sum": 0.0341135210352804,
-        "train_r2": 0.5100683171193059,
+        "coef_abs_sum": 0.08202838042094575,
+        "train_r2": 0.9999979557774947,
         "r_train_range": [
           -0.05009872562126535,
           0.03910716238743672
         ],
         "r_hat_range": [
-          -0.019626833869957713,
-          0.010577401813956187
+          -0.01507246603203466,
+          -0.003991473432631933
         ]
       },
       "neighbours": {
@@ -653,22 +658,23 @@
       "m1_fit": {
         "ridge_fitted": true,
         "estimator": "sklearn.linear_model.RidgeCV",
+        "n_features": 62,
         "alpha_grid": [
           0.1,
           1.0,
           10.0
         ],
-        "alpha": 10.0,
-        "intercept": -0.003929023640568888,
-        "coef_abs_sum": 0.02470470101225999,
-        "train_r2": 0.3827823342848957,
+        "alpha": 0.1,
+        "intercept": -0.003929023640568889,
+        "coef_abs_sum": 0.07658814638481194,
+        "train_r2": 0.9999981664572697,
         "r_train_range": [
           -0.054884319344542784,
           0.037604455914394104
         ],
         "r_hat_range": [
-          -0.008189853369581437,
-          0.009277469136728386
+          -0.009534715996234011,
+          0.008529642779704374
         ]
       },
       "neighbours": {
@@ -751,8 +757,8 @@
       },
       "M1": {
         "perline_spearman_mean": 0.8303295367815728,
-        "pooled_r2_vs_truth": 0.7885644605578073,
-        "mae_vs_truth": 0.047764550375264274
+        "pooled_r2_vs_truth": 0.7866088617437995,
+        "mae_vs_truth": 0.0479368261962225
       },
       "M2": {
         "perline_spearman_mean": 0.8012278007227838,
@@ -777,8 +783,8 @@
       },
       "M1": {
         "perline_spearman_mean": 0.7959528808259603,
-        "pooled_r2_vs_truth": 0.754640455409099,
-        "mae_vs_truth": 0.049006144676670256
+        "pooled_r2_vs_truth": 0.753280712988282,
+        "mae_vs_truth": 0.04976988505783135
       },
       "M2": {
         "perline_spearman_mean": 0.7679159194492383,
@@ -803,8 +809,8 @@
       },
       "M1": {
         "perline_spearman_mean": 0.8229005001557812,
-        "pooled_r2_vs_truth": 0.7590580785792717,
-        "mae_vs_truth": 0.048524488688404685
+        "pooled_r2_vs_truth": 0.7612784830958232,
+        "mae_vs_truth": 0.048673886477530605
       },
       "M2": {
         "perline_spearman_mean": 0.7785099621155045,
@@ -828,8 +834,8 @@
       },
       "M1": {
         "perline_spearman_mean": 0.8431386682777768,
-        "pooled_r2_vs_truth": 0.8247921213935901,
-        "mae_vs_truth": 0.044860546377047374
+        "pooled_r2_vs_truth": 0.8208052675379826,
+        "mae_vs_truth": 0.045205892098961475
       },
       "M2": {
         "perline_spearman_mean": 0.8269416497615626,
@@ -853,8 +859,8 @@
       },
       "M1": {
         "perline_spearman_mean": 0.8097146992907628,
-        "pooled_r2_vs_truth": 0.778477785027743,
-        "mae_vs_truth": 0.04703966077813569
+        "pooled_r2_vs_truth": 0.7799206432608683,
+        "mae_vs_truth": 0.04709336359796973
       },
       "M2": {
         "perline_spearman_mean": 0.7970460632318719,
@@ -871,8 +877,8 @@
     },
     "M1": {
       "perline_spearman_mean": 0.8198838286561186,
-      "pooled_r2_vs_truth": 0.7767898451125328,
-      "mae_vs_truth": 0.04773626445313294
+      "pooled_r2_vs_truth": 0.7763197015416952,
+      "mae_vs_truth": 0.04804935889530049
     },
     "M2": {
       "perline_spearman_mean": 0.792792141887451,
@@ -885,18 +891,18 @@
   "m2_perline_spearman_mean": 0.792792141887451,
   "pooled_r2_m0_vs_truth": 0.7756192307733124,
   "mae_m0_vs_truth": 0.04708116358745526,
-  "pooled_r2_m1_vs_truth": 0.7767898451125328,
-  "mae_m1_vs_truth": 0.04773626445313294,
+  "pooled_r2_m1_vs_truth": 0.7763197015416952,
+  "mae_m1_vs_truth": 0.04804935889530049,
   "pooled_r2_m2_vs_truth": 0.7549827859618564,
   "mae_m2_vs_truth": 0.04908331798711706,
   "pooled_r2_vs_truth": {
     "M0": 0.7756192307733124,
-    "M1": 0.7767898451125328,
+    "M1": 0.7763197015416952,
     "M2": 0.7549827859618564
   },
   "mae_vs_truth": {
     "M0": 0.04708116358745526,
-    "M1": 0.04773626445313294,
+    "M1": 0.04804935889530049,
     "M2": 0.04908331798711706
   },
   "paired_bootstrap_lines_2000": {
@@ -943,16 +949,10 @@
     "status": "skipped",
     "reason": "runtime budget exceeded for CatBoost-800 on the same folds"
   },
-  "honest_note": "computed over the 23 training lines only; no holdout lines used; labelled post-hoc, exploratory; not comparable to holdout metrics. DEVIATION (v1.2.5): construction defects found post-run (line-rank used as row index, within-line-centred M2 residual, no GroupKFold isolation, M1 not fitted) were corrected; pre-registered k=5, first 10 PCs, GroupKFold(5), bootstrap seed 42/2,000 resamples and the success criterion are unchanged.",
-  "holdout_modelids_excluded": [
-    "ACH-000019",
-    "ACH-000097",
-    "ACH-000212",
-    "ACH-000248",
-    "ACH-000643",
-    "ACH-000768",
-    "ACH-000934"
-  ],
+  "honest_note": "computed over the 23 training lines only; no holdout lines used; labelled post-hoc, exploratory; not comparable to holdout metrics. DEVIATION (v1.2.5): construction defects found post-run (line-rank used as row index, within-line-centred M2 residual, no GroupKFold isolation, M1 not fitted) were corrected. v1.2.6 ALIGNMENT: M1 uses the pre-registered 62 PCA features and M2 uses the pre-registered first 10 PCs; k=5, GroupKFold(5), bootstrap seed 42/2,000 resamples and the success criterion are unchanged.",
+  "ndcg10_note": "not computed; pre-registered graded-relevance metric, not used for any claim",
+  "recall10_note": "not computed; pre-registered binary AUC<0.3 metric, not used for any claim",
+  "holdout_lines_excluded_count": 7,
   "construction_audit": {
     "pca_line_matrix": {
       "n_lines": 23,
@@ -1004,22 +1004,23 @@
     },
     "m1_fit": {
       "ridge_fitted": true,
+      "n_features": 62,
       "alpha_grid": [
         0.1,
         1.0,
         10.0
       ],
       "per_fold_alpha": [
+        1.0,
+        0.1,
         10.0,
-        10.0,
-        10.0,
-        10.0,
-        10.0
+        0.1,
+        0.1
       ],
       "perline_spearman_equals_m0": true,
       "max_abs_perline_spearman_diff_vs_m0": 0.0,
-      "pooled_r2_minus_m0": 0.0011706143392203883,
-      "mae_minus_m0": 0.0006551008656776811
+      "pooled_r2_minus_m0": 0.0007004707683827549,
+      "mae_minus_m0": 0.0009681953078452266
     },
     "zero_weight_sanity": {
       "rows_checked": 23658,

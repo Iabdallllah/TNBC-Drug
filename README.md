@@ -20,6 +20,7 @@ luminal control **MCF7** — first computationally, then in the wet lab.
 **v1.2-defense** (7b04f0e) superseded by **v1.2.1-defense** (73d412e) — fix-forward only, no sealed artifact change. (The tag was amended once from 5d398fe; the amend touched only this note.)
 **v1.2.2-defense** — final gap closure: BLIND_MODE suppression enforced in the dashboard and exported report, diagnostic panel added; sealed artifact unchanged.
 **v1.2.5** — diagnostic construction fix-forward: strict GroupKFold(5), line-keyed PCA, fitted RidgeCV M1, M0-residual M2; M2 still does not beat M0 (paired 95% CI [−0.0373, −0.0176]); 41/41 tests; sealed artifact unchanged.
+**v1.2.6** — preregistration alignment: M1 uses all 62 PCA features (M2 remains first 10); dashboard CI tooltip and REPORT section/test-count attribution corrected; 41/41 tests; sealed artifact unchanged.
 
 > “selective” calls are relabelled **“Predicted selective (unvalidated)”**. The
 > defensible contributions are the leakage/audit machinery, the external CTRPv2 RSL3
@@ -321,7 +322,7 @@ against predictions (Spearman) with per-drug Selectivity Indexes.
 
 | Stream | Status |
 |---|---|
-| ML / Data / API / UI | **Done with a negative model result**: pipeline, leakage audit, rankings, combos, API, **41/41 tests** (read live from `outputs_local/validation_status.json`), seven-tab dashboard, zero-JS v1.1 report |
+| ML / Data / API / UI | **Done with a negative model result**: pipeline, leakage audit, rankings, combos, API, **41/41 tests** (recorded in `outputs_local/validation_status.json`), seven-tab dashboard, zero-JS v1.1 report |
 | Baseline / selectivity audit | **Done (post-hoc, exploratory)**: per-drug mean beats CatBoost; selectivity null incl. restricted check; 76-line correction |
 | Bioinformatics | Pending: confirm distinct targets/pathways for shortlisted pairs |
 | Wet-lab | Pending: MTT results (`raw_absorbance.csv`) for the panel + 2 pairs |

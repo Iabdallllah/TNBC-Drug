@@ -1644,9 +1644,9 @@ with tab_model:
              'rescue — if it does, the death was apoptosis.')
 
     st.subheader('Pre-registered diagnostic (post-hoc, exploratory)')
-    st.caption('v1.2.5 fold-honest construction: strict GroupKFold(5); M0 means, PCA scaling, '
-               'M1 fitting and M2 neighbours use training folds only. Post-hoc, exploratory, '
-               '23 training lines, no holdout use; not comparable to holdout metrics.')
+    st.caption('v1.2.6 preregistration-aligned construction: strict GroupKFold(5); M0 means and '
+               'M2 neighbours use training folds only; M1 RidgeCV uses 62 PCs, M2 kNN uses the first 10. '
+               'Post-hoc, exploratory, 23 training lines, no holdout use; not comparable to holdout metrics.')
     if diagnostic:
         metrics = diagnostic.get('metrics') or {}
         def _dm(model, key, default=float('nan')):
@@ -1661,7 +1661,7 @@ with tab_model:
         d2.metric('M1 per-line Spearman', f"{_dm('M1', 'perline_spearman_mean'):.3f}")
         d3.metric('M2 per-line Spearman', f"{_dm('M2', 'perline_spearman_mean'):.3f}")
         d4.metric('M2 − M0 95% CI', f"[{ci[0]:.3f}, {ci[1]:.3f}]",
-                  help='CI spans zero → no evidence of expression signal.')
+                  help='95% CI is <= 0 (pre-registered criterion > 0 not met) → no evidence of expression signal.')
         st.caption(
             f"M0 R²={_dm('M0', 'pooled_r2_vs_truth'):.3f}, MAE={_dm('M0', 'mae_vs_truth'):.3f} · "
             f"M1 R²={_dm('M1', 'pooled_r2_vs_truth'):.3f}, MAE={_dm('M1', 'mae_vs_truth'):.3f} · "
@@ -1678,7 +1678,8 @@ with tab_model:
             f"zero-distance pairs={pca.get('zero_distance_pairs', '—')} · "
             f"same-fold neighbours={iso.get('same_fold_neighbour_count', '—')} · "
             f"zero-weight max|Δ|={zw.get('max_abs_diff_vs_m0', '—')}. "
-            f"k={diagnostic.get('k')} · PCs={len(diagnostic.get('pcs_used', []))} · "
+            f"k={diagnostic.get('k')} · M1 PCs={diagnostic.get('m1_n_pcs', '—')} · "
+            f"M2 PCs={len(diagnostic.get('pcs_used', []))} · "
             f"M3 skipped ({diagnostic.get('m3', {}).get('reason', 'n/a')}).")
     else:
         st.info('`diagnostic_results.json` is not in this deployment.')

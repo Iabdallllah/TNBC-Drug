@@ -1031,6 +1031,9 @@ def test_diagnostic_m1_fitted_not_copy():
     m1 = res['metrics']['M1']
     fit = res['construction_audit']['m1_fit']
     assert fit['ridge_fitted'] is True
+    assert fit['n_features'] == 62
+    assert res['m1_n_pcs'] == 62
+    assert len(res['pcs_used']) == 10
     assert len(fit['per_fold_alpha']) == 5
     assert all(np.isfinite(fit['per_fold_alpha']))
     assert m1['perline_spearman_mean'] == pytest.approx(

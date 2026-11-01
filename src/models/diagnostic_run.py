@@ -1,11 +1,13 @@
-"""Phase 3B diagnostic runner, v1.2.5 fold-honest construction.
+"""Phase 3B diagnostic runner, v1.2.6 preregistration-aligned construction.
 
 M0: per-drug mean AUC from the fold-training lines only (global-mean fallback).
-M1: M0 + per-line RidgeCV offset fitted on fold-training lines; the offset is
-    constant per held-out line, so its per-line Spearman equals M0 by design,
-    but its pooled R2/MAE are genuinely fitted and reported.
-M2: M0 + kNN (k=5, Euclidean on first 10 PCs, inverse-distance weights) that
-    borrows the neighbour's fold-honest M0 residual AUC(d,L2) - M0_fold(d).
+M1: M0 + per-line RidgeCV offset fitted on fold-training lines using all 62
+    pre-registered PCA features (pca_0..pca_61); the offset is constant per
+    held-out line, so its per-line Spearman equals M0 by design, but its pooled
+    R2/MAE are genuinely fitted and reported.
+M2: M0 + kNN (k=5, Euclidean on the pre-registered first 10 PCs,
+    inverse-distance weights) that borrows the neighbour's fold-honest M0
+    residual AUC(d,L2) - M0_fold(d).
 
 Strict isolation: GroupKFold(5) over the 23 training lines. Per-drug means,
 PCA scaling, M1 fitting and the M2 neighbour pool all use fold-training lines
@@ -13,12 +15,13 @@ only. No holdout line is used.
 
 Writes outputs_local/diagnostic_results.{json,csv}; prints the diagnostic table.
 
-The pre-registered hyperparameters are unchanged: k=5, first 10 PCs,
+Pre-registered settings: k=5, M1 uses 62 PCA features, M2 uses the first 10 PCs,
 GroupKFold(5), bootstrap seed 42 with 2,000 resamples, and the success criterion
 "paired M2-M0 per-line Spearman 95% CI above 0".
 
 Deviation recorded in the output: construction defects were found post-run and
-corrected in v1.2.5; the success criterion is unchanged.
+corrected in v1.2.5; v1.2.6 restores M1's pre-registered 62 PCA features while
+keeping M2 on the first 10 PCs. The success criterion is unchanged.
 """
 import csv
 import json
@@ -35,7 +38,8 @@ ROOT = Path(__file__).resolve().parent.parent.parent
 OUT = ROOT / "outputs_local"
 LABEL = "post-hoc, exploratory, 23 training lines, GroupKFold(5)"
 K = 5
-N_PCS = 10
+N_PCS = 10          # M2 only: pre-registered first 10 PCs
+M1_N_PCS = 62       # M1: all pre-registered PCA features
 BOOTSTRAP_SEED = 42
 N_BOOTSTRAP = 2000
 M1_ALPHAS = (0.1, 1.0, 10.0)  # sklearn RidgeCV default grid; prereg left values open
@@ -48,9 +52,16 @@ def load_dataset(out_dir=OUT):
     audit = json.load(open(Path(out_dir) / "expression_line_audit.json"))
     holdout = set(audit["ml_holdout_ids"])
     lines = sorted(set(df["ModelID"]) - holdout)
-    pca_cols = [c for c in df.columns if c.startswith("pca_")][:N_PCS]
+    all_pca = sorted(
+        (c for c in df.columns if c.startswith("pca_")),
+        key=lambda c: int(c.split("_", 1)[1]),
+    )
+    m1_pca_cols = all_pca[:M1_N_PCS]
+    pca_cols = m1_pca_cols[:N_PCS]
+    if len(m1_pca_cols) != M1_N_PCS:
+        raise ValueError(f"expected {M1_N_PCS} PCA columns for M1, found {len(m1_pca_cols)}")
     if len(pca_cols) != N_PCS:
-        raise ValueError(f"expected {N_PCS} PCA columns, found {len(pca_cols)}")
+        raise ValueError(f"expected {N_PCS} PCA columns for M2, found {len(pca_cols)}")
     auc = {
         (str(r.drug_id), str(r.ModelID)): float(r.auc)
         for r in df.itertuples(index=False)
@@ -61,6 +72,7 @@ def load_dataset(out_dir=OUT):
         "holdout": holdout,
         "lines": lines,
         "pca_cols": pca_cols,
+        "m1_pca_cols": m1_pca_cols,
         "auc": auc,
         "drugs": drugs,
     }
@@ -128,6 +140,7 @@ def fit_m1(X, train_lines, held_lines, auc, m0, drugs):
     fit = {
         "ridge_fitted": True,
         "estimator": "sklearn.linear_model.RidgeCV",
+        "n_features": int(X.shape[1]),
         "alpha_grid": [float(a) for a in M1_ALPHAS],
         "alpha": float(model.alpha_),
         "intercept": float(model.intercept_),
@@ -183,6 +196,7 @@ def run_diagnostic(out_dir=OUT, write=True):
     holdout = data["holdout"]
     lines = data["lines"]
     pca_cols = data["pca_cols"]
+    m1_pca_cols = data["m1_pca_cols"]
     auc = data["auc"]
     drugs = data["drugs"]
 
@@ -204,8 +218,9 @@ def run_diagnostic(out_dir=OUT, write=True):
         train_lines = fold["train_lines"]
         held_lines = fold["held_out_lines"]
         X, _scaler = build_line_matrix(df, lines, train_lines, pca_cols)
+        X_m1, _scaler_m1 = build_line_matrix(df, lines, train_lines, m1_pca_cols)
         m0, global_mean, n_fallback = fold_m0(auc, drugs, train_lines)
-        m1_preds, m1_fit = fit_m1(X, train_lines, held_lines, auc, m0, drugs)
+        m1_preds, m1_fit = fit_m1(X_m1, train_lines, held_lines, auc, m0, drugs)
 
         neighbours = {}
         neighbour_distances = {}
@@ -327,6 +342,7 @@ def run_diagnostic(out_dir=OUT, write=True):
 
     m1_audit = {
         "ridge_fitted": True,
+        "n_features": int(len(m1_pca_cols)),
         "alpha_grid": [float(a) for a in M1_ALPHAS],
         "per_fold_alpha": [float(f["m1_fit"]["alpha"]) for f in fold_audit],
         "perline_spearman_equals_m0": m1_equal,
@@ -351,21 +367,23 @@ def run_diagnostic(out_dir=OUT, write=True):
     }
 
     results = {
-        "version": "v1.2.5",
+        "version": "v1.2.6",
         "label": LABEL,
         "construction": (
             "fold-honest GroupKFold(5); one-row-per-line PCA keyed by ModelID; "
-            "M0 means fitted on fold-training lines; M1 RidgeCV fitted; "
-            "M2 kNN on training-only neighbours using M0 residuals"
+            "M0 means fitted on fold-training lines; M1 RidgeCV fitted on all 62 "
+            "pre-registered PCs; M2 kNN on the first 10 PCs using training-only "
+            "neighbours and M0 residuals"
         ),
         "models": {
             "M0": "per-drug mean fitted on fold-training lines (global-mean fallback)",
-            "M1": "M0 + per-line RidgeCV offset fitted on fold-training line residuals; constant per held-out line",
+            "M1": "M0 + per-line RidgeCV offset fitted on fold-training line residuals using 62 PCs; constant per held-out line",
             "M2": "M0 + kNN (k=5, Euclidean on first 10 PCs, inverse-distance weights) over fold-training neighbours, borrowing M0 residuals",
             "M3": "skipped (runtime budget)",
         },
         "k": int(K),
         "pcs_used": list(pca_cols),
+        "m1_n_pcs": int(len(m1_pca_cols)),
         "training_lines": int(len(lines)),
         "folds": fold_audit,
         "fold_metrics": fold_metrics,
@@ -400,10 +418,17 @@ def run_diagnostic(out_dir=OUT, write=True):
             "computed over the 23 training lines only; no holdout lines used; labelled post-hoc, exploratory; "
             "not comparable to holdout metrics. DEVIATION (v1.2.5): construction defects found post-run "
             "(line-rank used as row index, within-line-centred M2 residual, no GroupKFold isolation, M1 not fitted) "
-            "were corrected; pre-registered k=5, first 10 PCs, GroupKFold(5), bootstrap seed 42/2,000 resamples and "
+            "were corrected. v1.2.6 ALIGNMENT: M1 uses the pre-registered 62 PCA features and M2 uses the "
+            "pre-registered first 10 PCs; k=5, GroupKFold(5), bootstrap seed 42/2,000 resamples and "
             "the success criterion are unchanged."
         ),
-        "holdout_modelids_excluded": sorted(holdout),
+        "ndcg10_note": (
+            "not computed; pre-registered graded-relevance metric, not used for any claim"
+        ),
+        "recall10_note": (
+            "not computed; pre-registered binary AUC<0.3 metric, not used for any claim"
+        ),
+        "holdout_lines_excluded_count": int(len(holdout)),
         "construction_audit": {
             "pca_line_matrix": pca_audit,
             "fold_isolation": fold_isolation,
@@ -455,7 +480,7 @@ def main():
     results = run_diagnostic(OUT, write=True)
     m = results["metrics"]
     pb = results["paired_bootstrap_lines_2000"]
-    print("DIAGNOSTIC TABLE v1.2.5 (post-hoc, exploratory, 23 training lines, GroupKFold(5), not comparable to holdout metrics)")
+    print("DIAGNOSTIC TABLE v1.2.6 (post-hoc, exploratory, 23 training lines, GroupKFold(5), not comparable to holdout metrics)")
     for name in ("M0", "M1", "M2"):
         print(
             f"{name}: per-line Spearman={m[name]['perline_spearman_mean']:.6f}  "
@@ -463,6 +488,7 @@ def main():
             f"MAE vs truth={m[name]['mae_vs_truth']:.6f}"
         )
     print("M1 per-line Spearman == M0 (empirical):", results["m1_equals_m0_perline_spearman"])
+    print("M1 PCA features:", results["m1_n_pcs"], "| M2 PCA features:", len(results["pcs_used"]))
     print("M1 RidgeCV per-fold alpha:", [f['m1_fit']['alpha'] for f in results['folds']])
     print("paired M1-M0 per-line Spearman mean / 95% CI:",
           pb["m1_minus_m0"]["mean"], pb["m1_minus_m0"]["ci_95"])

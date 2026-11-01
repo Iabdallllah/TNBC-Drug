@@ -262,8 +262,8 @@ def build_defense_report(out_dir, blind=None):
     diag_metrics = diagnostic.get('metrics') or {}
     diag_rows = []
     for key, desc in [('M0', 'Fold-training per-drug mean'),
-                      ('M1', 'M0 + fitted RidgeCV line offset'),
-                      ('M2', 'M0 + kNN M0-residual adjustment')]:
+                      ('M1', 'M0 + fitted RidgeCV line offset (62 PCs)'),
+                      ('M2', 'M0 + kNN M0-residual adjustment (first 10 PCs)')]:
         dm = diag_metrics.get(key) or {}
         diag_rows.append({
             'Model': f'{key}: {desc}',
@@ -572,8 +572,8 @@ pre-registered hypothesis — the plate decides.</p>
 <p>The diagnostic uses only the <b>23 training lines</b> (holdout excluded) with strict
 <b>GroupKFold(5)</b>: per-drug means, PCA scaling, the RidgeCV line-offset fit and the M2
 neighbour pool all use fold-training lines only. It is exploratory and is not comparable to
-holdout metrics. Pre-registered settings: k=5, first 10 PCs, bootstrap seed 42 with 2,000
-resamples.</p>
+holdout metrics. Pre-registered settings: k=5, M1 uses 62 PCA features, M2 uses the first
+10 PCs, bootstrap seed 42 with 2,000 resamples.</p>
 {_table(diag_df, nd=4)}
 <p>M1’s per-line Spearman equals M0 by construction because its fitted RidgeCV offset is
 constant within a held-out line, while its pooled R²/MAE are fitted values, not copies of M0.
@@ -583,13 +583,14 @@ The paired M1−M0 difference is <b>{_fmt(diag_m1pb.get('mean'), 4)}</b>
 (95% CI {_fmt(diag_m2_ci[0], 4)} to {_fmt(diag_m2_ci[1], 4)}): <b>M2 does not beat M0</b>, so
 the pre-registered success criterion (95% CI above zero) is not met. This is no evidence of
 expression signal, not proof of absence. M3 was skipped for runtime.</p>
-<div class="note"><b>v1.2.5 construction fix (transparent changelog).</b> The v1.2.4
+<div class="note"><b>v1.2.5 construction fix and v1.2.6 preregistration alignment (transparent changelog).</b> The v1.2.4
 diagnostic had four construction defects found in audit: a line-rank value was used as a row
 index into the drug-line matrix (3/23 mappings correct, zero-distance duplicates); M2
 borrowed a within-line-centred AUC instead of the M0 residual; there was no GroupKFold
-isolation; and M1 was never fitted. v1.2.5 corrects the construction without changing
-pre-registered settings (k=5, first 10 PCs, GroupKFold(5), bootstrap seed 42 with 2,000
-resamples, same criterion). Audit: {_fmt(diag_pca.get('n_unique_feature_rows'))}/
+isolation; and M1 was never fitted. v1.2.5 corrects the construction. v1.2.6 restores M1's
+pre-registered 62 PCA features while M2 keeps the pre-registered first 10 PCs. k=5,
+GroupKFold(5), bootstrap seed 42 with 2,000 resamples and the success criterion are
+unchanged. Audit: {_fmt(diag_pca.get('n_unique_feature_rows'))}/
 {_fmt(diag_pca.get('n_lines'))} unique line rows,
 {_fmt(diag_pca.get('zero_distance_pairs'))} zero-distance distinct-line pairs,
 {_fmt(diag_iso.get('same_fold_neighbour_count'))} same-fold neighbours, target line absent
@@ -659,10 +660,12 @@ ModelIDs explained</td><td>§1, <code>audit_summary.json</code>,
 <code>expression_line_audit.json</code></td></tr>
 <tr><td><code>quarantined</code> column added to the four legacy NAC CSVs; Erastin /
 Cloperastine regression test</td><td>Data layer, tests</td></tr>
-<tr><td>Four API tests added; suite count reported from
+<tr><td>Four API tests brought the suite from 33 to 37; four diagnostic construction
+tests brought it from 37 to 41; count reported from
 <code>validation_status.json</code></td><td>§10, tests</td></tr>
-<tr><td>v1.2.5 fold-honest diagnostic construction fix: strict GroupKFold(5), line-keyed
-PCA, fitted RidgeCV M1, M0-residual M2; M2 still does not beat M0 (paired 95% CI
+<tr><td>v1.2.5 fold-honest diagnostic construction fix; v1.2.6 restores M1's
+pre-registered 62 PCA features (M2 remains first 10), strict GroupKFold(5), fitted
+RidgeCV M1, M0-residual M2; M2 still does not beat M0 (paired 95% CI
 [−0.0373, −0.0176])</td><td>§9, dashboard diagnostic panel,
 <code>diagnostic_results.*</code></td></tr>
 </table>

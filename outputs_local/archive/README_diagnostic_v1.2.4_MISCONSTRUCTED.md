@@ -16,4 +16,6 @@ construction was still wrong:
    all 23 lines, including the line being predicted and same-fold held-out lines.
 4. M1 was never fitted; its CSV row copied M0 and `m1_equals_m0...` was hardcoded.
 
-Superseded by the v1.2.5 fold-honest construction. Kept for audit history only.
+Superseded by the v1.2.5 fold-honest construction and the v1.2.6
+preregistration alignment (M1 uses 62 PCs; M2 uses the first 10).
+Kept for audit history only.

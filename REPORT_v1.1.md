@@ -49,9 +49,10 @@ biology.
 | 4 | NDCG@10 definition corrected to graded relevance `1 − AUC`; only Recall@10 is binary `AUC < 0.3` | §5, README |
 | 5 | Expression-line count corrected from 77 to **76 unique**; 79 rows / 3 duplicate ModelIDs explained | §6, `audit_summary.json`, `expression_line_audit.json` |
 | 6 | `quarantined` column added to the four legacy NAC CSVs; Erastin/Cloperastine regression test | §7, data layer, tests |
-| 7 | Four API tests added; suite count now 41/41 and read from `validation_status.json` | §8 |
+| 7 | Four API tests brought the suite from 33 to 37; four diagnostic construction tests brought it from 37 to 41; count read from `validation_status.json` | §8 |
 | 8 | Baseline/selectivity analyses explicitly labelled post-hoc, exploratory | throughout |
-| 9 | v1.2.5 fold-honest diagnostic construction fix (strict GroupKFold, line-keyed PCA, fitted M1, M0-residual M2); M2 still does not beat M0 (paired 95% CI [−0.0373, −0.0176]) | §7, dashboard diagnostic panel, `diagnostic_results.*` |
+| 9 | v1.2.5 fold-honest diagnostic construction fix (strict GroupKFold, line-keyed PCA, fitted M1, M0-residual M2); M2 still does not beat M0 (paired 95% CI [−0.0373, −0.0176]) | §7B, dashboard diagnostic panel, `diagnostic_results.*` |
+| 10 | v1.2.6 cleanup: M1 restored to the pre-registered 62 PCA features (M2 remains first 10); dashboard CI tooltip and report section/test-count attribution corrected | §7B, §8, dashboard, `diagnostic_results.*` |
 
 No sealed prediction, ranking or v1.0 model artifact was edited.
 
@@ -369,14 +370,14 @@ The sealed record is the supervisor’s. Before plate 1:
 
 *Prepared for the defence. The plate decides the biology.*
 
-### 7. Diagnostic (post-hoc, exploratory)
-Pre-registration 57b363e → fold-honest results in `outputs_local/diagnostic_results.json` (23 training lines, holdout excluded; label everywhere: post-hoc, exploratory, GroupKFold(5), not comparable to holdout metrics). The v1.2.5 construction fix corrects four defects found in the v1.2.4 audit: the line-rank lookup was indexing drug-line rows instead of lines (3/23 mappings correct; zero-distance duplicates), M2 borrowed a within-line-centred AUC instead of the M0 residual, there was no GroupKFold isolation (global means and same-fold neighbours leaked), and M1 was never fitted. All pre-registered hyperparameters are unchanged: k=5, first 10 PCs, GroupKFold(5), bootstrap seed 42 with 2,000 resamples, and the criterion “paired M2−M0 per-line Spearman 95% CI above 0”.
+### 7B. Diagnostic (post-hoc, exploratory)
+Pre-registration 57b363e → fold-honest results in `outputs_local/diagnostic_results.json` (23 training lines, holdout excluded; label everywhere: post-hoc, exploratory, GroupKFold(5), not comparable to holdout metrics). The v1.2.5 construction fix corrects four defects found in the v1.2.4 audit: the line-rank lookup was indexing drug-line rows instead of lines (3/23 mappings correct; zero-distance duplicates), M2 borrowed a within-line-centred AUC instead of the M0 residual, there was no GroupKFold isolation (global means and same-fold neighbours leaked), and M1 was never fitted. v1.2.6 restores M1 to the pre-registered 62 PCA features (`pca_0`..`pca_61`) while M2 remains the pre-registered first 10 PCs. Pre-registered settings: k=5, M1 62 PCs, M2 first 10 PCs, GroupKFold(5), bootstrap seed 42 with 2,000 resamples, and the criterion “paired M2−M0 per-line Spearman 95% CI above 0”. NDCG@10 and Recall@10 are recorded as notes only; no holdout ModelIDs appear in the JSON (count only).
 
 | Model (23 training lines, OOF) | Per-line Spearman | Pooled R² vs measured AUC | MAE vs measured AUC |
 |---|---:|---:|---:|
 | M0: fold-training per-drug mean | 0.8199 | 0.7756 | 0.0471 |
-| M1: M0 + fitted RidgeCV line offset | 0.8199 | 0.7768 | 0.0477 |
-| M2: M0 + kNN M0-residual adjustment | 0.7928 | 0.7550 | 0.0491 |
+| M1: M0 + fitted RidgeCV line offset (62 PCs) | 0.8199 | 0.7763 | 0.0480 |
+| M2: M0 + kNN M0-residual adjustment (first 10 PCs) | 0.7928 | 0.7550 | 0.0491 |
 
 M1’s per-line Spearman equals M0 by construction (the fitted offset is constant within a line); its pooled R²/MAE are genuinely fitted and are not copied from M0. The paired M1−M0 per-line Spearman difference is 0.0000 (95% CI [0.0000, 0.0000]). The paired M2−M0 difference is **−0.0270 (95% CI [−0.0373, −0.0176])**: M2 does not beat M0, so the pre-registered success criterion is not met (“no evidence of expression signal”, not proof of absence). M3 was skipped for runtime. Construction audit: 23/23 unique line feature rows, 0 zero-distance distinct-line pairs, 0 same-fold neighbours, target line absent from every M0 source, and M0/M2 equality when neighbour weights are forced to zero. The v1.2.4 misconstructed results are archived at `outputs_local/archive/diagnostic_results_v1.2.4_MISCONSTRUCTED.*`; the earlier pre-statistic-fix results remain at `outputs_local/archive/diagnostic_results_BUGGY.*`.
 
