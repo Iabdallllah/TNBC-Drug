@@ -1,6 +1,10 @@
 # SUPERVISOR SIGNOFF — v1.1 defense (v1.2 tag)
 Status: NOT SIGNED (fields blank per rules — do not invent names/signatures/dates).
 
+> **v1.2.7 update:** the deployed dashboard and exported report are public/unblinded by
+> default. `BLIND_MODE=1` or `BLIND_MODE=true` restores the optional suppression described
+> below. The historical v1.1/v1.2 blinded-release plan is retained for audit context.
+
 ## What is sealed (unchanged)
 - sealed_prediction.md (SHA256 de0922e70c97b416eb46bc9df73a417dfa959551f74cb2043e543dba4f4db851)
 - v1.0-defense tag (commit 8be8319)
@@ -14,13 +18,13 @@ Status: NOT SIGNED (fields blank per rules — do not invent names/signatures/da
 - CLAIMED (post-hoc, exploratory): baseline comparison; null selectivity; 76-line correction; zero-JS report; 41/41 tests.
 - NOT CLAIMED: validated predictor; validated selective drugs; expression contribution proven; blind design fully validated; any panel kill percentage as an absolute rate.
 
-## Blinding scope (Phase 4.1 fix-forward)
-- UI blinding (BLIND_MODE ON) hides: panel predictions table, FerroSelect panel ranking, kill proxies, and the Live predictor for panel agents in both the dashboard and the exported Defence report; a banner replaces them. AppTest covers ON/OFF.
-- UI blinding does NOT hide committed files. The following files remain in the repo and must be withheld from the bench team out-of-band:
+## Blinding scope (historical Phase 4.1; optional suppression from v1.2.7)
+- UI suppression (`BLIND_MODE=1` or `BLIND_MODE=true`) hides: panel predictions table, FerroSelect panel ranking, kill proxies, and the Live predictor for panel agents in both the dashboard and the exported Defence report; a banner replaces them. AppTest covers the default public state and the explicit suppressed state.
+- UI suppression does NOT hide committed files. If suppression is enabled, the following files must be withheld from the bench team out-of-band:
   - outputs_local/sealed_prediction.md (+ sealed_prediction_manifest.json) — sealed record, SHA de0922e7…4db851
   - outputs_local/leaderboard.csv, outputs_local/ferroselect_panel_predictions.csv, outputs_local/mda_mb_231_full_ranking.csv, outputs_local/candidate_rankings.csv — sealed/panel numbers
   - catboost_tnbc_v1.cbm, outputs_local/prediction_intervals.json, outputs_local/ctpv2_* — model artifacts
-- The bench team must receive only the protocol / plate map and the blinded dashboard until unblinding is authorised.
+- Under the v1.2.7 default the dashboard and exported report are public/unblinded; this restriction applies only to an explicitly suppressed session.
 
 ## Checklist (all blank until supervisor completes)
 - [ ] Supervisor name / role: ___________________________
@@ -29,6 +33,6 @@ Status: NOT SIGNED (fields blank per rules — do not invent names/signatures/da
 - [ ] Confirmed sealed artifacts untouched at v1.0 and v1.1: [ ]
 - [ ] Confirmed dashboard-access log entries will be made by supervisor (not by agent) before plate 1: [ ]
 - [ ] Decision: keep diagnostic on slides? (YES/NO — requires supervisor): _____
-- [ ] BLIND_MODE set ON; UNBLIND path documented; banner visible: [ ]
+- [ ] Optional `BLIND_MODE=1` suppression verified; default public/unblinded state documented: [ ]
 
 Requires a human: supervisor sign-off, actual access-log entries before plate 1, and the diagnostic-slide decision.

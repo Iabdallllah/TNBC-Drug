@@ -18,13 +18,14 @@ import os
 import numpy as np
 import pandas as pd
 
-# Phase 4a: the exported report honours BLIND_MODE. Default ON means sealed panel
-# predictions and top-ranked kill proxies are replaced by a visible banner.
-BLIND_MODE = os.environ.get('BLIND_MODE', 'ON').upper() in ('ON', '1', 'TRUE', 'YES')
-
-
+# The exported report is public/unblinded by default. Set BLIND_MODE=1 or
+# BLIND_MODE=true to replace sealed panel predictions and top-ranked kill
+# proxies with a visible banner.
 def _env_blind():
-    return os.environ.get('BLIND_MODE', 'ON').upper() in ('ON', '1', 'TRUE', 'YES')
+    return os.environ.get('BLIND_MODE', '0').strip().lower() in ('1', 'true')
+
+
+BLIND_MODE = _env_blind()
 
 
 _BLIND_BANNER = (
@@ -37,7 +38,7 @@ _BLIND_BANNER = (
 
 
 def _maybe_blind(fragment):
-    """Return the banner instead of a prediction fragment when BLIND_MODE is ON."""
+    """Return the banner instead of a prediction fragment when blind mode is on."""
     return _BLIND_BANNER if BLIND_MODE else fragment
 
 PANEL = [
@@ -162,8 +163,8 @@ def _bliss_rows(preds):
 def build_defense_report(out_dir, blind=None):
     """Render the complete v1.1 executive report and return it as an HTML string.
 
-    blind=None honours BLIND_MODE (default ON); pass blind=False only for
-    supervisor-authorized exports/tests of the complete panel.
+    blind=None honours BLIND_MODE (default OFF / public); pass blind=True to
+    produce the optional suppressed export with the blind banner.
     """
     global BLIND_MODE
     BLIND_MODE = _env_blind() if blind is None else bool(blind)

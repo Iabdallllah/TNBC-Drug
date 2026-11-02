@@ -22,6 +22,7 @@ luminal control **MCF7** — first computationally, then in the wet lab.
 **v1.2.5** — diagnostic construction fix-forward: strict GroupKFold(5), line-keyed PCA, fitted RidgeCV M1, M0-residual M2; M2 still does not beat M0 (paired 95% CI [−0.0373, −0.0176]); 41/41 tests; sealed artifact unchanged.
 **v1.2.6** — preregistration alignment: M1 uses all 62 PCA features (M2 remains first 10); dashboard CI tooltip and REPORT section/test-count attribution corrected; 41/41 tests; sealed artifact unchanged.
 **v1.2.6-defense** — final annotated defence tag on the corrected state: M1 62 PCs, audited M2 construction, additivity-arithmetic combo labels, read-only diagnostic audit passes; sealed artifact unchanged.
+**v1.2.7** — public unblinded default: `BLIND_MODE` is off unless `BLIND_MODE=1` or `BLIND_MODE=true` is explicitly set; the dashboard and exported report show all tables, rankings, panel predictions, kill proxies and the Live Predictor; sealed artifact unchanged.
 
 > “selective” calls are relabelled **“Predicted selective (unvalidated)”**. The
 > defensible contributions are the leakage/audit machinery, the external CTRPv2 RSL3

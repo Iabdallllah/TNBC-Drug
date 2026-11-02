@@ -441,20 +441,30 @@ def test_prediction_intervals_are_calibrated_on_blind_holdouts():
         assert s['abs_q95'] > s['abs_q80'] > 0
 
 
-def test_defence_report_is_self_contained_and_complete():
+def test_defence_report_is_self_contained_and_complete(monkeypatch):
     """The export must be printable HTML with every required thesis section."""
     sys.path.insert(0, os.path.join(ROOT, 'dashboard'))
     import defense_report
 
-    h = defense_report.build_defense_report(OUT, blind=False)
+    # Default export is public/unblinded: no environment variable required.
+    monkeypatch.delenv('BLIND_MODE', raising=False)
+    h = defense_report.build_defense_report(OUT)
     assert h.startswith('<!DOCTYPE html>') and h.rstrip().endswith('</html>')
-    # Default export (BLIND_MODE ON) must not leak the sealed panel/top ranking.
-    h_blind = defense_report.build_defense_report(OUT)
+    assert 'Blinded for bench team' not in h, 'default export is still blinded'
+    assert 'Predicted AUC (MDA-MB-231)' in h and 'Expected AUC' in h
+
+    # Explicit suppression still works, via the argument and via BLIND_MODE=1/true.
+    h_blind = defense_report.build_defense_report(OUT, blind=True)
     assert h_blind.count('Blinded for bench team') >= 3
     for marker in ['Predicted AUC (MDA-MB-231)', 'Sealed single-agent prediction',
                    'Bliss additivity arithmetic', 'Expected AUC', 'class="bars"']:
         assert marker not in h_blind, f'{marker!r} leaked into the blinded export'
-    assert 'Predicted AUC (MDA-MB-231)' in h and 'Expected AUC' in h
+    monkeypatch.setenv('BLIND_MODE', '1')
+    assert defense_report.build_defense_report(OUT).count('Blinded for bench team') >= 3
+    monkeypatch.setenv('BLIND_MODE', 'true')
+    assert defense_report.build_defense_report(OUT).count('Blinded for bench team') >= 3
+    monkeypatch.setenv('BLIND_MODE', '0')
+    assert 'Blinded for bench team' not in defense_report.build_defense_report(OUT)
     assert '@page' in h and 'Print' not in h.split('</style>')[0]  # printable CSS
     assert '<script' not in h.lower(), 'the report must stay JavaScript-free'
     for marker in ['1. Dataset, leakage controls', '2. Model vs a one-line baseline',
@@ -596,7 +606,7 @@ def test_outputs_local_artifacts_parse():
 def test_dashboard_ci_and_defence_export_are_visible(monkeypatch):
     """The new UI must actually expose the CI column and the report download."""
     from streamlit.testing.v1 import AppTest
-    monkeypatch.setenv('BLIND_MODE', 'OFF')  # full UI assertions, not the blinded view
+    monkeypatch.delenv('BLIND_MODE', raising=False)  # default public/unblinded view
     at = AppTest.from_file(os.path.join(ROOT, 'dashboard', 'app.py'), default_timeout=300)
     at.run()
     assert not at.exception, [e.value for e in at.exception]
@@ -832,13 +842,16 @@ def test_diagnostic_preregistration_predates_results():
 
 
 def test_blind_mode_app_and_unblind():
-    """BLIND_MODE ON hides panel/kill-predictors; OFF shows them; UNBLIND documented."""
+    """Default is public/unblinded; BLIND_MODE=1/true still suppresses everything."""
     from streamlit.testing.v1 import AppTest
     import os, json
 
     def run(mode, view=None, demo=False):
         old = os.environ.get('BLIND_MODE')
-        os.environ['BLIND_MODE'] = mode
+        if mode is None:
+            os.environ.pop('BLIND_MODE', None)
+        else:
+            os.environ['BLIND_MODE'] = mode
         try:
             at = AppTest.from_file(os.path.join(ROOT, 'dashboard', 'app.py'),
                                    default_timeout=300)
@@ -876,7 +889,26 @@ def test_blind_mode_app_and_unblind():
     def metrics(at):
         return [str(m.label) for m in at.metric]
 
-    at_on = run('ON')
+    # No BLIND_MODE variable at all: the default must be public/unblinded.
+    at_default = run(None)
+    assert not at_default.exception, [e.value for e in at_default.exception]
+    assert 'BLIND_MODE is ON' not in infos(at_default), infos(at_default)
+    assert 'Blinded for bench team' not in infos(at_default)
+    assert 'pred_AUC_MDA231' in cols(at_default)
+    assert 'Load the live model' in toggles(at_default)
+
+    at_default_panel = run(None, view='FerroSelect inducer panel', demo=True)
+    assert not at_default_panel.exception, [e.value for e in at_default_panel.exception]
+    assert 'Panel ranking 1-8' in subs(at_default_panel)
+    assert 'Predicted AUC (MDA-MB-231)' in cols(at_default_panel)
+    assert 'pred_auc' in cols(at_default_panel)
+    assert any(lbl.startswith('Model AUC:') for lbl in metrics(at_default_panel))
+
+    at_default_top = run(None, view='Top-20 killers')
+    assert not at_default_top.exception, [e.value for e in at_default_top.exception]
+    assert 'pred_AUC_MDA231' in cols(at_default_top)
+
+    at_on = run('1')
     assert not at_on.exception, [e.value for e in at_on.exception]
     assert 'BLIND_MODE is ON' in infos(at_on), infos(at_on)
     assert 'Blinded for bench team' in infos(at_on), infos(at_on)
@@ -884,7 +916,7 @@ def test_blind_mode_app_and_unblind():
     assert 'Panel ranking 1-8' not in subs(at_on)
     assert 'Load the live model' not in toggles(at_on)
 
-    at_on_panel = run('ON', view='FerroSelect inducer panel', demo=True)
+    at_on_panel = run('1', view='FerroSelect inducer panel', demo=True)
     assert not at_on_panel.exception, [e.value for e in at_on_panel.exception]
     assert 'The wet-lab panel (8 members)' in subs(at_on_panel)
     assert 'Panel ranking 1-8' not in subs(at_on_panel), 'panel ranking leaked'
@@ -893,28 +925,21 @@ def test_blind_mode_app_and_unblind():
     assert 'Blinded for bench team' in infos(at_on_panel)
     assert not any(lbl.startswith('Model AUC:') for lbl in metrics(at_on_panel))
 
-    at_on_top = run('ON', view='Top-20 killers')
+    at_on_top = run('1', view='Top-20 killers')
     assert not at_on_top.exception, [e.value for e in at_on_top.exception]
     assert 'pred_AUC_MDA231' not in cols(at_on_top), 'kill-proxy ranking leaked'
     assert 'Blinded for bench team' in infos(at_on_top)
 
-    at_off = run('OFF')
+    at_true = run('true')
+    assert not at_true.exception, [e.value for e in at_true.exception]
+    assert 'Blinded for bench team' in infos(at_true)
+
+    at_off = run('0')
     assert not at_off.exception, [e.value for e in at_off.exception]
     assert 'BLIND_MODE is ON' not in infos(at_off), infos(at_off)
     assert 'Blinded for bench team' not in infos(at_off)
     assert 'pred_AUC_MDA231' in cols(at_off)
     assert 'Load the live model' in toggles(at_off)
-
-    at_off_panel = run('OFF', view='FerroSelect inducer panel', demo=True)
-    assert not at_off_panel.exception, [e.value for e in at_off_panel.exception]
-    assert 'Panel ranking 1-8' in subs(at_off_panel)
-    assert 'Predicted AUC (MDA-MB-231)' in cols(at_off_panel)
-    assert 'pred_auc' in cols(at_off_panel)
-    assert any(lbl.startswith('Model AUC:') for lbl in metrics(at_off_panel))
-
-    at_off_top = run('OFF', view='Top-20 killers')
-    assert not at_off_top.exception, [e.value for e in at_off_top.exception]
-    assert 'pred_AUC_MDA231' in cols(at_off_top)
 
     unblind_doc = open(os.path.join(ROOT, 'UNBLIND.md')).read()
     assert 'timestamped' in unblind_doc.lower() and 'supervisor key' in unblind_doc.lower()
@@ -922,7 +947,7 @@ def test_blind_mode_app_and_unblind():
     access = json.load(open(os.path.join(OUT, 'dashboard_access_log.template.json')))
     assert access.get('entries') == [], access
     assert access.get('fields_per_entry', {}).get('blind_status_at_time') is not None
-    print('blinding app modes verified: ON(hidden) / OFF(visible)')
+    print('blinding app modes verified: default(public) / 1,true(hidden) / 0(public)')
 
 
 def test_diagnostic_label_post_hoc_everywhere():

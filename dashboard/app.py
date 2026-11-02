@@ -124,8 +124,9 @@ selection_winner = clean_label(best.name)
 SENS_MAP = {'SENSITIVE (AUC<0.3)': 'Sensitive', 'sensitive': 'Sensitive',
             'resistant/intermediate': 'Resistant', 'resistant': 'Resistant',
             'RESISTANT (AUC>=0.3)': 'Resistant'}
-# BLIND_MODE (default ON): hides predictions/panel-ranking/live-predictor for panel agents
-BLIND_MODE = os.environ.get('BLIND_MODE','ON').upper() in ('ON','1','TRUE','YES')
+# BLIND_MODE (default OFF / public): set BLIND_MODE=1 or BLIND_MODE=true to
+# explicitly suppress predictions, panel ranking and the live predictor.
+BLIND_MODE = os.environ.get('BLIND_MODE', '0').strip().lower() in ('1', 'true')
 BLIND_BANNER = ('Blinded for bench team — predictions / FerroSelect panel ranking / '
                 'kill proxies / Live predictor hidden. Unblinding requires supervisor key.')
 

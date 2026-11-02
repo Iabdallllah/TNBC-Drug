@@ -52,7 +52,7 @@
              color: #868e96; font-size: 9.5px; }
     </style></head><body>
 <h1>FerroSelect — TNBC Drug-Response Predictor</h1>
-<div class="sub">Defence executive report · <b>v1.1 dated addendum</b> · generated 2026-11-02 11:47 UTC ·
+<div class="sub">Defence executive report · <b>v1.1 dated addendum</b> · generated 2026-11-02 12:05 UTC ·
 model version <b>catboost-v1.0</b></div>
 <div class="callout"><b>Document status.</b> v1.1 (2026-10-29) supersedes the v1.0
 briefing as a dated addendum; it does not rewrite v1.0. The v1.0 artifacts are preserved
@@ -429,7 +429,75 @@ additivity arithmetic: Bliss guarantees a pair out-ranks its components when com
 from their kill proxies, so a combo rank is not a discovery.</p>
 
 <h2>4. The eight-member wet-lab panel (pre-registered mechanism hypothesis)</h2>
-<div class="callout"><b>Blinded for bench team — unblinding requires supervisor key.</b><br>Panel predictions, the FerroSelect panel ranking and kill proxies are suppressed in this export. Unblinding requires a supervisor authorization and a timestamped entry in <code>dashboard_access_log.template.json</code> (see UNBLIND.md).</div>
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>Rank</th>
+      <th>Panel member</th>
+      <th>Role</th>
+      <th>Predicted AUC (MDA-MB-231)</th>
+      <th>Evidence / note</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>ERASTIN + SIMVASTATIN</td>
+      <td>Combo</td>
+      <td>0.764</td>
+      <td>Bliss additivity arithmetic from the sealed single-agent AUCs; not a synergy finding.</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>SULFASALAZINE + SIMVASTATIN</td>
+      <td>Combo (sealed nomination)</td>
+      <td>0.785</td>
+      <td>Bliss additivity arithmetic from the sealed single-agent AUCs; not a synergy finding.</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>RSL3 + SIMVASTATIN</td>
+      <td>Combo (lab-only lane)</td>
+      <td>—</td>
+      <td>Lab-only: no PRISM AUC for RSL3; test the pair on the plate.</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>ERASTIN</td>
+      <td>Killer (Type I)</td>
+      <td>0.864</td>
+      <td>Sealed single-agent prediction (LOW confidence).</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>SULFASALAZINE</td>
+      <td>Killer (Type I)</td>
+      <td>0.887</td>
+      <td>Sealed single-agent prediction (LOW confidence).</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td>RSL3</td>
+      <td>Killer (Type II, GPX4)</td>
+      <td>—</td>
+      <td>No PRISM AUC; GSE247883 signature + CTRPv2 ground truth.</td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td>N-ACETYLCYSTEINE (NAC)</td>
+      <td>Rescue control</td>
+      <td>—</td>
+      <td>Rescue control: must re-express suppressed proteins.</td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>DEFEROXAMINE (DFO)</td>
+      <td>Rescue control</td>
+      <td>—</td>
+      <td>Rescue control: must re-express suppressed proteins.</td>
+    </tr>
+  </tbody>
+</table>
 <p class="muted">Rank 1 = strongest expected killing proxy by the frozen model. The panel was
 selected on mechanism (GPX4, system xc⁻, iron) and agreed with the lab before any plate;
 the model outputs are a frozen, falsifiable record, not the justification. RSL3 lanes are
@@ -437,12 +505,134 @@ lab-only by design: PRISM never profiled RSL3, so no model AUC is fabricated for
 Selectivity and panel ordering are hypotheses for the plate.</p>
 
 <h2>5. Top-ranked killers, model resolution and the plateau</h2>
-<div class="callout"><b>Blinded for bench team — unblinding requires supervisor key.</b><br>Panel predictions, the FerroSelect panel ranking and kill proxies are suppressed in this export. Unblinding requires a supervisor authorization and a timestamped entry in <code>dashboard_access_log.template.json</code> (see UNBLIND.md).</div>
+<div class="bars"><div class="bar-row"><span class="bar-label">TRIPTOLIDE</span><span class="bar-track"><span class="bar-fill good" style="width:72.4%"></span></span><span class="bar-val">0.276</span><span class="bar-note"></span></div><div class="bar-row"><span class="bar-label">DOLASTATIN-10</span><span class="bar-track"><span class="bar-fill mid" style="width:65.1%"></span></span><span class="bar-val">0.349</span><span class="bar-note"></span></div><div class="bar-row"><span class="bar-label">ROMIDEPSIN</span><span class="bar-track"><span class="bar-fill mid" style="width:64.1%"></span></span><span class="bar-val">0.359</span><span class="bar-note"></span></div><div class="bar-row"><span class="bar-label">ECHINOMYCIN</span><span class="bar-track"><span class="bar-fill mid" style="width:62.6%"></span></span><span class="bar-val">0.374</span><span class="bar-note"></span></div><div class="bar-row"><span class="bar-label">EXATECAN-MESYLATE</span><span class="bar-track"><span class="bar-fill mid" style="width:62.2%"></span></span><span class="bar-val">0.378</span><span class="bar-note"></span></div><div class="bar-row"><span class="bar-label">MAYTANSINOL-ISOBUTYRATE</span><span class="bar-track"><span class="bar-fill mid" style="width:59.7%"></span></span><span class="bar-val">0.403</span><span class="bar-note"></span></div><div class="bar-row"><span class="bar-label">SB-743921</span><span class="bar-track"><span class="bar-fill mid" style="width:59.1%"></span></span><span class="bar-val">0.409</span><span class="bar-note"></span></div><div class="bar-row"><span class="bar-label">SN38</span><span class="bar-track"><span class="bar-fill mid" style="width:57.2%"></span></span><span class="bar-val">0.428</span><span class="bar-note"></span></div><div class="bar-row"><span class="bar-label">GEMCITABINE</span><span class="bar-track"><span class="bar-fill mid" style="width:53.6%"></span></span><span class="bar-val">0.464</span><span class="bar-note"></span></div><div class="bar-row"><span class="bar-label">EPOTHILONE-B</span><span class="bar-track"><span class="bar-fill mid" style="width:53.5%"></span></span><span class="bar-val">0.465</span><span class="bar-note"></span></div></div>
 <p class="muted">The predicted-AUC distribution is compressed above ~0.906 for the resistant bulk of the panel; ranks below ~226 are tied within model resolution and should not be read as a fine-grained order. 1,255 of 1,482 drugs (84.7%) carry zero CatBoost importance and collapse to one predicted value per line (0.906574 on MDA-MB-231). Only 227 drugs carry learned signal; the plateau is a documented coverage limit, not a fine-grained ranking.</p>
 
 <h2>6. Bliss combination expectations (additivity arithmetic — test on the plate)</h2>
-<div class="callout"><b>Blinded for bench team — unblinding requires supervisor key.</b><br>Panel predictions, the FerroSelect panel ranking and kill proxies are suppressed in this export. Unblinding requires a supervisor authorization and a timestamped entry in <code>dashboard_access_log.template.json</code> (see UNBLIND.md).</div>
-<div class="callout"><b>Blinded for bench team — unblinding requires supervisor key.</b><br>Panel predictions, the FerroSelect panel ranking and kill proxies are suppressed in this export. Unblinding requires a supervisor authorization and a timestamped entry in <code>dashboard_access_log.template.json</code> (see UNBLIND.md).</div>
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>Combination</th>
+      <th>Cell line</th>
+      <th>Bliss E_AB</th>
+      <th>Expected AUC</th>
+      <th>Note</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>ERASTIN + SIMVASTATIN</td>
+      <td>MDA-MB-231</td>
+      <td>0.236</td>
+      <td>0.764</td>
+      <td>additivity expectation — needs the plate</td>
+    </tr>
+    <tr>
+      <td>ERASTIN + SIMVASTATIN</td>
+      <td>MDA-MB-468</td>
+      <td>0.192</td>
+      <td>0.808</td>
+      <td>additivity expectation — needs the plate</td>
+    </tr>
+    <tr>
+      <td>ERASTIN + SIMVASTATIN</td>
+      <td>MCF7</td>
+      <td>0.151</td>
+      <td>0.849</td>
+      <td>additivity expectation — needs the plate</td>
+    </tr>
+    <tr>
+      <td>SULFASALAZINE + SIMVASTATIN</td>
+      <td>MDA-MB-231</td>
+      <td>0.215</td>
+      <td>0.785</td>
+      <td>additivity expectation — needs the plate</td>
+    </tr>
+    <tr>
+      <td>SULFASALAZINE + SIMVASTATIN</td>
+      <td>MDA-MB-468</td>
+      <td>0.144</td>
+      <td>0.856</td>
+      <td>additivity expectation — needs the plate</td>
+    </tr>
+    <tr>
+      <td>SULFASALAZINE + SIMVASTATIN</td>
+      <td>MCF7</td>
+      <td>0.135</td>
+      <td>0.865</td>
+      <td>additivity expectation — needs the plate</td>
+    </tr>
+    <tr>
+      <td>RSL3 + SIMVASTATIN</td>
+      <td>MDA-MB-231</td>
+      <td>—</td>
+      <td>—</td>
+      <td>not computable (no PRISM AUC for RSL3)</td>
+    </tr>
+    <tr>
+      <td>RSL3 + SIMVASTATIN</td>
+      <td>MDA-MB-468</td>
+      <td>—</td>
+      <td>—</td>
+      <td>not computable (no PRISM AUC for RSL3)</td>
+    </tr>
+    <tr>
+      <td>RSL3 + SIMVASTATIN</td>
+      <td>MCF7</td>
+      <td>—</td>
+      <td>—</td>
+      <td>not computable (no PRISM AUC for RSL3)</td>
+    </tr>
+  </tbody>
+</table>
+<table class="dataframe data">
+  <thead>
+    <tr style="text-align: right;">
+      <th>drugA_name</th>
+      <th>drugB_name</th>
+      <th>E_AB_MDA231</th>
+      <th>E_AB_MCF7</th>
+      <th>selectivity_gap</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>TRIPTOLIDE</td>
+      <td>MAYTANSINOL-ISOBUTYRATE</td>
+      <td>0.889</td>
+      <td>0.864</td>
+      <td>0.025</td>
+    </tr>
+    <tr>
+      <td>MAYTANSINOL-ISOBUTYRATE</td>
+      <td>GEMCITABINE</td>
+      <td>0.813</td>
+      <td>0.789</td>
+      <td>0.024</td>
+    </tr>
+    <tr>
+      <td>ROMIDEPSIN</td>
+      <td>MAYTANSINOL-ISOBUTYRATE</td>
+      <td>0.855</td>
+      <td>0.833</td>
+      <td>0.023</td>
+    </tr>
+    <tr>
+      <td>MAYTANSINOL-ISOBUTYRATE</td>
+      <td>EPOTHILONE-D</td>
+      <td>0.812</td>
+      <td>0.791</td>
+      <td>0.021</td>
+    </tr>
+    <tr>
+      <td>DOLASTATIN-10</td>
+      <td>MAYTANSINOL-ISOBUTYRATE</td>
+      <td>0.859</td>
+      <td>0.839</td>
+      <td>0.021</td>
+    </tr>
+  </tbody>
+</table>
 <p class="muted">These are additivity expectations, not synergy predictions. The 4×4
 checkerboard is the test.</p>
 

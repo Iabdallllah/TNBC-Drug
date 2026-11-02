@@ -54,6 +54,7 @@ biology.
 | 9 | v1.2.5 fold-honest diagnostic construction fix (strict GroupKFold, line-keyed PCA, fitted M1, M0-residual M2); M2 still does not beat M0 (paired 95% CI [−0.0373, −0.0176]) | §7B, dashboard diagnostic panel, `diagnostic_results.*` |
 | 10 | v1.2.6 cleanup: M1 restored to the pre-registered 62 PCA features (M2 remains first 10); dashboard CI tooltip and report section/test-count attribution corrected | §7B, §8, dashboard, `diagnostic_results.*` |
 | 11 | v1.2.6 audit closure: combo UI labelled **additivity arithmetic**; neutral “model-selection winner” wording; read-only diagnostic audit (`tools/audit_diagnostic.py`) passes; final annotated tag `v1.2.6-defense` | dashboard, §6/§7B, `outputs_local/` |
+| 12 | v1.2.7 public unblinded default: dashboard and exported report are open by default; `BLIND_MODE=1`/`true` is the only way to re-enable suppression | dashboard, report, `UNBLIND.md`, tests |
 
 No sealed prediction, ranking or v1.0 model artifact was edited.
 
@@ -334,8 +335,9 @@ The sealed record is the supervisor’s. Before plate 1:
 - [ ] Print and sign `outputs_local/sealed_prediction.md`; lodge the signed copy with the
       supervisor.
 - [ ] Record the timestamp and hash in `outputs_local/sealed_prediction_manifest.json`.
-- [ ] Confirm who had dashboard access before plate 1. The bench team must not see the
-      **Defense report** or **Live predictor** tabs until unblinding.
+- [ ] v1.2.7 makes the dashboard and exported report **public/unblinded by default**.
+      For a private session, set `BLIND_MODE=1` or `BLIND_MODE=true`; the sealed record
+      itself remains the supervisor’s.
 - [ ] Freeze the git tag for the defence release; do not retrain after the seal.
 - [ ] The supervisor signs the negative-result framing; the computational lead owns the
       numbers.
