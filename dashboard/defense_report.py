@@ -190,12 +190,9 @@ def build_defense_report(out_dir, blind=None):
 
     now = _dt.datetime.now(_dt.timezone.utc).strftime('%Y-%m-%d %H:%M UTC')
 
-    champion = 'n/a'
     best = None
     if leaderboard is not None and len(leaderboard):
         best = leaderboard.sort_values('ndcg10', ascending=False).iloc[0]
-        import re
-        champion = re.sub(r'[^\x00-\x7F]+', '', str(best['label'])).strip()
 
     metrics = baseline.get('metrics') or {}
     cb = metrics.get('catboost') or {}
@@ -449,7 +446,7 @@ model version <b>{html.escape(str(info.get('model_version', 'n/a')))}</b></div>
 briefing as a dated addendum; it does not rewrite v1.0. The v1.0 artifacts are preserved
 in git at tag <b>v1.0-defense</b> and the sealed prediction is unchanged. The baseline and
 selectivity analyses below are <b>post-hoc, exploratory</b>: the holdout was already seen.
-The champion is reported as a <b>negative result</b>.</div>
+The v1.0 model-selection winner is reported as a <b>negative result</b>.</div>
 <div class="callout"><b>Scope:</b> predicted sensitivity in cell models — never a
 clinical treatment recommendation. Wet-lab confirmation is the decision layer.</div>
 <div class="kpis">{kpi_html}</div>
@@ -493,6 +490,9 @@ of drug identities. Within the 227 drugs it did learn, it ties the baseline rath
 beating it.</p>
 {_table(subset_df, nd=3)}
 {_table(calibration_df, nd=3)}
+<p class="muted">Calibration is descriptive, not a decision rule: the model overpredicts
+AUC on the learned drugs, fixed AUC thresholds (0.3, 0.4) remain unreliable, and the
+calibration is estimated on the spent holdout.</p>
 <p><b>Sensitive-tail coverage.</b> {_fmt(coverage.get('measured_sensitive_in_learned'))} of
 {_fmt(coverage.get('measured_sensitive_rows'))} measured AUC &lt; 0.3 holdout rows fall
 inside the {_fmt(coverage.get('learned_drugs'))} learned drugs; every line’s measured
@@ -553,7 +553,7 @@ OOF Spearman <b>{_fmt(v2_best.get('spearman'))}</b>
 {_fmt((v2_best.get('bootstrap_spearman') or {}).get('hi95'))}) on
 {_fmt(v2_best.get('n'))} lines — below the published lab-vs-CTRP ceiling
 ({_fmt((rsl_report.get('ceiling_lab_vs_ctrp') or {}).get('RSL3'))}). This is external,
-cross-platform evidence about RSL3, not a validation of the v1 PRISM champion.</p>
+cross-platform evidence about RSL3, not a validation of the v1.0 PRISM model-selection winner.</p>
 
 <h2>8. Prediction uncertainty (calibrated on the spent holdout)</h2>
 <p>Conformal-style intervals from {_fmt(glob.get('n'))} out-of-sample rows:
@@ -595,7 +595,9 @@ unchanged. Audit: {_fmt(diag_pca.get('n_unique_feature_rows'))}/
 {_fmt(diag_pca.get('zero_distance_pairs'))} zero-distance distinct-line pairs,
 {_fmt(diag_iso.get('same_fold_neighbour_count'))} same-fold neighbours, target line absent
 from every M0 source, and zero-weight M2 = M0 exactly (max|Δ| =
-{_fmt(diag_zw.get('max_abs_diff_vs_m0'), 6)}). Superseded v1.2.4 outputs are archived
+{_fmt(diag_zw.get('max_abs_diff_vs_m0'), 6)}). The statistic is corrected; M2 is no longer
+withdrawn. A read-only verifier (<code>python tools/audit_diagnostic.py</code>) re-checks
+these invariants and exits 0. Superseded v1.2.4 outputs are archived
 at <code>outputs_local/archive/diagnostic_results_v1.2.4_MISCONSTRUCTED.*</code>.</div>
 
 <h2>10. Validation gates, provenance quarantine and test status</h2>

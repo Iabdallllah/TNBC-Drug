@@ -21,6 +21,7 @@ luminal control **MCF7** — first computationally, then in the wet lab.
 **v1.2.2-defense** — final gap closure: BLIND_MODE suppression enforced in the dashboard and exported report, diagnostic panel added; sealed artifact unchanged.
 **v1.2.5** — diagnostic construction fix-forward: strict GroupKFold(5), line-keyed PCA, fitted RidgeCV M1, M0-residual M2; M2 still does not beat M0 (paired 95% CI [−0.0373, −0.0176]); 41/41 tests; sealed artifact unchanged.
 **v1.2.6** — preregistration alignment: M1 uses all 62 PCA features (M2 remains first 10); dashboard CI tooltip and REPORT section/test-count attribution corrected; 41/41 tests; sealed artifact unchanged.
+**v1.2.6-defense** — final annotated defence tag on the corrected state: M1 62 PCs, audited M2 construction, additivity-arithmetic combo labels, read-only diagnostic audit passes; sealed artifact unchanged.
 
 > “selective” calls are relabelled **“Predicted selective (unvalidated)”**. The
 > defensible contributions are the leakage/audit machinery, the external CTRPv2 RSL3
@@ -154,12 +155,20 @@ disproven. The four v1.0 “selective” calls are relabelled **“Predicted sel
 
 - Training set: **30,994** unique (cell line, drug) pairs — 30 lines x 1,482 drugs.
 - CatBoost plateaus: **1,255 / 1,482** drugs (84.7%) carry zero importance and
-  collapse to **one prediction per line** (MDA-MB-231: 0.906574).
+  collapse to **one prediction per line** (MDA-MB-231: 0.906574). This is a coverage
+  limit of the current features; resolving it needs drug descriptors or more lines,
+  not a post-hoc threshold change.
+- Calibration is descriptive, not a decision rule: on the learned 227 drugs, predicted
+  mean AUC is 0.741 versus measured 0.606. Fixed AUC thresholds (0.3, 0.4) remain
+  unreliable because the calibration is estimated on the spent holdout.
+- Prediction intervals are **marginal**, not conditional guarantees: 80%/95% half-widths
+  are calibrated on the same seven spent lines; per-drug intervals exist only when a drug
+  has at least 40 holdout rows, otherwise the line/global fallback applies.
 - Top predicted killers of MDA-MB-231: **Triptolide, Dolastatin-10, Romidepsin,
   Echinomycin, Exatecan** (see `outputs_local/mda_mb_231_top20_killers.csv`).
   Selectivity deltas vs MCF7 are modest (~0.02), predicted and unvalidated.
 - Top Bliss pair: **Triptolide + Maytansinol-isobutyrate** (gap 0.025).
-  Additivity assumption — synergy verdict requires checkerboard validation.
+  **Additivity arithmetic** — synergy verdict requires checkerboard validation.
 - Full artifacts: `outputs_local/` (leaderboard, rankings, models, SHAP plots,
   `model_info.json`, `audit_summary.json`).
 - PCA gene loadings: `pca_loadings.parquet` + `pca_loadings_top.csv` map every
@@ -353,11 +362,15 @@ at least one candidate — **awaiting lab data**).
   not the shipped one.
 - Regenerate the post-hoc audit with `python src/models/baseline_audit.py`
   (`baseline_audit.json`, `baseline_audit.csv`, `expression_line_audit.json`).
+- Verify the diagnostic construction read-only with `python tools/audit_diagnostic.py`
+  (23 unique line rows, GroupKFold isolation, M1 62 PCs, M2 first 10 PCs, zero-weight
+  M2 = M0, M2 pooled R² > 0, no holdout ModelIDs, CSV mirrors JSON).
 - Regenerate the printable report with
   `python -c "import sys; sys.path.insert(0,'dashboard'); import defense_report as d; open('outputs_local/defense_report.html','w').write(d.build_defense_report('outputs_local'))"`.
 - Version provenance: v1.0 is preserved at tag `v1.0-defense` (commit `8be8319`);
   v1.1 is a dated addendum that does not modify the sealed prediction or v1.0
-  artifacts. Sealed timestamp/hash and access policy:
+  artifacts. The final corrected state is the annotated tag `v1.2.6-defense`.
+  Sealed timestamp/hash and access policy:
   `outputs_local/sealed_prediction_manifest.json`.
 - Raw data are git-ignored (`Data/*.csv`, `Data/*.xlsx`); re-download with
   `python src/ingestion/download.py --small-only`.

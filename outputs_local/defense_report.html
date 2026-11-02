@@ -52,13 +52,13 @@
              color: #868e96; font-size: 9.5px; }
     </style></head><body>
 <h1>FerroSelect — TNBC Drug-Response Predictor</h1>
-<div class="sub">Defence executive report · <b>v1.1 dated addendum</b> · generated 2026-11-01 11:47 UTC ·
+<div class="sub">Defence executive report · <b>v1.1 dated addendum</b> · generated 2026-11-02 11:47 UTC ·
 model version <b>catboost-v1.0</b></div>
 <div class="callout"><b>Document status.</b> v1.1 (2026-10-29) supersedes the v1.0
 briefing as a dated addendum; it does not rewrite v1.0. The v1.0 artifacts are preserved
 in git at tag <b>v1.0-defense</b> and the sealed prediction is unchanged. The baseline and
 selectivity analyses below are <b>post-hoc, exploratory</b>: the holdout was already seen.
-The champion is reported as a <b>negative result</b>.</div>
+The v1.0 model-selection winner is reported as a <b>negative result</b>.</div>
 <div class="callout"><b>Scope:</b> predicted sensitivity in cell models — never a
 clinical treatment recommendation. Wet-lab confirmation is the decision layer.</div>
 <div class="kpis"><div class="kpi"><div class="kpi-v">0.630</div><div class="kpi-l">CatBoost per-line Spearman</div></div><div class="kpi"><div class="kpi-v">0.829</div><div class="kpi-l">Per-drug baseline</div></div><div class="kpi"><div class="kpi-v">0.567</div><div class="kpi-l">CatBoost R²</div></div><div class="kpi"><div class="kpi-v">0.825</div><div class="kpi-l">Baseline R²</div></div><div class="kpi"><div class="kpi-v">0.027</div><div class="kpi-l">Selectivity Spearman</div></div><div class="kpi"><div class="kpi-v">41/41</div><div class="kpi-l">Tests</div></div></div>
@@ -312,6 +312,9 @@ beating it.</p>
     </tr>
   </tbody>
 </table>
+<p class="muted">Calibration is descriptive, not a decision rule: the model overpredicts
+AUC on the learned drugs, fixed AUC thresholds (0.3, 0.4) remain unreliable, and the
+calibration is estimated on the spent holdout.</p>
 <p><b>Sensitive-tail coverage.</b> 55 of
 55 measured AUC &lt; 0.3 holdout rows fall
 inside the 227 learned drugs; every line’s measured
@@ -481,7 +484,7 @@ OOF Spearman <b>0.462</b>
 0.518) on
 788 lines — below the published lab-vs-CTRP ceiling
 (0.830). This is external,
-cross-platform evidence about RSL3, not a validation of the v1 PRISM champion.</p>
+cross-platform evidence about RSL3, not a validation of the v1.0 PRISM model-selection winner.</p>
 
 <h2>8. Prediction uncertainty (calibrated on the spent holdout)</h2>
 <p>Conformal-style intervals from 7,336 out-of-sample rows:
@@ -613,7 +616,9 @@ unchanged. Audit: 23/
 0 zero-distance distinct-line pairs,
 0 same-fold neighbours, target line absent
 from every M0 source, and zero-weight M2 = M0 exactly (max|Δ| =
-0.000000). Superseded v1.2.4 outputs are archived
+0.000000). The statistic is corrected; M2 is no longer
+withdrawn. A read-only verifier (<code>python tools/audit_diagnostic.py</code>) re-checks
+these invariants and exits 0. Superseded v1.2.4 outputs are archived
 at <code>outputs_local/archive/diagnostic_results_v1.2.4_MISCONSTRUCTED.*</code>.</div>
 
 <h2>10. Validation gates, provenance quarantine and test status</h2>

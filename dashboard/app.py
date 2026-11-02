@@ -118,7 +118,7 @@ def clean_label(s):
 leaderboard['label'] = leaderboard['label'].map(clean_label)
 lb = leaderboard.set_index('label')
 best = lb.sort_values('ndcg10', ascending=False).iloc[0]
-champion = clean_label(best.name)
+selection_winner = clean_label(best.name)
 
 # ---------- display helpers ----------
 SENS_MAP = {'SENSITIVE (AUC<0.3)': 'Sensitive', 'sensitive': 'Sensitive',
@@ -463,7 +463,7 @@ def panel_ranking_table(preds):
         if key == 'SULFASALAZINE':
             return float(auc.get('SULFASALAZINE', np.nan)), f'{nrows.get("SULFASALAZINE")} PRISM training rows (LOW confidence)'
         if key == 'combo':
-            return np.nan, 'Lab-only: PRISM has no AUC for RSL3, so no Bliss number exists'
+            return np.nan, 'Lab-only: PRISM has no AUC for RSL3, so no Bliss additivity arithmetic exists'
         if key == 'rsl3combo':
             note = ('Lab-only (no PRISM AUC for RSL3); together the two signatures produce '
                     f'{combined} suppression events in MDA-MB-231 '
@@ -493,9 +493,9 @@ def panel_ranking_table(preds):
             killer = member.split(' + ')[0]
             auc_val = (1 - _bliss(e, killer, 'SIMVASTATIN')) if killer in e.index else np.nan
             note = ('Sealed nomination' if 'nomination' in role
-                    else 'Bliss expectation from the sealed single-agent AUCs')
+                    else 'Bliss additivity expectation from the sealed single-agent AUCs')
             if not np.isnan(auc_val):
-                note += (f'; E_AB = {1 - auc_val:.3f}; Bliss arithmetic, not synergy — '
+                note += (f'; E_AB = {1 - auc_val:.3f}; additivity arithmetic, not synergy — '
                          'needs the checkerboard test')
         else:
             auc_val, note = value(key)
@@ -543,7 +543,7 @@ def panel_ranking_chart(d):
 
 
 def combo_bliss_chart(preds):
-    """The three Simvastatin pairs: Bliss expected effect, grouped by cell line."""
+    """The three Simvastatin pairs: Bliss additivity arithmetic, grouped by cell line."""
     rows = []
     for line in ['MDA-MB-231', 'MDA-MB-468', 'MCF7']:
         p = preds[preds['line'] == line].set_index('drug')['pred_auc'].astype(float)
@@ -561,7 +561,7 @@ def combo_bliss_chart(preds):
                  color_discrete_map={'MDA-MB-231': '#b3261e',
                                      'MDA-MB-468': '#f59f00', 'MCF7': '#495057'},
                  category_orders={'combo': order},
-                 labels={'E_AB': 'Bliss expected effect E_AB', 'line': 'Line'})
+                 labels={'E_AB': 'Bliss additivity E_AB', 'line': 'Line'})
     fig.update_traces(texttemplate='%{x:.3f}', textposition='outside',
                       marker_line_width=0)
     fig.add_annotation(x=0.002, y='RSL3 + SIMVASTATIN',
@@ -1054,8 +1054,9 @@ with st.expander('How to read this dashboard (60 seconds, no ML background neede
              'Read the gates as “not useless”, not as “validated”.')
     st.write('**LOW confidence** — fewer than 25 training rows for that drug. A hypothesis '
              'to test, not a result.')
-    st.write('**Bliss pairs** — expected combined effect if two drugs simply add up. '
-             'A synergy claim needs the checkerboard experiment, never this table.')
+    st.write('**Bliss pairs** — additivity arithmetic: expected combined effect if two '
+             'drugs simply add up. A synergy claim needs the checkerboard experiment, '
+             'never this table.')
     st.write('**Pending annotation** — pathway identity is not yet curated by the bio '
              'informatics side; the pair itself is still valid.')
 
@@ -1082,7 +1083,7 @@ dummy = lb.loc['DummyMean'] if 'DummyMean' in lb.index else None
 
 with st.container(border=True):
     k1, k2, k3, k4 = st.columns(4)
-    k1.metric('v1.0 model-selection winner', champion,
+    k1.metric('v1.0 model-selection winner', selection_winner,
               help='Selected by NDCG@10, a saturated metric; this is a convention, '
                    'not evidence of quality. The gap to XGBoost is within 7-line resolution.')
     k2.metric('CatBoost per-line Spearman', f"{(_cb or best)['per_line_spearman']:.3f}",
@@ -1247,13 +1248,14 @@ with tab_rank:
                         note2 = note2.replace('Spearman ~0.46',
                                               f'Spearman {sp:.3f} ({md3["winner"]})')
                 st.caption(note2)
-            st.subheader('Combination Bliss ranking - the three Simvastatin pairs')
+            st.subheader('Combination Bliss additivity arithmetic - the three Simvastatin pairs')
             st.plotly_chart(combo_bliss_chart(preds), use_container_width=True,
                             config={'displaylogo': False})
-            st.caption('Expected combined effect per line from the sealed FerroSelect AUCs. '
-                       'RSL3 + SIMVASTATIN cannot be Bliss-scored (no PRISM AUC for RSL3); '
-                       'it stays a wet-lab-only question. Every value here inherits the LOW '
-                       'confidence of 9-22 training rows per agent.')
+            st.caption('Additivity arithmetic, not synergy predictions: expected combined '
+                       'effect per line from the sealed FerroSelect AUCs. RSL3 + SIMVASTATIN '
+                       'cannot be Bliss-scored (no PRISM AUC for RSL3); it stays a '
+                       'wet-lab-only question. Every value here inherits the LOW confidence '
+                       'of 9-22 training rows per agent.')
             fpred = preds.copy()
             if 'pred_auc' in fpred.columns:
                 fpred['pred_auc'] = fpred['pred_auc'].astype(float).round(3)
@@ -1402,10 +1404,10 @@ with tab_sel:
         st.plotly_chart(selectivity_chart(rank_full, n_top), use_container_width=True,
                         config={'displaylogo': False})
 
-        st.subheader('Two-drug combinations (Bliss independence)')
+        st.subheader('Two-drug combinations (Bliss additivity arithmetic)')
         st.write('Ranked by selectivity gap: expected efficacy on MDA-MB-231 minus expected '
-                 'efficacy on MCF7. This assumes additivity, so a synergy verdict needs the '
-                 '4×4 checkerboard validation.')
+                 'efficacy on MCF7. This is additivity arithmetic, not a synergy prediction; '
+                 'a synergy verdict needs the 4×4 checkerboard validation.')
         cb = combos.copy()
         for c in ['E_AB_MDA231', 'E_AB_MCF7', 'selectivity_gap']:
             cb[c] = cb[c].astype(float).round(3)
@@ -1492,7 +1494,9 @@ with tab_model:
                                   'Measured mean AUC': round(c['measured_mean_auc'], 3),
                                   'CatBoost mean': round(c['catboost_mean_auc'], 3),
                                   'Baseline mean': round(c['per_drug_mean_auc'], 3)})
-                st.write('**Calibration** — CatBoost overpredicts AUC on the drugs it learned.')
+                st.write('**Calibration** — CatBoost overpredicts AUC on the drugs it learned. '
+                         'Fixed AUC thresholds (0.3, 0.4) remain unreliable; treat this '
+                         'calibration as descriptive, not a calibrated decision rule.')
                 st.dataframe(pd.DataFrame(crows), hide_index=True,
                              use_container_width=True)
             cov = baseline_audit.get('coverage') or {}
@@ -1537,7 +1541,8 @@ with tab_model:
         st.caption('Every AUC shown in the rankings and panel tabs carries the 80% half-width '
                    'for its cell line; per-drug intervals are used when a drug has at least '
                    f'{intervals.get("min_drug_n", 40)} holdout rows, otherwise the line/global '
-                   'fallback applies. Intervals quantify model error, not experimental noise. '
+                   'fallback applies. These intervals are marginal, not conditional guarantees, '
+                   'and quantify model error, not experimental noise. '
                    'The MDA-MB-231 prediction distribution is compressed above ~0.906 for the '
                    'resistant bulk (84.7% of drugs are tied at the same plateau): ranks below '
                    '~226 are not a fine-grained order, and the sensitive tail is where the '
@@ -1681,6 +1686,8 @@ with tab_model:
             f"k={diagnostic.get('k')} · M1 PCs={diagnostic.get('m1_n_pcs', '—')} · "
             f"M2 PCs={len(diagnostic.get('pcs_used', []))} · "
             f"M3 skipped ({diagnostic.get('m3', {}).get('reason', 'n/a')}).")
+        st.caption('Statistic corrected (v1.2.5); M2 construction audited read-only '
+                   '(`python tools/audit_diagnostic.py`); M2 does not beat M0.')
     else:
         st.info('`diagnostic_results.json` is not in this deployment.')
 
